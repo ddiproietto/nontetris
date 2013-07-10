@@ -16,6 +16,9 @@ struct GraphicPiece
 
 class GraphicHandler
 {
+	GLint uPMatrixLoc;
+	GLint uRTVecLoc;
+	GLint aVertexPositionLoc;
 public:
 	GraphicHandler(int width = 800, int height = 600, bool fullscreen = false);
 	~GraphicHandler();
