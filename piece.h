@@ -13,13 +13,14 @@ template <class T = float>
 class piece
 {
 	polygon<T> shape;
+	int type;
 	std::vector<polygon<T>> convshapes;
 public: 
-	piece(const polygon<T> & p):shape(p)
+	piece(const polygon<T> & p, int ptype):shape(p),type(ptype)
 	{
 		convshapes = convexer(shape);
 	}
-	piece(std::initializer_list<point<T>> l):piece(polygon<T>(l))
+	piece(std::initializer_list<point<T>> l, int type):piece(polygon<T>(l),type)
 	{
 	}
 	auto begin() -> decltype(convshapes.begin())
@@ -46,6 +47,10 @@ public:
 	polygon<T> & operator[](size_t n)
 	{
 		return convshapes[n];
+	}
+	int getType() const 
+	{
+		return type;
 	}
 };
 

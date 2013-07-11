@@ -3,11 +3,16 @@
 #include <algorithm>
 #include <cmath>
 #include <fstream>
+#include <string>
 
+#ifndef EMSCRIPTEN
 #include <GL/glew.h>
+#endif
 #include <GL/glfw.h>
 
-void printLog(GLuint obj)
+#include "SOIL/SOIL.h"
+
+void printLog(GLuint obj, const std::string & str)
 {
 	int infologLength = 0;
 	char infoLog[1024];
@@ -18,7 +23,7 @@ void printLog(GLuint obj)
 		glGetProgramInfoLog(obj, 1024, &infologLength, infoLog);
 
 	if (infologLength > 0)
-		std::cout << infoLog << std::endl;
+		std::cout << str <<infoLog << std::endl;
 }
 
 void ortho(GLfloat * out, double left, double right, double bottom, double top, double near, double far)
@@ -71,34 +76,43 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen)
 
 	glViewport(0, 0, width, height);
 
+	#ifndef EMSCRIPTEN
 	if(glewInit() != GLEW_OK)
 		std::cerr<<"GLEW fail"<<std::endl;
+	#endif
 
 	GLuint vs, /* Vertex Shader */
 	       fs, /* Fragment Shader */
 	       sp; /* Shader Program */
 
 
+	#ifndef EMSCRIPTEN
 	std::string vsSource = file2string("../shader.vert");
 	const char * c_vsSource = vsSource.c_str();
 	std::string fsSource = file2string("../shader.frag");
 	const char * c_fsSource = fsSource.c_str();
+	#else
+	std::string vsSource = file2string("wshader.vert");
+	const char * c_vsSource = vsSource.c_str();
+	std::string fsSource = file2string("wshader.frag");
+	const char * c_fsSource = fsSource.c_str();
+	#endif
 
 	vs = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vs, 1, (const GLchar **) &c_vsSource, NULL);
 	glCompileShader(vs);
-	printLog(vs);
+	printLog(vs,"vertex shader:");
 
 	fs = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fs, 1, (const GLchar **) &c_fsSource, NULL);
 	glCompileShader(fs);
-	printLog(fs);
+	printLog(fs, "fragment shader:");
 
 	sp = glCreateProgram();
 	glAttachShader(sp, vs);
 	glAttachShader(sp, fs);
 	glLinkProgram(sp);
-	printLog(sp);
+	printLog(sp, "linking shader:");
 
 	glUseProgram(sp);
 
@@ -112,6 +126,35 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen)
 	glUniformMatrix4fv(uPMatrixLoc, 1, false, PMatrix);
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	
+	//TEXTURE
+
+	uMyTexLoc = glGetUniformLocation(sp, "myTexture");
+	
+	glGenTextures(7, tex);
+
+	for (int i = 0; i < 7; i++)
+	{
+		glBindTexture( GL_TEXTURE_2D, tex[i]);
+		glActiveTexture(GL_TEXTURE0);
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+		//glGenerateMipmap( GL_TEXTURE_2D );
+		int twidth, theight;
+		#ifndef EMSCRIPTEN
+		std::string path = std::string("../pieces/")+std::to_string(i+1)+std::string(".png");
+		#else
+		std::string path = std::to_string(i+1)+std::string(".png");
+		#endif //EMSCRIPTEN
+		unsigned char * image =
+			SOIL_load_image(path.c_str() , &twidth, &theight, 0, SOIL_LOAD_RGB );
+		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, twidth, theight, 0, GL_RGB,
+				GL_UNSIGNED_BYTE, image );
+		SOIL_free_image_data( image );
+	}
+
 }
 
 GraphicHandler::~GraphicHandler()
@@ -164,15 +207,16 @@ GraphicPiece * GraphicHandler::createpiece(piece<float> pie)
 	glBufferData(GL_ARRAY_BUFFER_ARB, vertices.size()*sizeof(float), vertices.data(), GL_STATIC_DRAW_ARB);
 
 	pgp->VBOid = VBOid;
-	pgp->num = size/2;
+	pgp->num = static_cast<int>(size/2);
+	pgp->tex = tex[pie.getType()];
 	//std::cerr<<"NUM:"<<gp.num<<std::endl;
 	return pgp;
 }
 
 bool GraphicHandler::render(std::function< void(std::function<void(float x, float y, float rot, void * d)>)>allbodies )
 {
+	glClearColor(1.0, 1.0, 1.0, 1.0);
 	glClear( GL_COLOR_BUFFER_BIT );
-	glLoadIdentity();
 
 	allbodies([this](float x, float y, float rot, void * d)
 	{
@@ -183,6 +227,7 @@ bool GraphicHandler::render(std::function< void(std::function<void(float x, floa
 		GLfloat RTVec[4] = {(GLfloat)sin(rot), (GLfloat)cos(rot), x, y};
 		glUniform4fv(uRTVecLoc, 1, RTVec);
 
+		glBindTexture( GL_TEXTURE_2D, gp.tex);
 		glBindBuffer(GL_ARRAY_BUFFER_ARB, gp.VBOid);
 
 		glEnableClientState(GL_VERTEX_ARRAY);

@@ -12,13 +12,16 @@ struct GraphicPiece
 {
 	GLuint VBOid;
 	GLuint num;
+	int tex;
 };
 
 class GraphicHandler
 {
 	GLint uPMatrixLoc;
 	GLint uRTVecLoc;
+	GLint uMyTexLoc;
 	GLint aVertexPositionLoc;
+	GLuint tex[7];
 public:
 	GraphicHandler(int width = 800, int height = 600, bool fullscreen = false);
 	~GraphicHandler();

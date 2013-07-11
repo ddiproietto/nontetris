@@ -14,7 +14,7 @@
 */
 
 #define SOIL_CHECK_FOR_GL_ERRORS 0
-
+#define SOIL_DO_NOT_USE_GL 1
 #ifdef WIN32
 	#define WIN32_LEAN_AND_MEAN
 	#include <windows.h>
@@ -26,8 +26,10 @@
 	#include <Carbon/Carbon.h>
 	#define APIENTRY
 #else
+	#ifndef SOIL_DO_NOT_USE_GL
 	#include <GL/gl.h>
 	#include <GL/glx.h>
+	#endif
 #endif
 
 #include "SOIL.h"
@@ -78,8 +80,10 @@ int query_DXT_capability( void );
 #define SOIL_RGBA_S3TC_DXT1		0x83F1
 #define SOIL_RGBA_S3TC_DXT3		0x83F2
 #define SOIL_RGBA_S3TC_DXT5		0x83F3
+#ifndef SOIL_DO_NOT_USE_GL
 typedef void (APIENTRY * P_SOIL_GLCOMPRESSEDTEXIMAGE2DPROC) (GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid * data);
 P_SOIL_GLCOMPRESSEDTEXIMAGE2DPROC soilGlCompressedTexImage2D = NULL;
+#endif
 unsigned int SOIL_direct_load_DDS(
 		const char *filename,
 		unsigned int reuse_texture_ID,
@@ -92,6 +96,7 @@ unsigned int SOIL_direct_load_DDS_from_memory(
 		int flags,
 		int loading_as_cubemap );
 /*	other functions	*/
+#ifndef SOIL_DO_NOT_USE_GL
 unsigned int
 	SOIL_internal_create_OGL_texture
 	(
@@ -1420,7 +1425,7 @@ int
     SOIL_free_image_data( pixel_data );
 	return save_result;
 }
-
+#endif //SOIL_DO_NOT_USE_GL
 unsigned char*
 	SOIL_load_image
 	(
@@ -1529,6 +1534,7 @@ const char*
 	return result_string_pointer;
 }
 
+#ifndef SOIL_DO_NOT_USE_GL
 unsigned int SOIL_direct_load_DDS_from_memory(
 		const unsigned char *const buffer,
 		int buffer_length,
@@ -2022,3 +2028,4 @@ int query_DXT_capability( void )
 	/*	let the user know if we can do DXT or not	*/
 	return has_DXT_capability;
 }
+#endif
