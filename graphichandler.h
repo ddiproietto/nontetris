@@ -28,13 +28,15 @@ class GraphicHandler
 	GLuint vbo_main_rect;
 
 	GLfloat PMatrix[16];
-	GLfloat IMatrix[16];
 
 	bool fbo_used;
 
 	int width;
 	int height;
-	int fsaa;
+	double fsaa;
+
+	GLuint sp, gsp;
+	GLint aGlobalVertexPositionLoc;
 
 public:
 	GraphicHandler(int width = 308, int height = 540, bool fullscreen = false);

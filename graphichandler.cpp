@@ -102,30 +102,49 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 
 	GLuint vs, /* Vertex Shader */
 	       fs, /* Fragment Shader */
-	       sp; /* Shader Program */
+	       gvs,
+	       gfs;
 
 
 	#ifndef EMSCRIPTEN
 	std::string vsSource = file2string("../shader.vert");
-	const char * c_vsSource = vsSource.c_str();
 	std::string fsSource = file2string("../shader.frag");
-	const char * c_fsSource = fsSource.c_str();
+	std::string gvsSource = file2string("../shaderglobal.vert");
+	std::string gfsSource = file2string("../shaderglobal.frag");
 	#else
-	std::string vsSource = file2string("wshader.vert");
-	const char * c_vsSource = vsSource.c_str();
-	std::string fsSource = file2string("wshader.frag");
-	const char * c_fsSource = fsSource.c_str();
+
+	std::string webpreamble = std::string("precision mediump float;\n");
+
+	std::string vsSource =  webpreamble + file2string("shader.vert");
+	std::string fsSource = webpreamble + file2string("shader.frag");
+	std::string gvsSource = webpreamble + file2string("shaderglobal.vert");
+	std::string gfsSource = webpreamble + file2string("shaderglobal.frag");
 	#endif
+
+	const char * c_vsSource = vsSource.c_str();
+	const char * c_fsSource = fsSource.c_str();
+	const char * c_gvsSource = gvsSource.c_str();
+	const char * c_gfsSource = gfsSource.c_str();
 
 	vs = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vs, 1, (const GLchar **) &c_vsSource, NULL);
 	glCompileShader(vs);
 	printLog(vs,"vertex shader:");
 
+	gvs = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(gvs, 1, (const GLchar **) &c_gvsSource, NULL);
+	glCompileShader(gvs);
+	printLog(vs,"global vertex shader:");
+
 	fs = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fs, 1, (const GLchar **) &c_fsSource, NULL);
 	glCompileShader(fs);
 	printLog(fs, "fragment shader:");
+
+	gfs = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(gfs, 1, (const GLchar **) &c_gfsSource, NULL);
+	glCompileShader(gfs);
+	printLog(gfs, "fragment shader:");
 
 	sp = glCreateProgram();
 	glAttachShader(sp, vs);
@@ -133,15 +152,21 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 	glLinkProgram(sp);
 	printLog(sp, "linking shader:");
 
+	gsp = glCreateProgram();
+	glAttachShader(gsp, gvs);
+	glAttachShader(gsp, gfs);
+	glLinkProgram(gsp);
+	printLog(gsp, "linking shader:");
+
 	glUseProgram(sp);
 
 	uPMatrixLoc = glGetUniformLocation(sp, "uPMatrix");
 	uRTVecLoc = glGetUniformLocation(sp, "uRTVec");
 	aVertexPositionLoc = glGetAttribLocation(sp, "aVertexPosition");
+	aGlobalVertexPositionLoc = glGetAttribLocation(gsp, "aVertexPosition");
 	glEnableVertexAttribArray(aVertexPositionLoc);
 
 	ortho(PMatrix,0,10.25,18,0,-1,1);
-	eye(IMatrix);
 	glUniformMatrix4fv(uPMatrixLoc, 1, false, PMatrix);
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -177,14 +202,14 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 	glDisable(GL_DEPTH_TEST);
 
 	//ANTIALIASING
-	fsaa = 2;
+	fsaa = 4;
 	glGenTextures(1, &tex_fbo);
 	glBindTexture(GL_TEXTURE_2D, tex_fbo);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE); // automatic mipmap
+	//glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE); // automatic mipmap
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, fsaa*width, fsaa*height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	
@@ -194,8 +219,7 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex_fbo, 0);
 	//WARNING:no depth test in the texture, should use another renderbuffer
 	
-	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	fbo_used = (status == GL_FRAMEBUFFER_COMPLETE);
+	fbo_used = (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 	if(!fbo_used)
 		std::cerr << "error initializing fbo" << std::endl;
 	
@@ -203,8 +227,7 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 
 	glGenBuffers(1, &vbo_main_rect);
 	glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_main_rect);
-	GLfloat vertices [] = {0, 0, 0, 18, 10.25, 0, 10.25, 18};
-	//GLfloat vertices [] = {0, 0, 0, 9, 5.125, 0, 5.125, 9};
+	GLfloat vertices [] = {-1, -1, -1, 1, 1, -1, 1, 1};
 	glBufferData(GL_ARRAY_BUFFER_ARB, 4*2*sizeof(float), vertices, GL_STATIC_DRAW_ARB);
 
 }
@@ -267,15 +290,12 @@ GraphicPiece * GraphicHandler::createpiece(piece<float> pie)
 
 bool GraphicHandler::render(std::function< void(std::function<void(float x, float y, float rot, void * d)>)>allbodies )
 {
-	glViewport(0, 0, fsaa*width, fsaa*height);
 	if(fbo_used)
 	{
-		glClearColor(1.0, 1.0, 1.0, 1.0);
-		glClear( GL_COLOR_BUFFER_BIT );
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-		glUniformMatrix4fv(uPMatrixLoc, 1, false, PMatrix);
+		glViewport(0, 0, fsaa*width, fsaa*height);
+		glUseProgram(sp);
 	}
-
 	glClearColor(1.0, 1.0, 1.0, 1.0);
 	glClear( GL_COLOR_BUFFER_BIT );
 
@@ -301,19 +321,16 @@ bool GraphicHandler::render(std::function< void(std::function<void(float x, floa
 
 	if(fbo_used)
 	{
+		glUseProgram(gsp);
 		glViewport(0, 0, width, height);
-
-		GLfloat RTVec[4] = {(GLfloat)sin(0),(GLfloat)cos(0),5,0};
-		glUniform4fv(uRTVecLoc, 1, RTVec);
-		glUniformMatrix4fv(uPMatrixLoc, 1, false, PMatrix);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glBindTexture(GL_TEXTURE_2D, tex_fbo);
-		glGenerateMipmap(GL_TEXTURE_2D);
+		//glGenerateMipmap(GL_TEXTURE_2D);
 
 		glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_main_rect);
 		glEnableClientState(GL_VERTEX_ARRAY);
-		glVertexAttribPointer(aVertexPositionLoc, 2, GL_FLOAT, false, 0, 0);
+		glVertexAttribPointer(aGlobalVertexPositionLoc, 2, GL_FLOAT, false, 0, 0);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	}
 

@@ -1,4 +1,3 @@
-//precision mediump float;
 uniform sampler2D myTexture;
 
 varying vec2 texture_coordinate;
