@@ -164,6 +164,7 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 	uRTVecLoc = glGetUniformLocation(sp, "uRTVec");
 	aVertexPositionLoc = glGetAttribLocation(sp, "aVertexPosition");
 	aGlobalVertexPositionLoc = glGetAttribLocation(gsp, "aVertexPosition");
+	aGlobalTextureCoordLoc = glGetAttribLocation(gsp, "aTextureCoord");
 	glEnableVertexAttribArray(aVertexPositionLoc);
 
 	ortho(PMatrix,0,10.25,18,0,-1,1);
@@ -175,6 +176,18 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 
 	uMyTexLoc = glGetUniformLocation(sp, "myTexture");
 	
+	glGenTextures(1, &tex_background);
+	glBindTexture( GL_TEXTURE_2D, tex_background);
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+	int twidth, theight;
+
+	unsigned char * image =
+		SOIL_load_image("../imgs/gamebackground.png" , &twidth, &theight, 0, SOIL_LOAD_RGB );
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, twidth, theight, 0, GL_RGB,
+			GL_UNSIGNED_BYTE, image );
+	SOIL_free_image_data( image );
+
 	glGenTextures(7, tex);
 
 	for (int i = 0; i < 7; i++)
@@ -186,13 +199,12 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 		//glGenerateMipmap( GL_TEXTURE_2D );
-		int twidth, theight;
 		#ifndef EMSCRIPTEN
-		std::string path = std::string("../pieces/")+std::to_string(i+1)+std::string(".png");
+		std::string path = std::string("../imgs/pieces/")+std::to_string(i+1)+std::string(".png");
 		#else
 		std::string path = std::to_string(i+1)+std::string(".png");
 		#endif //EMSCRIPTEN
-		unsigned char * image =
+		image =
 			SOIL_load_image(path.c_str() , &twidth, &theight, 0, SOIL_LOAD_RGB );
 		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, twidth, theight, 0, GL_RGB,
 				GL_UNSIGNED_BYTE, image );
@@ -227,8 +239,13 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 
 	glGenBuffers(1, &vbo_main_rect);
 	glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_main_rect);
-	GLfloat vertices [] = {-1, -1, -1, 1, 1, -1, 1, 1};
-	glBufferData(GL_ARRAY_BUFFER_ARB, 4*2*sizeof(float), vertices, GL_STATIC_DRAW_ARB);
+	GLfloat vertices [] = {-0.8, -1, -0.8, 1, 0.2, -1, 0.2, 1, 0, 0, 0, 1, 1,0, 1,1};
+	glBufferData(GL_ARRAY_BUFFER_ARB, 4*2*2*sizeof(float), vertices, GL_STATIC_DRAW_ARB);
+
+	glGenBuffers(1, &vbo_all_screen);
+	glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_all_screen);
+	GLfloat vertices2 [] = {-1, -1, -1, 1, 1, -1, 1, 1, 0, 1, 0, 0, 1,1, 1,0};
+	glBufferData(GL_ARRAY_BUFFER_ARB, 4*2*2*sizeof(float), vertices2, GL_STATIC_DRAW_ARB);
 
 }
 
@@ -299,6 +316,7 @@ bool GraphicHandler::render(std::function< void(std::function<void(float x, floa
 	glClearColor(1.0, 1.0, 1.0, 1.0);
 	glClear( GL_COLOR_BUFFER_BIT );
 
+	glEnableVertexAttribArray(aVertexPositionLoc);
 	allbodies([this](float x, float y, float rot, void * d)
 	{
 		GraphicPiece & gp = *(GraphicPiece * )d;
@@ -318,20 +336,38 @@ bool GraphicHandler::render(std::function< void(std::function<void(float x, floa
 		//glDisableClientState(GL_VERTEX_ARRAY);
 		//glBindBuffer(GL_ARRAY_BUFFER_ARB, 0);
 	});
+	glDisableVertexAttribArray(aVertexPositionLoc);
 
 	if(fbo_used)
 	{
+		
 		glUseProgram(gsp);
 		glViewport(0, 0, width, height);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_all_screen);
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableVertexAttribArray(aGlobalVertexPositionLoc);
+		glEnableVertexAttribArray(aGlobalTextureCoordLoc);
+
+		glBindTexture(GL_TEXTURE_2D, tex_background);
+		glVertexAttribPointer(aGlobalVertexPositionLoc, 2, GL_FLOAT, false, 0, (void *)0);
+		glVertexAttribPointer(aGlobalTextureCoordLoc, 2, GL_FLOAT, false, 0, (void *)(4*2*sizeof(GLfloat)));
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+
 		glBindTexture(GL_TEXTURE_2D, tex_fbo);
 		//glGenerateMipmap(GL_TEXTURE_2D);
 
 		glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_main_rect);
-		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexAttribPointer(aGlobalVertexPositionLoc, 2, GL_FLOAT, false, 0, 0);
+		glVertexAttribPointer(aGlobalTextureCoordLoc, 2, GL_FLOAT, false, 0, (void *)(4*2*sizeof(GLfloat)));
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+
+		glDisableVertexAttribArray(aGlobalVertexPositionLoc);
+		glDisableVertexAttribArray(aGlobalTextureCoordLoc);
 	}
 
 	glfwSwapBuffers();

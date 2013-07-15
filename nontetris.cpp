@@ -108,7 +108,7 @@ void oneiterationwrapper()
 int main(int argc, char * argv[])
 {
 	PhysicHandler phh(10.25, 18);
-	GraphicHandler grh(308,540);
+	GraphicHandler grh(600,540);
 
 	newrandompiece(phh, grh);
 

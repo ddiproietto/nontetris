@@ -21,11 +21,13 @@ class GraphicHandler
 	GLint uRTVecLoc;
 	GLint uMyTexLoc;
 	GLint aVertexPositionLoc;
+	GLuint tex_background;
 	GLuint tex[7];
 
 	GLuint tex_fbo;
 	GLuint fbo;
 	GLuint vbo_main_rect;
+	GLuint vbo_all_screen;
 
 	GLfloat PMatrix[16];
 
@@ -37,9 +39,10 @@ class GraphicHandler
 
 	GLuint sp, gsp;
 	GLint aGlobalVertexPositionLoc;
+	GLint aGlobalTextureCoordLoc;
 
 public:
-	GraphicHandler(int width = 308, int height = 540, bool fullscreen = false);
+	GraphicHandler(int width = 600, int height = 540, bool fullscreen = false);
 	~GraphicHandler();
 	GraphicPiece * createpiece(piece<float> pol);
 	bool render(std::function< void(std::function<void(float x, float y, float rot, void * d)>)>allbodies );
