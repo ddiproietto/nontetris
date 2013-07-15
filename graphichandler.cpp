@@ -50,6 +50,26 @@ void ortho(GLfloat * out, double left, double right, double bottom, double top, 
 	out[15] = 1;
 }
 
+void eye(GLfloat * out)
+{
+	out[0] = 1;
+	out[1] = 0;
+	out[2] = 0;
+	out[3] = 0;
+	out[4] = 0;
+	out[5] = 1;
+	out[6] = 0;
+	out[7] = 0;
+	out[8] = 0;
+	out[9] = 0;
+	out[10] = 1;
+	out[11] = 0;
+	out[12] = 0;
+	out[13] = 0;
+	out[14] = 0;
+	out[15] = 1;
+}
+
 std::string file2string(const std::string & filename)
 {
 	std::ifstream t(filename);
@@ -67,14 +87,13 @@ std::string file2string(const std::string & filename)
 	return str;
 }
 
-GraphicHandler::GraphicHandler(int width, int height, bool fullscreen)
+GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(width), height(height)
 {
 	glfwInit();
 	glfwOpenWindowHint(GLFW_FSAA_SAMPLES,8);
 	glfwOpenWindow(width, height, 5, 6, 5, 8, 0, 0, fullscreen?GLFW_FULLSCREEN:GLFW_WINDOW );
 
-
-	glViewport(0, 0, width, height);
+	//glViewport(0, 0, width, height);
 
 	#ifndef EMSCRIPTEN
 	if(glewInit() != GLEW_OK)
@@ -121,8 +140,8 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen)
 	aVertexPositionLoc = glGetAttribLocation(sp, "aVertexPosition");
 	glEnableVertexAttribArray(aVertexPositionLoc);
 
-	GLfloat PMatrix[16];
 	ortho(PMatrix,0,10.25,18,0,-1,1);
+	eye(IMatrix);
 	glUniformMatrix4fv(uPMatrixLoc, 1, false, PMatrix);
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -154,6 +173,39 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen)
 				GL_UNSIGNED_BYTE, image );
 		SOIL_free_image_data( image );
 	}
+	
+	glDisable(GL_DEPTH_TEST);
+
+	//ANTIALIASING
+	fsaa = 2;
+	glGenTextures(1, &tex_fbo);
+	glBindTexture(GL_TEXTURE_2D, tex_fbo);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE); // automatic mipmap
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, fsaa*width, fsaa*height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	
+	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex_fbo, 0);
+	//WARNING:no depth test in the texture, should use another renderbuffer
+	
+	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	fbo_used = (status == GL_FRAMEBUFFER_COMPLETE);
+	if(!fbo_used)
+		std::cerr << "error initializing fbo" << std::endl;
+	
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glGenBuffers(1, &vbo_main_rect);
+	glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_main_rect);
+	GLfloat vertices [] = {0, 0, 0, 18, 10.25, 0, 10.25, 18};
+	//GLfloat vertices [] = {0, 0, 0, 9, 5.125, 0, 5.125, 9};
+	glBufferData(GL_ARRAY_BUFFER_ARB, 4*2*sizeof(float), vertices, GL_STATIC_DRAW_ARB);
 
 }
 
@@ -215,6 +267,15 @@ GraphicPiece * GraphicHandler::createpiece(piece<float> pie)
 
 bool GraphicHandler::render(std::function< void(std::function<void(float x, float y, float rot, void * d)>)>allbodies )
 {
+	glViewport(0, 0, fsaa*width, fsaa*height);
+	if(fbo_used)
+	{
+		glClearColor(1.0, 1.0, 1.0, 1.0);
+		glClear( GL_COLOR_BUFFER_BIT );
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+		glUniformMatrix4fv(uPMatrixLoc, 1, false, PMatrix);
+	}
+
 	glClearColor(1.0, 1.0, 1.0, 1.0);
 	glClear( GL_COLOR_BUFFER_BIT );
 
@@ -237,6 +298,24 @@ bool GraphicHandler::render(std::function< void(std::function<void(float x, floa
 		//glDisableClientState(GL_VERTEX_ARRAY);
 		//glBindBuffer(GL_ARRAY_BUFFER_ARB, 0);
 	});
+
+	if(fbo_used)
+	{
+		glViewport(0, 0, width, height);
+
+		GLfloat RTVec[4] = {(GLfloat)sin(0),(GLfloat)cos(0),5,0};
+		glUniform4fv(uRTVecLoc, 1, RTVec);
+		glUniformMatrix4fv(uPMatrixLoc, 1, false, PMatrix);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glBindTexture(GL_TEXTURE_2D, tex_fbo);
+		glGenerateMipmap(GL_TEXTURE_2D);
+
+		glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_main_rect);
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexAttribPointer(aVertexPositionLoc, 2, GL_FLOAT, false, 0, 0);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	}
 
 	glfwSwapBuffers();
 	return true;
