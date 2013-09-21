@@ -24,10 +24,10 @@
 b2Version b2_version = {2, 3, 0};
 
 // Memory allocators. Modify these to use your own allocator.
-void* b2Alloc(int32 size)
-{
-	return malloc(size);
-}
+//void* b2Alloc(int32 size)
+//{
+//	return malloc(size);
+//}
 
 void b2Free(void* mem)
 {

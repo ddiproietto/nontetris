@@ -21,6 +21,11 @@
 #include <cfloat>
 using namespace std;
 
+#ifdef __DUETTO__
+//TODO:very ugly!!
+#define parent parent_or_next
+#define next parent_or_next
+#endif
 
 b2DynamicTree::b2DynamicTree()
 {

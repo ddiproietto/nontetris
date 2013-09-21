@@ -46,8 +46,13 @@ b2ContactSolver::b2ContactSolver(b2ContactSolverDef* def)
 	m_step = def->step;
 	m_allocator = def->allocator;
 	m_count = def->count;
+	#ifdef __DUETTO__
+	m_positionConstraints = new b2ContactPositionConstraint[m_count];
+	m_velocityConstraints = new b2ContactVelocityConstraint[m_count];
+	#else
 	m_positionConstraints = (b2ContactPositionConstraint*)m_allocator->Allocate(m_count * sizeof(b2ContactPositionConstraint));
 	m_velocityConstraints = (b2ContactVelocityConstraint*)m_allocator->Allocate(m_count * sizeof(b2ContactVelocityConstraint));
+	#endif
 	m_positions = def->positions;
 	m_velocities = def->velocities;
 	m_contacts = def->contacts;
@@ -130,8 +135,13 @@ b2ContactSolver::b2ContactSolver(b2ContactSolverDef* def)
 
 b2ContactSolver::~b2ContactSolver()
 {
+	#ifdef __DUETTO__
+	delete [] m_velocityConstraints;
+	delete [] m_positionConstraints;
+	#else
 	m_allocator->Free(m_velocityConstraints);
 	m_allocator->Free(m_positionConstraints);
+	#endif
 }
 
 // Initialize position dependent portions of the velocity constraints.

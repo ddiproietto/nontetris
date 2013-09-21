@@ -28,14 +28,22 @@ using namespace std;
 
 b2Contact* b2CircleContact::Create(b2Fixture* fixtureA, int32, b2Fixture* fixtureB, int32, b2BlockAllocator* allocator)
 {
+	#ifdef __DUETTO__
+	return new b2CircleContact(fixtureA, fixtureB);
+	#else
 	void* mem = allocator->Allocate(sizeof(b2CircleContact));
 	return new (mem) b2CircleContact(fixtureA, fixtureB);
+	#endif
 }
 
 void b2CircleContact::Destroy(b2Contact* contact, b2BlockAllocator* allocator)
 {
+	#ifdef __DUETTO__
+	delete contact;
+	#else
 	((b2CircleContact*)contact)->~b2CircleContact();
 	allocator->Free(contact, sizeof(b2CircleContact));
+	#endif
 }
 
 b2CircleContact::b2CircleContact(b2Fixture* fixtureA, b2Fixture* fixtureB)

@@ -42,7 +42,7 @@ public:
 		}
 		return MyTime(std::move(result));
 	}
-	MyTime operator+=(const MyTime & obj)
+	MyTime & operator+=(const MyTime & obj)
 	{
 		ts.tv_nsec += obj.ts.tv_nsec;
 		if(ts.tv_nsec >= 1000000000L)
@@ -51,6 +51,7 @@ public:
 			ts.tv_sec ++;
 		}
 		ts.tv_sec += obj.ts.tv_sec;
+		return *this;
 	}
 	void now()
 	{

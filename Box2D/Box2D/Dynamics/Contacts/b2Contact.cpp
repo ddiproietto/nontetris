@@ -205,7 +205,11 @@ void b2Contact::Update(b2ContactListener* listener)
 			{
 				b2ManifoldPoint* mp1 = oldManifold.points + j;
 
+				#ifdef __DUETTO__
+				if (mp1->id.getKey() == id2.getKey())
+				#else
 				if (mp1->id.key == id2.key)
+				#endif
 				{
 					mp2->normalImpulse = mp1->normalImpulse;
 					mp2->tangentImpulse = mp1->tangentImpulse;

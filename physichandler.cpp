@@ -1,6 +1,9 @@
 #include "physichandler.h"
+#include "NontetrisConfig.h"
 
+#ifndef __DUETTO__
 #include <iostream>
+#endif
 #include <algorithm>
 
 #include "polygon.h"
@@ -78,7 +81,7 @@ PhysicHandler::PhysicHandler(float w_width, float w_height):world(b2Vec2(0.0F, 1
 	world.SetContactListener(&contactlistener);
 }
 
-void PhysicHandler::createpiece(piece<float> pie, float x, float y, float rot, void * userdata)
+PhysicPiece * PhysicHandler::createpiece(piece<float> pie, float x, float y, float rot, void * userdata)
 {
 	b2BodyDef bodyDef;
 	b2FixtureDef fixDef;
@@ -113,6 +116,7 @@ void PhysicHandler::createpiece(piece<float> pie, float x, float y, float rot, v
 	if(fallingpiece != NULL)
 		((userData*)fallingpiece->GetUserData())->type = userData::OLD_PIECE;
 	fallingpiece = body;
+	return new PhysicPiece(body);
 }
 
 void PhysicHandler::piecerotate(float rot)
@@ -159,6 +163,7 @@ void PhysicHandler::step(std::function<void(float x, float y)> cb)
 	contactlistener.callcollision = false;
 }
 
+#ifndef __DUETTO__
 void PhysicHandler::debugprint()
 {
 	for (b2Body * body = world.GetBodyList(); body; body = body->GetNext())
@@ -170,6 +175,7 @@ void PhysicHandler::debugprint()
 	}
 	std::cout<<std::endl;
 }
+#endif
 
 void PhysicHandler::drawbodies(std::function <void (float, float, float, void *)> draw)
 {

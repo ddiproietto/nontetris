@@ -85,8 +85,12 @@ void b2ChainShape::SetNextVertex(const b2Vec2& nextVertex)
 
 b2Shape* b2ChainShape::Clone(b2BlockAllocator* allocator) const
 {
+	#ifdef __DUETTO__
+	b2ChainShape* clone = new b2ChainShape;
+	#else
 	void* mem = allocator->Allocate(sizeof(b2ChainShape));
 	b2ChainShape* clone = new (mem) b2ChainShape;
+	#endif
 	clone->CreateChain(m_vertices, m_count);
 	clone->m_prevVertex = m_prevVertex;
 	clone->m_nextVertex = m_nextVertex;

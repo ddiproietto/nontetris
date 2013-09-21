@@ -11,10 +11,19 @@ configure_file (
 
 include_directories("${PROJECT_BINARY_DIR}")
 
-#include SOIL library
-set (EXTERNAL_SOURCES SOIL/SOIL.c SOIL/image_DXT.c SOIL/image_helper.c SOIL/stb_image_aug.c)
 
-add_executable (nontetris nontetris.cpp physichandler.cpp graphichandler.cpp ${EXTERNAL_SOURCES})
+if(DEFINED DUETTO)
+	set (MY_SOURCES graphichandler.cpp duettogl.cpp)
+	add_library (nontetris nontetris.cpp physichandler.cpp ${MY_SOURCES} ${EXTERNAL_SOURCES})
+	target_link_libraries(nontetris cxxabi)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O1")
+else(DEFINED DUETTO)
+	set (MY_SOURCES graphichandler.cpp)
+	#include SOIL library
+	set (EXTERNAL_SOURCES SOIL/SOIL.c SOIL/image_DXT.c SOIL/image_helper.c SOIL/stb_image_aug.c)
+	add_executable (nontetris nontetris.cpp physichandler.cpp ${MY_SOURCES} ${EXTERNAL_SOURCES})
+endif(DEFINED DUETTO)
+
 
 #find_package(Box2D)
 #if (BOX2D_FOUND)
@@ -46,6 +55,11 @@ target_link_libraries (nontetris Box2D)
 ###END BOX2D INCLUSION
 
 
+if(NOT DEFINED DUETTO)
+##OpenGL##
+find_package(OpenGL REQUIRED)
+target_link_libraries (nontetris ${OPENGL_LIBRARIES})
+##END OpenGL##
 
 ##GLFW##
 find_package(PkgConfig REQUIRED)
@@ -58,4 +72,4 @@ find_package(PkgConfig REQUIRED)
 pkg_search_module(GLEW REQUIRED glew)
 target_link_libraries(nontetris ${GLEW_LIBRARIES})
 ##END GLEW##
-
+endif(NOT DEFINED DUETTO)

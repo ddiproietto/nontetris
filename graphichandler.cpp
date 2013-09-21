@@ -1,19 +1,40 @@
 #include "graphichandler.h"
 
+#include "NontetrisConfig.h"
+
+#ifdef __DUETTO__
+#include "duettogl.h"
+#include <duetto/client.h>
+#include <duetto/clientlib.h>
+#elif defined(EMSCRIPTEN)
+#include <GL/glfw.h>
+#else
+#include <GL/glew.h>
+#include <GL/glfw.h>
+#endif
+
 #include <algorithm>
 #include <cmath>
+#ifndef __DUETTO__
 #include <fstream>
+#include <iostream>
+#include "SOIL/SOIL.h"
+#endif
 #include <string>
 
-#ifndef EMSCRIPTEN
-#include <GL/glew.h>
-#endif
-#include <GL/glfw.h>
+#include "NontetrisConfig.h"
 
-#include "SOIL/SOIL.h"
+
+
+#ifdef __DUETTO__
+typedef GLsizei glvapt;
+#else
+typedef void * glvapt;
+#endif
 
 void printLog(GLuint obj, const std::string & str)
 {
+#ifndef __DUETTO__
 	int infologLength = 0;
 	char infoLog[1024];
 
@@ -24,8 +45,8 @@ void printLog(GLuint obj, const std::string & str)
 
 	if (infologLength > 0)
 		std::cout << str <<infoLog << std::endl;
+#endif
 }
-
 void ortho(GLfloat * out, double left, double right, double bottom, double top, double near, double far)
 {
 	//COPIED FROM javascript gl-matrix
@@ -72,6 +93,7 @@ void eye(GLfloat * out)
 
 std::string file2string(const std::string & filename)
 {
+	#ifndef __DUETTO__
 	std::ifstream t(filename);
 	if(!t)
 	{
@@ -85,19 +107,93 @@ std::string file2string(const std::string & filename)
 
 	str.assign((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
 	return str;
+	#else
+	#define WEBPREAMBLE "precision mediump float;\n"
+
+	if(filename == "shader.vert")
+		return
+			WEBPREAMBLE
+			
+		"attribute vec2 aVertexPosition;\n"
+
+		"uniform mat4 uPMatrix;\n"
+		"uniform vec4 uRTVec;\n"
+
+		"varying vec2 texture_coordinate;\n"
+
+		"void main(void)\n"
+		"{\n"
+		"	vec2 transl = vec2(uRTVec[2], uRTVec[3]);\n"
+		"	float sinrot = uRTVec[0];\n"
+		"	float cosrot = uRTVec[1];\n"
+
+		"	mat2 rotation = mat2(cosrot, sinrot, -sinrot, cosrot);\n"
+		"	gl_Position = uPMatrix * vec4(rotation*vec2(aVertexPosition[0],aVertexPosition[1])+transl, 0.0, 1.0);\n"
+		"	texture_coordinate = (aVertexPosition-vec2(2.0, 2.0))/4.0;\n"
+		"}\n"
+			;
+	else if(filename == "shader.frag")
+		return
+			WEBPREAMBLE
+			
+		"uniform sampler2D myTexture;\n"
+
+		"varying vec2 texture_coordinate;\n"
+
+		"void main(void)\n"
+		"{\n"
+		"	gl_FragColor = texture2D(myTexture, texture_coordinate);//vec4(1.0,1.0,1.0,1.0);\n"
+		"	//gl_FragColor = vec4(0.0,0.0,1.0,1.0);\n"
+		"}\n"
+			;
+	else if(filename == "shaderglobal.vert")
+		return
+			WEBPREAMBLE
+			
+		"attribute vec2 aVertexPosition;\n"
+		"attribute vec2 aTextureCoord;\n"
+
+		"varying vec2 texture_coordinate;\n"
+
+		"void main(void)\n"
+		"{\n"
+		"	gl_Position = vec4(aVertexPosition[0],aVertexPosition[1], 0.0, 1.0);\n"
+		"	texture_coordinate = aTextureCoord;//(aVertexPosition+vec2(1.0,1.0))/2.0;\n"
+		"}\n"
+			;
+	else if(filename == "shaderglobal.frag")
+		return
+			WEBPREAMBLE
+			
+		"uniform sampler2D myTexture;\n"
+
+		"varying vec2 texture_coordinate;\n"
+
+		"void main(void)\n"
+		"{\n"
+		"	//TODO: bicubic interpolation\n"
+		"	gl_FragColor = texture2D(myTexture, texture_coordinate);\n"
+		"}\n"
+			
+			;
+	else //TMCH
+		return "";
+	#endif
 }
 
 GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(width), height(height)
 {
+	#ifndef __DUETTO__
 	glfwInit();
 	glfwOpenWindowHint(GLFW_FSAA_SAMPLES,8);
 	glfwOpenWindow(width, height, 5, 6, 5, 8, 0, 0, fullscreen?GLFW_FULLSCREEN:GLFW_WINDOW );
 
-	//glViewport(0, 0, width, height);
-
-	#ifndef EMSCRIPTEN
+	#if !defined(EMSCRIPTEN) && !defined(__DUETTO__)
 	if(glewInit() != GLEW_OK)
 		std::cerr<<"GLEW fail"<<std::endl;
+	#endif
+	#else //defined(__DUETTO__)
+	duettoGLInit(width, height);
 	#endif
 
 	GLuint vs, /* Vertex Shader */
@@ -106,19 +202,16 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 	       gfs;
 
 
-	#ifndef EMSCRIPTEN
+	#if !defined(EMSCRIPTEN) && !defined(__DUETTO__)
 	std::string vsSource = file2string("../shader.vert");
 	std::string fsSource = file2string("../shader.frag");
 	std::string gvsSource = file2string("../shaderglobal.vert");
 	std::string gfsSource = file2string("../shaderglobal.frag");
 	#else
-
-	std::string webpreamble = std::string("precision mediump float;\n");
-
-	std::string vsSource =  webpreamble + file2string("shader.vert");
-	std::string fsSource = webpreamble + file2string("shader.frag");
-	std::string gvsSource = webpreamble + file2string("shaderglobal.vert");
-	std::string gfsSource = webpreamble + file2string("shaderglobal.frag");
+	std::string vsSource = file2string("shader.vert");
+	std::string fsSource = file2string("shader.frag");
+	std::string gvsSource = file2string("shaderglobal.vert");
+	std::string gfsSource = file2string("shaderglobal.frag");
 	#endif
 
 	const char * c_vsSource = vsSource.c_str();
@@ -178,37 +271,48 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 	
 	glGenTextures(1, &tex_background);
 	glBindTexture( GL_TEXTURE_2D, tex_background);
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 	int twidth, theight;
 
+	#ifndef __DUETTO__
 	unsigned char * image =
 		SOIL_load_image("../imgs/gamebackground.png" , &twidth, &theight, 0, SOIL_LOAD_RGB );
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, twidth, theight, 0, GL_RGB,
 			GL_UNSIGNED_BYTE, image );
 	SOIL_free_image_data( image );
+	#else
+	gl->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById("background")));
+	//TODO:load textures for DUETTO
+	#endif
+	glGenerateMipmap( GL_TEXTURE_2D );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+
 
 	glGenTextures(7, tex);
 
 	for (int i = 0; i < 7; i++)
 	{
 		glBindTexture( GL_TEXTURE_2D, tex[i]);
-		glActiveTexture(GL_TEXTURE0);
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-		//glGenerateMipmap( GL_TEXTURE_2D );
-		#ifndef EMSCRIPTEN
-		std::string path = std::string("../imgs/pieces/")+std::to_string(i+1)+std::string(".png");
-		#else
-		std::string path = std::to_string(i+1)+std::string(".png");
-		#endif //EMSCRIPTEN
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );//TODO:make it work with GL_CLAMP_TO_EDGE
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );//TODO:make it work with GL_CLAMP_TO_EDGE
+		#ifndef __DUETTO__
+			#ifndef EMSCRIPTEN
+			std::string path = std::string("../imgs/pieces/")+std::to_string(i+1)+std::string(".png");
+			#else
+			std::string path = std::to_string(i+1)+std::string(".png");
+			#endif //EMSCRIPTEN
 		image =
 			SOIL_load_image(path.c_str() , &twidth, &theight, 0, SOIL_LOAD_RGB );
 		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, twidth, theight, 0, GL_RGB,
 				GL_UNSIGNED_BYTE, image );
 		SOIL_free_image_data( image );
+		#else
+		//TODO:load textures for DUETTO
+		gl->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById("piece1")));
+		#endif
+		glGenerateMipmap( GL_TEXTURE_2D );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR ); //TODO: test linear
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST ); //TODO: test linear
 	}
 	
 	glDisable(GL_DEPTH_TEST);
@@ -217,12 +321,15 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 	fsaa = 4;
 	glGenTextures(1, &tex_fbo);
 	glBindTexture(GL_TEXTURE_2D, tex_fbo);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	//glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE); // automatic mipmap
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, fsaa*width, fsaa*height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	#ifndef __DUETTO__
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, log(fsaa)/log(2));
+	#endif
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fsaa*width, fsaa*height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);//TODO: check??duetto???
+	//glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE); // automatic mipmap: deprecated
 	glBindTexture(GL_TEXTURE_2D, 0);
 	
 	glGenFramebuffers(1, &fbo);
@@ -231,10 +338,13 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex_fbo, 0);
 	//WARNING:no depth test in the texture, should use another renderbuffer
 	
+	#ifndef __DUETTO__
 	fbo_used = (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 	if(!fbo_used)
 		std::cerr << "error initializing fbo" << std::endl;
-	
+	#else
+	fbo_used = true;
+	#endif
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	glGenBuffers(1, &vbo_main_rect);
@@ -251,7 +361,9 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 
 GraphicHandler::~GraphicHandler()
 {
+	#ifndef __DUETTO__
 	glfwTerminate();
+	#endif
 }
 
 GraphicPiece * GraphicHandler::createpiece(piece<float> pie)
@@ -305,7 +417,7 @@ GraphicPiece * GraphicHandler::createpiece(piece<float> pie)
 	return pgp;
 }
 
-bool GraphicHandler::render(std::function< void(std::function<void(float x, float y, float rot, void * d)>)>allbodies )
+bool GraphicHandler::render(std::function< void(std::function<void(float x, float y, float rot, GraphicPiece * d)>)>allbodies )
 {
 	if(fbo_used)
 	{
@@ -315,9 +427,8 @@ bool GraphicHandler::render(std::function< void(std::function<void(float x, floa
 	}
 	glClearColor(1.0, 1.0, 1.0, 1.0);
 	glClear( GL_COLOR_BUFFER_BIT );
-
 	glEnableVertexAttribArray(aVertexPositionLoc);
-	allbodies([this](float x, float y, float rot, void * d)
+	allbodies([this](float x, float y, float rot, GraphicPiece * d)
 	{
 		GraphicPiece & gp = *(GraphicPiece * )d;
 		//std::cerr <<"(" << x << ", " << y << "); rot:"<< rot<<std::endl;
@@ -329,7 +440,9 @@ bool GraphicHandler::render(std::function< void(std::function<void(float x, floa
 		glBindTexture( GL_TEXTURE_2D, gp.tex);
 		glBindBuffer(GL_ARRAY_BUFFER_ARB, gp.VBOid);
 
+		#ifndef __DUETTO__
 		glEnableClientState(GL_VERTEX_ARRAY);
+		#endif
 		glVertexAttribPointer(aVertexPositionLoc, 2, GL_FLOAT, false, 0, 0);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, gp.num);
 
@@ -347,22 +460,24 @@ bool GraphicHandler::render(std::function< void(std::function<void(float x, floa
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_all_screen);
+		#ifndef __DUETTO__
 		glEnableClientState(GL_VERTEX_ARRAY);
+		#endif
 		glEnableVertexAttribArray(aGlobalVertexPositionLoc);
 		glEnableVertexAttribArray(aGlobalTextureCoordLoc);
 
 		glBindTexture(GL_TEXTURE_2D, tex_background);
-		glVertexAttribPointer(aGlobalVertexPositionLoc, 2, GL_FLOAT, false, 0, (void *)0);
-		glVertexAttribPointer(aGlobalTextureCoordLoc, 2, GL_FLOAT, false, 0, (void *)(4*2*sizeof(GLfloat)));
+		glVertexAttribPointer(aGlobalVertexPositionLoc, 2, GL_FLOAT, false, 0, (glvapt)0);
+		glVertexAttribPointer(aGlobalTextureCoordLoc, 2, GL_FLOAT, false, 0, (glvapt)(4*2*sizeof(GLfloat)));
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 
 		glBindTexture(GL_TEXTURE_2D, tex_fbo);
-		//glGenerateMipmap(GL_TEXTURE_2D);
+		glGenerateMipmap(GL_TEXTURE_2D);
 
 		glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_main_rect);
-		glVertexAttribPointer(aGlobalVertexPositionLoc, 2, GL_FLOAT, false, 0, 0);
-		glVertexAttribPointer(aGlobalTextureCoordLoc, 2, GL_FLOAT, false, 0, (void *)(4*2*sizeof(GLfloat)));
+		glVertexAttribPointer(aGlobalVertexPositionLoc, 2, GL_FLOAT, false, 0, (glvapt)0);
+		glVertexAttribPointer(aGlobalTextureCoordLoc, 2, GL_FLOAT, false, 0, (glvapt)(4*2*sizeof(GLfloat)));
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 
@@ -370,6 +485,8 @@ bool GraphicHandler::render(std::function< void(std::function<void(float x, floa
 		glDisableVertexAttribArray(aGlobalTextureCoordLoc);
 	}
 
+	#ifndef __DUETTO__
 	glfwSwapBuffers();
+	#endif
 	return true;
 }

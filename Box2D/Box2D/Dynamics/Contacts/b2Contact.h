@@ -185,8 +185,13 @@ protected:
 
 	b2Contact() : m_fixtureA(NULL), m_fixtureB(NULL) {}
 	b2Contact(b2Fixture* fixtureA, int32 indexA, b2Fixture* fixtureB, int32 indexB);
+	#ifdef __DUETTO__
+	public:
 	virtual ~b2Contact() {}
-
+	protected:
+	#else
+	virtual ~b2Contact() {}
+	#endif
 	void Update(b2ContactListener* listener);
 
 	static b2ContactRegister s_registers[b2Shape::e_typeCount][b2Shape::e_typeCount];

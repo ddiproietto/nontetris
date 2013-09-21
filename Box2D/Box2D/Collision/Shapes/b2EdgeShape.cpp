@@ -30,8 +30,12 @@ void b2EdgeShape::Set(const b2Vec2& v1, const b2Vec2& v2)
 
 b2Shape* b2EdgeShape::Clone(b2BlockAllocator* allocator) const
 {
+	#ifdef __DUETTO__
+	b2EdgeShape* clone = new b2EdgeShape;
+	#else
 	void* mem = allocator->Allocate(sizeof(b2EdgeShape));
 	b2EdgeShape* clone = new (mem) b2EdgeShape;
+	#endif
 	*clone = *this;
 	return clone;
 }

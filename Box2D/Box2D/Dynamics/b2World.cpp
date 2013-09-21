@@ -112,8 +112,12 @@ b2Body* b2World::CreateBody(const b2BodyDef* def)
 		return NULL;
 	}
 
+	#ifdef __DUETTO__
+	b2Body* b = new b2Body(def, this);
+	#else
 	void* mem = m_blockAllocator.Allocate(sizeof(b2Body));
 	b2Body* b = new (mem) b2Body(def, this);
+	#endif
 
 	// Add to world doubly linked list.
 	b->m_prev = NULL;
@@ -180,7 +184,11 @@ void b2World::DestroyBody(b2Body* b)
 		f0->DestroyProxies(&m_contactManager.m_broadPhase);
 		f0->Destroy(&m_blockAllocator);
 		f0->~b2Fixture();
+		#ifdef __DUETTO__
+		delete f0;
+		#else
 		m_blockAllocator.Free(f0, sizeof(b2Fixture));
+		#endif
 
 		b->m_fixtureList = f;
 		b->m_fixtureCount -= 1;
@@ -206,7 +214,11 @@ void b2World::DestroyBody(b2Body* b)
 
 	--m_bodyCount;
 	b->~b2Body();
+	#ifdef __DUETTO__
+	delete b;
+	#else
 	m_blockAllocator.Free(b, sizeof(b2Body));
+	#endif
 }
 
 b2Joint* b2World::CreateJoint(const b2JointDef* def)
@@ -412,7 +424,11 @@ void b2World::Solve(const b2TimeStep& step)
 
 	// Build and simulate all awake islands.
 	int32 stackSize = m_bodyCount;
+	#ifdef __DUETTO__
+	b2Body** stack = new b2Body*[stackSize];
+	#else
 	b2Body** stack = (b2Body**)m_stackAllocator.Allocate(stackSize * sizeof(b2Body*));
+	#endif
 	for (b2Body* seed = m_bodyList; seed; seed = seed->m_next)
 	{
 		if (seed->m_flags & b2Body::e_islandFlag)
@@ -545,7 +561,11 @@ void b2World::Solve(const b2TimeStep& step)
 		}
 	}
 
+	#ifdef __DUETTO__
+	delete [] stack;
+	#else
 	m_stackAllocator.Free(stack);
+	#endif
 
 	{
 		b2Timer timer;

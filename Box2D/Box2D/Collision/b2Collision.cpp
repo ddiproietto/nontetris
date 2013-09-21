@@ -100,7 +100,11 @@ void b2GetPointStates(b2PointState state1[b2_maxManifoldPoints], b2PointState st
 
 		for (int32 j = 0; j < manifold2->pointCount; ++j)
 		{
+			#ifdef __DUETTO__
+			if (manifold2->points[j].id.getKey() == id.getKey())
+			#else
 			if (manifold2->points[j].id.key == id.key)
+			#endif
 			{
 				state1[i] = b2_persistState;
 				break;
@@ -117,7 +121,11 @@ void b2GetPointStates(b2PointState state1[b2_maxManifoldPoints], b2PointState st
 
 		for (int32 j = 0; j < manifold1->pointCount; ++j)
 		{
+			#ifdef __DUETTO__
+			if (manifold1->points[j].id.getKey() == id.getKey())
+			#else
 			if (manifold1->points[j].id.key == id.key)
+			#endif
 			{
 				state2[i] = b2_persistState;
 				break;

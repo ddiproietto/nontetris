@@ -45,7 +45,12 @@ void b2CollideCircles(
 	manifold->pointCount = 1;
 
 	manifold->points[0].localPoint = circleB->m_p;
+	#ifdef __DUETTO__
+	manifold->points[0].id.setKey(0);
+	#else
 	manifold->points[0].id.key = 0;
+	#endif
+
 }
 
 void b2CollidePolygonAndCircle(
@@ -98,7 +103,11 @@ void b2CollidePolygonAndCircle(
 		manifold->localNormal = normals[normalIndex];
 		manifold->localPoint = 0.5f * (v1 + v2);
 		manifold->points[0].localPoint = circleB->m_p;
+		#ifdef __DUETTO__
+		manifold->points[0].id.setKey(0);
+		#else
 		manifold->points[0].id.key = 0;
+		#endif
 		return;
 	}
 
@@ -118,7 +127,11 @@ void b2CollidePolygonAndCircle(
 		manifold->localNormal.Normalize();
 		manifold->localPoint = v1;
 		manifold->points[0].localPoint = circleB->m_p;
+		#ifdef __DUETTO__
+		manifold->points[0].id.setKey(0);
+		#else
 		manifold->points[0].id.key = 0;
+		#endif
 	}
 	else if (u2 <= 0.0f)
 	{
@@ -133,7 +146,11 @@ void b2CollidePolygonAndCircle(
 		manifold->localNormal.Normalize();
 		manifold->localPoint = v2;
 		manifold->points[0].localPoint = circleB->m_p;
+		#ifdef __DUETTO__
+		manifold->points[0].id.setKey(0);
+		#else
 		manifold->points[0].id.key = 0;
+		#endif
 	}
 	else
 	{
@@ -149,6 +166,10 @@ void b2CollidePolygonAndCircle(
 		manifold->localNormal = normals[vertIndex1];
 		manifold->localPoint = faceCenter;
 		manifold->points[0].localPoint = circleB->m_p;
+		#ifdef __DUETTO__
+		manifold->points[0].id.setKey(0);
+		#else
 		manifold->points[0].id.key = 0;
+		#endif
 	}
 }

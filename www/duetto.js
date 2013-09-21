@@ -1,0 +1,1 @@
+/opt/duetto/share/duetto/examples/duetto.js

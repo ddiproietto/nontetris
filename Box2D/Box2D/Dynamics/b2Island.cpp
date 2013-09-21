@@ -162,22 +162,39 @@ b2Island::b2Island(
 	m_allocator = allocator;
 	m_listener = listener;
 
+	#ifdef __DUETTO__
+	m_bodies = new b2Body* [bodyCapacity];
+	m_contacts = new b2Contact* [contactCapacity];
+	m_joints = new b2Joint* [jointCapacity];
+
+	m_velocities = new b2Velocity [m_bodyCapacity];
+	m_positions = new b2Position [m_bodyCapacity];
+	#else
 	m_bodies = (b2Body**)m_allocator->Allocate(bodyCapacity * sizeof(b2Body*));
 	m_contacts = (b2Contact**)m_allocator->Allocate(contactCapacity	 * sizeof(b2Contact*));
 	m_joints = (b2Joint**)m_allocator->Allocate(jointCapacity * sizeof(b2Joint*));
 
 	m_velocities = (b2Velocity*)m_allocator->Allocate(m_bodyCapacity * sizeof(b2Velocity));
 	m_positions = (b2Position*)m_allocator->Allocate(m_bodyCapacity * sizeof(b2Position));
+	#endif
 }
 
 b2Island::~b2Island()
 {
+	#ifdef __DUETTO__
+	delete [] m_positions;
+	delete [] m_velocities;
+	delete [] m_joints;
+	delete [] m_contacts;
+	delete [] m_bodies;
+	#else
 	// Warning: the order should reverse the constructor order.
 	m_allocator->Free(m_positions);
 	m_allocator->Free(m_velocities);
 	m_allocator->Free(m_joints);
 	m_allocator->Free(m_contacts);
 	m_allocator->Free(m_bodies);
+	#endif
 }
 
 void b2Island::Solve(b2Profile* profile, const b2TimeStep& step, const b2Vec2& gravity, bool allowSleep)

@@ -21,6 +21,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <cstdlib>
 
 #define B2_NOT_USED(x) ((void)(x))
 #define b2Assert(A) assert(A)
@@ -127,7 +128,9 @@ typedef double float64;
 // Memory Allocation
 
 /// Implement this function to use your own memory allocator.
-void* b2Alloc(int32 size);
+// Memory allocators. Modify these to use your own allocator.
+#define b2Alloc(size) malloc(size)
+//void* b2Alloc(int32 size);
 
 /// If you implement b2Alloc, you should also implement this function.
 void b2Free(void* mem);

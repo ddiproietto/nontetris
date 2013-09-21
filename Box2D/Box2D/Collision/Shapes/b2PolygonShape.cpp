@@ -21,8 +21,12 @@
 
 b2Shape* b2PolygonShape::Clone(b2BlockAllocator* allocator) const
 {
+	#ifdef __DUETTO__
+	b2PolygonShape* clone = new b2PolygonShape;
+	#else
 	void* mem = allocator->Allocate(sizeof(b2PolygonShape));
 	b2PolygonShape* clone = new (mem) b2PolygonShape;
+	#endif
 	*clone = *this;
 	return clone;
 }

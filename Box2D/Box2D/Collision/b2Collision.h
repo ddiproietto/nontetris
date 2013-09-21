@@ -49,13 +49,30 @@ struct b2ContactFeature
 	uint8 typeB;		///< The feature type on shapeB
 };
 
+#ifdef __DUETTO__
+struct b2ContactID
+{
+	b2ContactFeature cf;
+	uint32 getKey() const
+	{
+		return static_cast<uint32>(cf.indexA) | (static_cast<uint32>(cf.indexB)<<8) | (static_cast<uint32>(cf.typeA)<<16) | (static_cast<uint32>(cf.typeB)<<24);
+	}
+	void setKey(uint32 key)
+	{
+		cf.indexA = static_cast<uint8>(key & 0xFF);
+		cf.indexB = static_cast<uint8>((key>>8) & 0xFF);
+		cf.typeA = static_cast<uint8>((key>>16) & 0xFF);
+		cf.typeB = static_cast<uint8>((key>>24) & 0xFF);
+	}
+};
+#else
 /// Contact ids to facilitate warm starting.
 union b2ContactID
 {
 	b2ContactFeature cf;
 	uint32 key;					///< Used to quickly compare contact ids.
 };
-
+#endif
 /// A manifold point is a contact point belonging to a contact
 /// manifold. It holds details related to the geometry and dynamics
 /// of the contact points.

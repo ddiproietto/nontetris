@@ -1,18 +1,28 @@
+#ifdef __DUETTO__
+#include <duetto/client.h>
+#include <duetto/clientlib.h>
+#endif
+
 #include <cstdlib>
-#include <iostream>
 #include <array>
+#include <list>
 
 #include "NontetrisConfig.h"
 
 #include "polygon.h"
 #include "piece.h"
-#include "physichandler.h"
 #include "graphichandler.h"
+#include "physichandler.h"
 #include "inputhandler.h"
 #include "myutil.h"
 
 #ifdef EMSCRIPTEN
 #include <emscripten.h>
+#elif defined(__DUETTO__)
+//Bridge method implemented in JS since feature testing is not yet supported by Duetto
+extern "C" {
+	void compatRequestAnimationFrame(const client::EventListener&);
+}
 #else
 #include "timemanager.h"
 #endif
@@ -31,14 +41,21 @@ namespace
 		piece <float> ({ { -1.5,-1}, { 0.5,-1}, { 0.5,0}, { 1.5,0}, { 1.5,1}, { -0.5,1}, { -0.5,0}, { -1.5,0} }, 5), //Z
 		piece <float> ({ { -1.5,-1}, { 1.5,-1}, { 1.5,0}, { 0.5,0}, { 0.5,1}, { -0.5,1}, { -0.5,0}, { -1.5,0} }, 6) //T
 	);
+	struct GamePiece
+	{
+		PhysicPiece * php;
+		GraphicPiece * grp;
+	};
+	list<GamePiece> ingamepieces;
 
-	#ifdef EMSCRIPTEN
+	#if defined(EMSCRIPTEN) || defined(__DUETTO__)
 	void newrandompiece(PhysicHandler & phh, GraphicHandler & grh)
 	{
 		auto & p = pieces[rand()%pieces.size()];
-		phh.createpiece(p, 5.125, -1, 0.0, grh.createpiece(p));
+		auto * php = phh.createpiece(p, 5.125, -1, 0.0, NULL);
+		auto * grp = grh.createpiece(p);
+		ingamepieces.insert(ingamepieces.begin(), GamePiece{.php=php,.grp=grp});
 	}
-
 	#else
 	std::random_device rd;
 	std::mt19937 gen(rd());
@@ -47,7 +64,9 @@ namespace
 	void newrandompiece(PhysicHandler & phh, GraphicHandler & grh)
 	{
 		auto & p = pieces[dis(gen)];
-		phh.createpiece(p, 5.125, -1, 0.0, grh.createpiece(p));
+		auto * php = phh.createpiece(p, 5.125, -1, 0.0, NULL);
+		auto * grp = grh.createpiece(p);
+		ingamepieces.insert(ingamepieces.begin(), GamePiece{.php=php,.grp=grp});
 	}
 	#endif
 }
@@ -65,7 +84,17 @@ bool one_iteration(PhysicHandler & phh, GraphicHandler & grh)
 	//phh.debugprint();
 	//phh.drawbodies([](float x, float y, float rot, void * d){cout <<"(" << x << ", " << y << "); rot:"<< rot << endl;});
 	//running = grh.render(std::bind(&PhysicHandler::drawbodies, &phh, std::placeholders::_1));
-	grh.render([& phh](std::function<void(float x, float y, float rot, void * d)> x){phh.drawbodies(x);}); //also sleeps because of vsync(not on every platform)
+	//grh.render([& phh](std::function<void(float x, float y, float rot, void * d)> x){phh.drawbodies(x);}); //also sleeps because of vsync(not on every platform)
+	grh.render([](std::function<void(float x, float y, float rot, GraphicPiece * d)> x)
+	{
+		for(auto i : ingamepieces)
+		{
+			auto php = i.php;
+			auto grp = i.grp;
+			x(php->getX(),php->getY(),php->getRot(),grp);
+		}
+			
+	});
 	process_input([&]()//EXIT
 		{
 			running = false;
@@ -94,21 +123,56 @@ bool one_iteration(PhysicHandler & phh, GraphicHandler & grh)
 	);
 	return running;
 }
-#ifdef EMSCRIPTEN
+#if defined(EMSCRIPTEN) || defined(__DUETTO__)
 PhysicHandler * pphh;
 GraphicHandler * pgrh;
 
 void oneiterationwrapper()
 {
 	one_iteration(*pphh,*pgrh);
-}
 
+	#if defined(__DUETTO__)
+	//client::console.log("HEREIAM");
+	compatRequestAnimationFrame(client::Callback(oneiterationwrapper));
+	#endif
+}
+#endif
+
+#ifdef __DUETTO__
+char argv1 [] = "nontetris";
+char * argv [] = {argv1};
+int main(int argc, char * argv[]);
+void texloaded()
+{
+	client::console.log("texloaded");
+	main(1, argv);
+}
+void domLoaded()
+{
+	client::console.log("domloaded");
+	/*
+	auto elem = client::document.getElementById("texcontainer");
+	elem->addEventListener("load",client::Callback(texloaded));
+	*/
+	texloaded();
+}
+int webMain() [[client]]
+{
+	client::document.addEventListener("DOMContentLoaded",client::Callback(domLoaded));
+
+	return 0;
+}
 #endif
 
 int main(int argc, char * argv[])
 {
 	PhysicHandler phh(10.25, 18);
+	#ifndef __DUETTO__
 	GraphicHandler grh(600,540);
+	#else
+	GraphicHandler grh(512,512);
+	#endif
+
 
 	newrandompiece(phh, grh);
 
@@ -116,6 +180,10 @@ int main(int argc, char * argv[])
 	pphh = &phh;
 	pgrh = &grh;
 	emscripten_set_main_loop( oneiterationwrapper, 0, false);
+	#elif defined(__DUETTO__)
+	pphh = &phh;
+	pgrh = &grh;
+	compatRequestAnimationFrame(client::Callback(oneiterationwrapper));
 	#else
 	bool running = true;
 	MyTime next;

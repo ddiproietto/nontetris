@@ -78,7 +78,11 @@ void b2CollideEdgeAndCircle(b2Manifold* manifold,
 		manifold->type = b2Manifold::e_circles;
 		manifold->localNormal.SetZero();
 		manifold->localPoint = P;
+		#ifdef __DUETTO__
+		manifold->points[0].id.setKey(0);
+		#else
 		manifold->points[0].id.key = 0;
+		#endif
 		manifold->points[0].id.cf = cf;
 		manifold->points[0].localPoint = circleB->m_p;
 		return;
@@ -116,7 +120,11 @@ void b2CollideEdgeAndCircle(b2Manifold* manifold,
 		manifold->type = b2Manifold::e_circles;
 		manifold->localNormal.SetZero();
 		manifold->localPoint = P;
+		#ifdef __DUETTO__
+		manifold->points[0].id.setKey(0);
+		#else
 		manifold->points[0].id.key = 0;
+		#endif
 		manifold->points[0].id.cf = cf;
 		manifold->points[0].localPoint = circleB->m_p;
 		return;
@@ -146,7 +154,11 @@ void b2CollideEdgeAndCircle(b2Manifold* manifold,
 	manifold->type = b2Manifold::e_faceA;
 	manifold->localNormal = n;
 	manifold->localPoint = A;
+	#ifdef __DUETTO__
+	manifold->points[0].id.setKey(0);
+	#else
 	manifold->points[0].id.key = 0;
+	#endif
 	manifold->points[0].id.cf = cf;
 	manifold->points[0].localPoint = circleB->m_p;
 }

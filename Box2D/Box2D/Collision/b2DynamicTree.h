@@ -37,11 +37,15 @@ struct b2TreeNode
 
 	void* userData;
 
+	#ifdef __DUETTO__
+	int32 parent_or_next;
+	#else
 	union
 	{
 		int32 parent;
 		int32 next;
 	};
+	#endif
 
 	int32 child1;
 	int32 child2;

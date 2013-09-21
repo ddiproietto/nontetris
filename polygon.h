@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <array>
-#include <iostream>
 #include <iterator>
 #include <cmath>
 
@@ -20,11 +19,13 @@ struct point
 	{
 		return sqrt(((p2.y-p1.y)*(p2.y-p1.y)+(p2.x-p1.x)*(p2.x-p1.x))*((p3.y-p2.y)*(p3.y-p2.y)+(p3.x-p2.x)*(p3.x-p2.x)));
 	}
+	/*
 	friend std::ostream & operator<< (std::ostream & os, point<T> obj)
 	{
 		os<<'('<<obj.x<<", "<<obj.y<<')';
 		return os;
 	}
+	*/
 };
 
 template <class T = float>
@@ -135,10 +136,12 @@ public:
 		
 	}
 
+	/*
 	friend std::ostream & operator<< (std::ostream & os, const polygon<T> & obj)
 	{
 		std::copy(obj.vertices.begin(), obj.vertices.end(), std::ostream_iterator<point<T>>(os, " "));
 		return os;
 	}
+	*/
 };
 #endif //_POLYGON_H

@@ -3,6 +3,8 @@
 
 #include <functional>
 
+#ifndef __DUETTO__
+
 #include <GL/glfw.h>
 
 void process_input(std::function<void()> exit, std::function<void()> left, std::function<void()> right, std::function<void()> down, std::function<void()> z, std::function<void()> x)
@@ -30,4 +32,11 @@ void process_input(std::function<void()> exit, std::function<void()> left, std::
 		x();
 	}
 }
+#else
+void process_input(std::function<void()> exit, std::function<void()> left, std::function<void()> right, std::function<void()> down, std::function<void()> z, std::function<void()> x)
+{
+
+}
+#endif
+
 #endif //_INPUT_HANDLER

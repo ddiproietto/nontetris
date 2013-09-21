@@ -40,8 +40,14 @@ public:
 	b2StackAllocator();
 	~b2StackAllocator();
 
+#ifdef __DUETTO__
+private:
+#endif
 	void* Allocate(int32 size);
 	void Free(void* p);
+#ifdef __DUETTO__
+public:
+#endif
 
 	int32 GetMaxAllocation() const;
 
