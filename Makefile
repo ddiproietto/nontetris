@@ -5,6 +5,7 @@ all:
 	-rm duettobuild/output.js
 	/opt/duetto/bin/duetto-compiler duettobuild/output.bc
 	mv duettobuild/output.js duettobuild/libnontetris.js
+	sed -i -e 's/print(/console.log(/' duettobuild/libnontetris.js
 
 clean:
 	make -C duettobuild/ clean

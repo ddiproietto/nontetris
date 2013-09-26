@@ -7,6 +7,7 @@
 using namespace client;
 
 void myteximage2Dnull(WebGLRenderingContext* gl, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type);
+void myglbindnullframebuffer(WebGLRenderingContext* gl);
 WebGLRenderingContext* gl;
 
 //TODO: limited
@@ -27,7 +28,7 @@ WebGLTexture * gaTexture[200];
 unsigned int gaiTexture = 0;
 
 WebGLFramebuffer * gaFramebuffer[200];
-unsigned int gaiFramebuffer = 0;
+unsigned int gaiFramebuffer = 1; //0 is reserved
 
 WebGLBuffer * gaBuffer[200];
 unsigned int gaiBuffer = 0;
@@ -152,7 +153,10 @@ GL_APICALL void         GL_APIENTRY glGenFramebuffers (GLsizei n, GLuint* frameb
 
 GL_APICALL void         GL_APIENTRY glBindFramebuffer (GLenum target, GLuint framebuffer)
 {
-	gl->bindFramebuffer(target, gaFramebuffer[framebuffer]);
+	if( framebuffer == 0)
+		myglbindnullframebuffer(gl);
+	else
+		gl->bindFramebuffer(target, gaFramebuffer[framebuffer]);
 }
 
 GL_APICALL void         GL_APIENTRY glFramebufferTexture2D (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)

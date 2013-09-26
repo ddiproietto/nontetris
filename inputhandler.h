@@ -3,40 +3,23 @@
 
 #include <functional>
 
-#ifndef __DUETTO__
 
-#include <GL/glfw.h>
-
-void process_input(std::function<void()> exit, std::function<void()> left, std::function<void()> right, std::function<void()> down, std::function<void()> z, std::function<void()> x)
+class InputHandler
 {
-	if(glfwGetKey( GLFW_KEY_ESC ) || !glfwGetWindowParam( GLFW_OPENED ))
-		exit();
-	if(glfwGetKey( GLFW_KEY_LEFT))
-	{
-		left();
-	}
-	if(glfwGetKey( GLFW_KEY_RIGHT))
-	{
-		right();
-	}
-	if(glfwGetKey( GLFW_KEY_DOWN))
-	{
-		down();
-	}
-	if(glfwGetKey('Z') || glfwGetKey('W') || glfwGetKey('Y'))
-	{
-		z();
-	}
-	if(glfwGetKey('X'))
-	{
-		x();
-	}
-}
-#else
-void process_input(std::function<void()> exit, std::function<void()> left, std::function<void()> right, std::function<void()> down, std::function<void()> z, std::function<void()> x)
-{
-
-}
-#endif
+	#ifdef __DUETTO__
+	static bool k_down;
+	static bool k_left;
+	static bool k_right;
+	static bool k_z;
+	static bool k_x;
+	#endif
+public:
+	InputHandler();
+	void process_input(std::function<void()> exit, std::function<void()> left, std::function<void()> right, std::function<void()> down, std::function<void()> z, std::function<void()> x);
+	#ifdef __DUETTO__
+	static void keydown(client::KeyboardEvent * _e);
+	static void keyup(client::KeyboardEvent * _e);
+	#endif
+};
 
 #endif //_INPUT_HANDLER

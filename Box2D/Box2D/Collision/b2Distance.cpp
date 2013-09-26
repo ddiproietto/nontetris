@@ -22,6 +22,13 @@
 #include <Box2D/Collision/Shapes/b2ChainShape.h>
 #include <Box2D/Collision/Shapes/b2PolygonShape.h>
 
+//TODO:ugly
+#ifdef __DUETTO__
+#define m_v1 m_vxx[0]
+#define m_v2 m_vxx[1]
+#define m_v3 m_vxx[2]
+#endif
+
 // GJK using Voronoi regions (Christer Ericson) and Barycentric coordinates.
 int32 b2_gjkCalls, b2_gjkIters, b2_gjkMaxIters;
 
@@ -265,7 +272,12 @@ struct b2Simplex
 	void Solve2();
 	void Solve3();
 
+	#ifdef __DUETTO__
+	b2SimplexVertex m_vxx[3];
+	#else
 	b2SimplexVertex m_v1, m_v2, m_v3;
+	#endif
+
 	int32 m_count;
 };
 

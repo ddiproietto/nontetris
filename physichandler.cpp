@@ -1,3 +1,8 @@
+#ifdef __DUETTO__
+#include <duetto/client.h>
+#include <duetto/clientlib.h>
+#include <stdio.h>
+#endif
 #include "physichandler.h"
 #include "NontetrisConfig.h"
 
@@ -189,4 +194,5 @@ void PhysicHandler::drawbodies(std::function <void (float, float, float, void *)
 		draw(pos.x, pos.y, rot ,userdata->otherdata);
 
 	}
+
 }

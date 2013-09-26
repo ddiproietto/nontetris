@@ -9,3 +9,7 @@ function __Z16myteximage2DnullPN6client21WebGLRenderingContextEjiiiiijj(gl,p1,p2
 {
 	gl.texImage2D(p1,p2,p3,p4,p5,p6,p7,p8,null);
 }
+function __Z23myglbindnullframebufferPN6client21WebGLRenderingContextE(gl)
+{
+	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+}

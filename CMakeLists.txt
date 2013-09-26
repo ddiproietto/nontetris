@@ -13,12 +13,12 @@ include_directories("${PROJECT_BINARY_DIR}")
 
 
 if(DEFINED DUETTO)
-	set (MY_SOURCES graphichandler.cpp duettogl.cpp)
+	set (MY_SOURCES graphichandler.cpp duettogl.cpp inputhandler.cpp)
 	add_library (nontetris nontetris.cpp physichandler.cpp ${MY_SOURCES} ${EXTERNAL_SOURCES})
 	target_link_libraries(nontetris cxxabi)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O1")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
 else(DEFINED DUETTO)
-	set (MY_SOURCES graphichandler.cpp)
+	set (MY_SOURCES graphichandler.cpp inputhandler.cpp)
 	#include SOIL library
 	set (EXTERNAL_SOURCES SOIL/SOIL.c SOIL/image_DXT.c SOIL/image_helper.c SOIL/stb_image_aug.c)
 	add_executable (nontetris nontetris.cpp physichandler.cpp ${MY_SOURCES} ${EXTERNAL_SOURCES})

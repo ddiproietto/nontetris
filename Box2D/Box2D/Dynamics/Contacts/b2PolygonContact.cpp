@@ -23,6 +23,9 @@
 #include <Box2D/Dynamics/b2Fixture.h>
 #include <Box2D/Dynamics/b2WorldCallbacks.h>
 
+#ifdef __DUETTO__
+#include <Box2D/Collision/Shapes/b2PolygonShape.h>
+#endif
 #include <new>
 using namespace std;
 
@@ -55,7 +58,13 @@ b2PolygonContact::b2PolygonContact(b2Fixture* fixtureA, b2Fixture* fixtureB)
 
 void b2PolygonContact::Evaluate(b2Manifold* manifold, const b2Transform& xfA, const b2Transform& xfB)
 {
+	#ifdef __DUETTO__
+	b2CollidePolygons(	manifold,
+						static_cast<b2PolygonShape*>(m_fixtureA->GetShape()), xfA,
+						static_cast<b2PolygonShape*>(m_fixtureB->GetShape()), xfB);
+	#else
 	b2CollidePolygons(	manifold,
 						(b2PolygonShape*)m_fixtureA->GetShape(), xfA,
 						(b2PolygonShape*)m_fixtureB->GetShape(), xfB);
+	#endif
 }

@@ -143,7 +143,7 @@ std::string file2string(const std::string & filename)
 		"void main(void)\n"
 		"{\n"
 		"	gl_FragColor = texture2D(myTexture, texture_coordinate);//vec4(1.0,1.0,1.0,1.0);\n"
-		"	//gl_FragColor = vec4(0.0,0.0,1.0,1.0);\n"
+		"	//gl_FragColor = vec4(0.0,1.0,0.0,1.0);\n"
 		"}\n"
 			;
 	else if(filename == "shaderglobal.vert")
@@ -275,7 +275,7 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 
 	#ifndef __DUETTO__
 	unsigned char * image =
-		SOIL_load_image("../imgs/newgamebackground_pc.png" , &twidth, &theight, 0, SOIL_LOAD_RGB );
+		SOIL_load_image("../imgs/gamebackground.png" , &twidth, &theight, 0, SOIL_LOAD_RGB );
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, twidth, theight, 0, GL_RGB,
 			GL_UNSIGNED_BYTE, image );
 	SOIL_free_image_data( image );
@@ -327,60 +327,37 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	/*
 	#ifndef __DUETTO__
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, log(fsaa)/log(2));
 	#endif
-	*/
-	//FIND smallest power of two greater than width or height
-	int potfsaawidth = 1;
-	int potfsaaheight = 1;
-	for (potfsaawidth = 1; potfsaawidth<=8192; potfsaawidth*=2)
-	{
-		if(potfsaawidth > fsaa*width)
-			break;
-	}
-	for (potfsaaheight = 1; potfsaaheight<=8192; potfsaaheight*=2)
-	{
-		if(potfsaaheight > fsaa*height)
-			break;
-	}
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fsaa*width, fsaa*height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);//NPOT
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, potfsaawidth, potfsaaheight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 4096, 4096, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fsaa*width, fsaa*height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);//TODO: check??duetto???
 	//glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE); // automatic mipmap: deprecated
 	glBindTexture(GL_TEXTURE_2D, 0);
 	
 	glGenFramebuffers(1, &fbo);
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	//glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex_fbo, 0);
+	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex_fbo, 0);
 	//WARNING:no depth test in the texture, should use another renderbuffer
 	
 	#ifndef __DUETTO__
 	fbo_used = (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 	if(!fbo_used)
 		std::cerr << "error initializing fbo" << std::endl;
+	fbo_used = false;
 	#else
-	fbo_used = true;
+	fbo_used = false;
 	#endif
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	glGenBuffers(1, &vbo_main_rect);
 	glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_main_rect);
-	float rapx = float(potfsaawidth) / (fsaa*width);
-	float rapy = float(potfsaaheight) / (fsaa*height);
-	GLfloat vertices [] = {-0.8, -1, -0.8, 1, 0.2, -1, 0.2, 1, 
-		0, 0, 0, 1/rapy, 1/rapx,0, 1/rapx,1/rapy};
+	GLfloat vertices [] = {-0.8, -1, -0.8, 1, 0.2, -1, 0.2, 1, 0, 0, 0, 1, 1,0, 1,1};
 	glBufferData(GL_ARRAY_BUFFER_ARB, 4*2*2*sizeof(float), vertices, GL_STATIC_DRAW_ARB);
 
 	glGenBuffers(1, &vbo_all_screen);
 	glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_all_screen);
-	rapx = 256.0/160.0;
-	rapy = 256.0/144.0;
-	GLfloat vertices2 [] = {-1, -1, -1, 1, 1, -1, 1, 1,
-		0, 1/rapy, 0, 0, 1/rapx,1/rapy, 1/rapx,0};
+	GLfloat vertices2 [] = {-1, -1, -1, 1, 1, -1, 1, 1, 0, 1, 0, 0, 1,1, 1,0};
 	glBufferData(GL_ARRAY_BUFFER_ARB, 4*2*2*sizeof(float), vertices2, GL_STATIC_DRAW_ARB);
 
 }
@@ -448,10 +425,10 @@ bool GraphicHandler::render(std::function< void(std::function<void(float x, floa
 	if(fbo_used)
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	}
 		glViewport(0, 0, fsaa*width, fsaa*height);
 		glUseProgram(sp);
-	}
-	glClearColor(1.0, 1.0, 1.0, 1.0);
+	glClearColor(0.0, 0.0, 1.0, 1.0);
 	glClear( GL_COLOR_BUFFER_BIT );
 	glEnableVertexAttribArray(aVertexPositionLoc);
 	allbodies([this](float x, float y, float rot, GraphicPiece * d)

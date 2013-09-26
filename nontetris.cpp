@@ -1,6 +1,8 @@
 #ifdef __DUETTO__
 #include <duetto/client.h>
 #include <duetto/clientlib.h>
+#include <stdio.h>
+#include <time.h>
 #endif
 
 #include <cstdlib>
@@ -51,7 +53,11 @@ namespace
 	#if defined(EMSCRIPTEN) || defined(__DUETTO__)
 	void newrandompiece(PhysicHandler & phh, GraphicHandler & grh)
 	{
+		#ifdef __DUETTO__
+		auto & p = pieces[int(client::Math.random()*pieces.size())];
+		#else
 		auto & p = pieces[rand()%pieces.size()];
+		#endif
 		auto * php = phh.createpiece(p, 5.125, -1, 0.0, NULL);
 		auto * grp = grh.createpiece(p);
 		ingamepieces.insert(ingamepieces.begin(), GamePiece{.php=php,.grp=grp});
@@ -71,7 +77,7 @@ namespace
 	#endif
 }
 
-bool one_iteration(PhysicHandler & phh, GraphicHandler & grh)
+bool one_iteration(PhysicHandler & phh, GraphicHandler & grh, InputHandler & inh)
 {
 	bool running = true;
 	//TODO: restructure main loop so that eventually multiple physic steps are done at once
@@ -92,10 +98,15 @@ bool one_iteration(PhysicHandler & phh, GraphicHandler & grh)
 			auto php = i.php;
 			auto grp = i.grp;
 			x(php->getX(),php->getY(),php->getRot(),grp);
+			/*
+			#ifdef __DUETTO__
+			printf("%d,%d\n", (int)(php->getX()*100),(int)(php->getY()*100));
+			#endif
+			*/
 		}
 			
 	});
-	process_input([&]()//EXIT
+	inh.process_input([&]()//EXIT
 		{
 			running = false;
 		},
@@ -123,13 +134,14 @@ bool one_iteration(PhysicHandler & phh, GraphicHandler & grh)
 	);
 	return running;
 }
-#if defined(EMSCRIPTEN) || defined(__DUETTO__)
 PhysicHandler * pphh;
 GraphicHandler * pgrh;
+InputHandler * pinh;
+#if defined(EMSCRIPTEN) || defined(__DUETTO__)
 
 void oneiterationwrapper()
 {
-	one_iteration(*pphh,*pgrh);
+	one_iteration(*pphh, *pgrh, *pinh);
 
 	#if defined(__DUETTO__)
 	//client::console.log("HEREIAM");
@@ -142,6 +154,7 @@ void oneiterationwrapper()
 char argv1 [] = "nontetris";
 char * argv [] = {argv1};
 int main(int argc, char * argv[]);
+
 void texloaded()
 {
 	client::console.log("texloaded");
@@ -166,30 +179,37 @@ int webMain() [[client]]
 
 int main(int argc, char * argv[])
 {
+	pphh = new PhysicHandler (10.25, 18);
+	pgrh = new GraphicHandler (600,540);
+	pinh = new InputHandler();
+	/*
 	PhysicHandler phh(10.25, 18);
-	#ifndef __DUETTO__
 	GraphicHandler grh(600,540);
-	#else
-	GraphicHandler grh(512,512);
-	#endif
-
+	*/
+	PhysicHandler &phh = *pphh;
+	GraphicHandler &grh = *pgrh;
+	InputHandler &inh = *pinh;
 
 	newrandompiece(phh, grh);
 
 	#ifdef EMSCRIPTEN
+	/*
 	pphh = &phh;
 	pgrh = &grh;
+	*/
 	emscripten_set_main_loop( oneiterationwrapper, 0, false);
 	#elif defined(__DUETTO__)
+	/*
 	pphh = &phh;
 	pgrh = &grh;
+	*/
 	compatRequestAnimationFrame(client::Callback(oneiterationwrapper));
 	#else
 	bool running = true;
 	MyTime next;
 	while (running)
 	{
-		running = one_iteration(phh, grh);
+		running = one_iteration(phh, grh, inh);
 		next+=(MyTime(0,1000000000.0/60.0));
 		next.sleepuntil();
 	}
