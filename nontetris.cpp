@@ -1,8 +1,6 @@
 #ifdef __DUETTO__
 #include <duetto/client.h>
 #include <duetto/clientlib.h>
-#include <stdio.h>
-#include <time.h>
 #endif
 
 #include <cstdlib>
@@ -98,11 +96,6 @@ bool one_iteration(PhysicHandler & phh, GraphicHandler & grh, InputHandler & inh
 			auto php = i.php;
 			auto grp = i.grp;
 			x(php->getX(),php->getY(),php->getRot(),grp);
-			/*
-			#ifdef __DUETTO__
-			printf("%d,%d\n", (int)(php->getX()*100),(int)(php->getY()*100));
-			#endif
-			*/
 		}
 			
 	});
@@ -144,7 +137,6 @@ void oneiterationwrapper()
 	one_iteration(*pphh, *pgrh, *pinh);
 
 	#if defined(__DUETTO__)
-	//client::console.log("HEREIAM");
 	compatRequestAnimationFrame(client::Callback(oneiterationwrapper));
 	#endif
 }
@@ -213,6 +205,9 @@ int main(int argc, char * argv[])
 		next+=(MyTime(0,1000000000.0/60.0));
 		next.sleepuntil();
 	}
+	delete pinh;
+	delete pgrh;
+	delete pinh;
 	#endif
 	return EXIT_SUCCESS;
 }

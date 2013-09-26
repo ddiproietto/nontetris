@@ -11,17 +11,17 @@ configure_file (
 
 include_directories("${PROJECT_BINARY_DIR}")
 
+set(MY_SOURCES nontetris.cpp physichandler.cpp inputhandler.cpp graphichandler.cpp inputhandler.cpp)
 
 if(DEFINED DUETTO)
-	set (MY_SOURCES graphichandler.cpp duettogl.cpp inputhandler.cpp)
-	add_library (nontetris nontetris.cpp physichandler.cpp ${MY_SOURCES} ${EXTERNAL_SOURCES})
+	set (MY_SOURCES ${MY_SOURCES} duettogl.cpp)
+	add_library (nontetris ${MY_SOURCES})
 	target_link_libraries(nontetris cxxabi)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
 else(DEFINED DUETTO)
-	set (MY_SOURCES graphichandler.cpp inputhandler.cpp)
 	#include SOIL library
 	set (EXTERNAL_SOURCES SOIL/SOIL.c SOIL/image_DXT.c SOIL/image_helper.c SOIL/stb_image_aug.c)
-	add_executable (nontetris nontetris.cpp physichandler.cpp ${MY_SOURCES} ${EXTERNAL_SOURCES})
+	add_executable (nontetris ${MY_SOURCES} ${EXTERNAL_SOURCES})
 endif(DEFINED DUETTO)
 
 
@@ -56,10 +56,12 @@ target_link_libraries (nontetris Box2D)
 
 
 if(NOT DEFINED DUETTO)
-##OpenGL##
-find_package(OpenGL REQUIRED)
-target_link_libraries (nontetris ${OPENGL_LIBRARIES})
-##END OpenGL##
+	if(NOT DEFINED EMSCRIPTEN)
+	##OpenGL##
+	find_package(OpenGL REQUIRED)
+	target_link_libraries (nontetris ${OPENGL_LIBRARIES})
+	##END OpenGL##
+	endif(NOT DEFINED EMSCRIPTEN)
 
 ##GLFW##
 find_package(PkgConfig REQUIRED)

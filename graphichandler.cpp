@@ -93,6 +93,7 @@ void eye(GLfloat * out)
 
 std::string file2string(const std::string & filename)
 {
+	#define WEBPREAMBLE "precision mediump float;\n"
 	#ifndef __DUETTO__
 	std::ifstream t(filename);
 	if(!t)
@@ -106,9 +107,13 @@ std::string file2string(const std::string & filename)
 	t.seekg(0, std::ios::beg);
 
 	str.assign((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
-	return str;
+	#ifdef EMSCRIPTEN
+	return std::string(WEBPREAMBLE) + str;
 	#else
-	#define WEBPREAMBLE "precision mediump float;\n"
+	return str;
+	#endif
+
+	#else
 
 	if(filename == "shader.vert")
 		return

@@ -10,10 +10,7 @@ void myteximage2Dnull(WebGLRenderingContext* gl, GLenum target, GLint level, GLi
 void myglbindnullframebuffer(WebGLRenderingContext* gl);
 WebGLRenderingContext* gl;
 
-//TODO: limited
 
-//WebGLObject * ga[200];
-//unsigned int gai;
 
 WebGLShader * gaShader[200];
 unsigned int gaiShader = 0;
@@ -44,8 +41,6 @@ GLuint glCreateShader(GLenum type)
 {
 	gaShader[gaiShader] = gl->createShader(type);
 	return gaiShader ++;
-//	ga[gai] = static_cast<WebGLObject *>(gl->createShader(type));
-//	return gai++;
 }
 
 void glShaderSource(GLuint shader,  GLsizei count,  const GLchar * const * string,  const GLint *length)
