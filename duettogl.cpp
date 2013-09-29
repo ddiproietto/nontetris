@@ -132,7 +132,7 @@ GL_APICALL void         GL_APIENTRY glBufferData (GLenum target, GLsizeiptr size
 GL_APICALL void         GL_APIENTRY glTexImage2D (GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels)
 {
 	if(pixels == NULL)
-		myteximage2Dnull(gl, target, level, internalformat, width, height, border, format, type);
+		gl->texImage2D(target, level, internalformat, width, height, border, format, type, NULL);
 	else
 		gl->texImage2D(target, level, internalformat, width, height, border, format, type, (ArrayBufferView *)pixels);
 }
@@ -149,7 +149,7 @@ GL_APICALL void         GL_APIENTRY glGenFramebuffers (GLsizei n, GLuint* frameb
 GL_APICALL void         GL_APIENTRY glBindFramebuffer (GLenum target, GLuint framebuffer)
 {
 	if( framebuffer == 0)
-		myglbindnullframebuffer(gl);
+		gl->bindFramebuffer(target, NULL);
 	else
 		gl->bindFramebuffer(target, gaFramebuffer[framebuffer]);
 }

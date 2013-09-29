@@ -1,6 +1,7 @@
 #ifdef __DUETTO__
 #include <duetto/client.h>
 #include <duetto/clientlib.h>
+#include "texloader.h"
 #endif
 
 #include <cstdlib>
@@ -159,11 +160,26 @@ void domLoaded()
 	auto elem = client::document.getElementById("texcontainer");
 	elem->addEventListener("load",client::Callback(texloaded));
 	*/
-	texloaded();
+
+	//FileLoader::setcallback(texloaded);
+	//FileLoader::load({"shader.frag","shader.vert","shaderglobal.frag","shaderglobal.vert"});
+	//FileLoader::go();
+	auto texfiles = make_array(
+	"imgs/newgamebackground.png",
+	"imgs/pieces/1.png",
+	"imgs/pieces/2.png",
+	"imgs/pieces/3.png",
+	"imgs/pieces/4.png",
+	"imgs/pieces/5.png",
+	"imgs/pieces/6.png",
+	"imgs/pieces/7.png"
+	);
+	loadtextures(texloaded, texfiles);
+	//texloaded();
 }
 int webMain() [[client]]
 {
-	client::document.addEventListener("DOMContentLoaded",client::Callback(domLoaded));
+	client::document.addEventListener("DOMContentLoaded", client::Callback(domLoaded));
 
 	return 0;
 }

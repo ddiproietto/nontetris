@@ -15,6 +15,7 @@ bool InputHandler::k_left = false;
 bool InputHandler::k_right = false;
 bool InputHandler::k_z = false;
 bool InputHandler::k_x = false;
+
 InputHandler::InputHandler()
 {
 	/*

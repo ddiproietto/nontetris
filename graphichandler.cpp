@@ -285,7 +285,7 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 			GL_UNSIGNED_BYTE, image );
 	SOIL_free_image_data( image );
 	#else
-	gl->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById("background")));
+	gl->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById("imgs/newgamebackground.png")));
 	//TODO:load textures for DUETTO
 	#endif
 	glGenerateMipmap( GL_TEXTURE_2D );
@@ -313,9 +313,10 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 		SOIL_free_image_data( image );
 		#else
 		//TODO:load textures for DUETTO
-		client::String tname("piece");
-		client::String * pname = tname.concat(i+1);
-		gl->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById(*pname)));
+		client::String prefixname("imgs/pieces/");
+		client::String * pname = prefixname.concat(i+1);
+		client::String * idname = pname->concat(".png");
+		gl->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById(*idname)));
 		#endif
 		glGenerateMipmap( GL_TEXTURE_2D );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR ); //TODO: test linear
