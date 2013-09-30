@@ -12,7 +12,7 @@
 
 class FileLoader
 {
-	//TODO: shouldn't be static, but i need it for lambda callback
+	//TODO: shouldn't be static.
 	#ifdef __DUETTO__
 	static int todo;
 	#endif
@@ -22,7 +22,7 @@ public:
 	static void load(const std::vector<std::string>);
 	static void go();
 	#ifdef __DUETTO__
-	static void recvonload(client::Event * e);
+	static void recvonload(client::Event * e, const char * file);
 	static client::String * getfilecontent(std::string);
 	#else
 	static std::string getfilecontent(std::string);

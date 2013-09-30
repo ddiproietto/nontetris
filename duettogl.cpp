@@ -49,6 +49,12 @@ void glShaderSource(GLuint shader,  GLsizei count,  const GLchar * const * strin
 	return gl->shaderSource(gaShader[shader], string[0]);
 }
 
+void glShaderSource(GLuint shader,  GLsizei count,  const String * const * string,  const GLint *length)
+{
+	//LIMITATION: count must be one, length must be NULL
+	return gl->shaderSource(gaShader[shader], *string[0]);
+}
+
 void glCompileShader(GLuint shader)
 {
 	gl->compileShader(gaShader[shader]);

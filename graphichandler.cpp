@@ -16,14 +16,11 @@
 #include <algorithm>
 #include <cmath>
 #ifndef __DUETTO__
-#include <fstream>
 #include <iostream>
 #include "SOIL/SOIL.h"
 #endif
 #include <string>
-
-#include "NontetrisConfig.h"
-
+#include "fileloader.h"
 
 
 #ifdef __DUETTO__
@@ -91,10 +88,11 @@ void eye(GLfloat * out)
 	out[15] = 1;
 }
 
+#define WEBPREAMBLE "precision mediump float;\n"
+
+#if 0
 std::string file2string(const std::string & filename)
 {
-	#define WEBPREAMBLE "precision mediump float;\n"
-	#ifndef __DUETTO__
 	std::ifstream t(filename);
 	if(!t)
 	{
@@ -112,79 +110,8 @@ std::string file2string(const std::string & filename)
 	#else
 	return str;
 	#endif
-
-	#else
-
-	if(filename == "shader.vert")
-		return
-			WEBPREAMBLE
-			
-		"attribute vec2 aVertexPosition;\n"
-
-		"uniform mat4 uPMatrix;\n"
-		"uniform vec4 uRTVec;\n"
-
-		"varying vec2 texture_coordinate;\n"
-
-		"void main(void)\n"
-		"{\n"
-		"	vec2 transl = vec2(uRTVec[2], uRTVec[3]);\n"
-		"	float sinrot = uRTVec[0];\n"
-		"	float cosrot = uRTVec[1];\n"
-
-		"	mat2 rotation = mat2(cosrot, sinrot, -sinrot, cosrot);\n"
-		"	gl_Position = uPMatrix * vec4(rotation*vec2(aVertexPosition[0],aVertexPosition[1])+transl, 0.0, 1.0);\n"
-		"	texture_coordinate = (aVertexPosition-vec2(2.0, 2.0))/4.0;\n"
-		"}\n"
-			;
-	else if(filename == "shader.frag")
-		return
-			WEBPREAMBLE
-			
-		"uniform sampler2D myTexture;\n"
-
-		"varying vec2 texture_coordinate;\n"
-
-		"void main(void)\n"
-		"{\n"
-		"	gl_FragColor = texture2D(myTexture, texture_coordinate);//vec4(1.0,1.0,1.0,1.0);\n"
-		"	//gl_FragColor = vec4(0.0,0.0,1.0,1.0);\n"
-		"}\n"
-			;
-	else if(filename == "shaderglobal.vert")
-		return
-			WEBPREAMBLE
-			
-		"attribute vec2 aVertexPosition;\n"
-		"attribute vec2 aTextureCoord;\n"
-
-		"varying vec2 texture_coordinate;\n"
-
-		"void main(void)\n"
-		"{\n"
-		"	gl_Position = vec4(aVertexPosition[0],aVertexPosition[1], 0.0, 1.0);\n"
-		"	texture_coordinate = aTextureCoord;//(aVertexPosition+vec2(1.0,1.0))/2.0;\n"
-		"}\n"
-			;
-	else if(filename == "shaderglobal.frag")
-		return
-			WEBPREAMBLE
-			
-		"uniform sampler2D myTexture;\n"
-
-		"varying vec2 texture_coordinate;\n"
-
-		"void main(void)\n"
-		"{\n"
-		"	//TODO: bicubic interpolation\n"
-		"	gl_FragColor = texture2D(myTexture, texture_coordinate);\n"
-		"}\n"
-			
-			;
-	else //TMCH
-		return "";
-	#endif
 }
+#endif
 
 GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(width), height(height)
 {
@@ -207,40 +134,47 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 	       gfs;
 
 
-	#if !defined(EMSCRIPTEN) && !defined(__DUETTO__)
-	std::string vsSource = file2string("../shader.vert");
-	std::string fsSource = file2string("../shader.frag");
-	std::string gvsSource = file2string("../shaderglobal.vert");
-	std::string gfsSource = file2string("../shaderglobal.frag");
+	#ifdef __DUETTO__
+		auto * c_vsSource = FileLoader::getfilecontent("shader.vert");
+		auto * c_fsSource = client::String(WEBPREAMBLE).concat(FileLoader::getfilecontent("shader.frag"));
+		auto * c_gvsSource = FileLoader::getfilecontent("shaderglobal.vert");
+		auto * c_gfsSource = client::String(WEBPREAMBLE).concat(FileLoader::getfilecontent("shaderglobal.frag"));
 	#else
-	std::string vsSource = file2string("shader.vert");
-	std::string fsSource = file2string("shader.frag");
-	std::string gvsSource = file2string("shaderglobal.vert");
-	std::string gfsSource = file2string("shaderglobal.frag");
+		#if !defined(EMSCRIPTEN)
+		std::string vsSource = FileLoader::getfilecontent("../shader.vert");
+		std::string fsSource = FileLoader::getfilecontent("../shader.frag");
+		std::string gvsSource = FileLoader::getfilecontent("../shaderglobal.vert");
+		std::string gfsSource = FileLoader::getfilecontent("../shaderglobal.frag");
+		#else
+		std::string vsSource = FileLoader::getfilecontent("shader.vert");
+		std::string fsSource = std::string(WEBPREAMBLE) + FileLoader::getfilecontent("shader.frag");
+		std::string gvsSource = FileLoader::getfilecontent("shaderglobal.vert");
+		std::string gfsSource = std::string(WEBPREAMBLE) + FileLoader::getfilecontent("shaderglobal.frag");
+		#endif
+
+		const char * c_vsSource = vsSource.c_str();
+		const char * c_fsSource = fsSource.c_str();
+		const char * c_gvsSource = gvsSource.c_str();
+		const char * c_gfsSource = gfsSource.c_str();
 	#endif
 
-	const char * c_vsSource = vsSource.c_str();
-	const char * c_fsSource = fsSource.c_str();
-	const char * c_gvsSource = gvsSource.c_str();
-	const char * c_gfsSource = gfsSource.c_str();
-
 	vs = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vs, 1, (const GLchar **) &c_vsSource, NULL);
+	glShaderSource(vs, 1, &c_vsSource, NULL);
 	glCompileShader(vs);
 	printLog(vs,"vertex shader:");
 
 	gvs = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(gvs, 1, (const GLchar **) &c_gvsSource, NULL);
+	glShaderSource(gvs, 1, &c_gvsSource, NULL);
 	glCompileShader(gvs);
 	printLog(vs,"global vertex shader:");
 
 	fs = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fs, 1, (const GLchar **) &c_fsSource, NULL);
+	glShaderSource(fs, 1, &c_fsSource, NULL);
 	glCompileShader(fs);
 	printLog(fs, "fragment shader:");
 
 	gfs = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(gfs, 1, (const GLchar **) &c_gfsSource, NULL);
+	glShaderSource(gfs, 1, &c_gfsSource, NULL);
 	glCompileShader(gfs);
 	printLog(gfs, "fragment shader:");
 
@@ -353,7 +287,6 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 	}
 	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fsaa*width, fsaa*height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);//NPOT
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, potfsaawidth, potfsaaheight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 4096, 4096, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	
 	//glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE); // automatic mipmap: deprecated
 	glBindTexture(GL_TEXTURE_2D, 0);

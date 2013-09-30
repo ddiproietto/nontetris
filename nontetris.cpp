@@ -16,6 +16,7 @@
 #include "physichandler.h"
 #include "inputhandler.h"
 #include "myutil.h"
+#include "fileloader.h"
 
 #ifdef EMSCRIPTEN
 #include <emscripten.h>
@@ -153,17 +154,8 @@ void texloaded()
 	client::console.log("texloaded");
 	main(1, argv);
 }
-void domLoaded()
+void fileloaded()
 {
-	client::console.log("domloaded");
-	/*
-	auto elem = client::document.getElementById("texcontainer");
-	elem->addEventListener("load",client::Callback(texloaded));
-	*/
-
-	//FileLoader::setcallback(texloaded);
-	//FileLoader::load({"shader.frag","shader.vert","shaderglobal.frag","shaderglobal.vert"});
-	//FileLoader::go();
 	auto texfiles = make_array(
 	"imgs/newgamebackground.png",
 	"imgs/pieces/1.png",
@@ -175,6 +167,19 @@ void domLoaded()
 	"imgs/pieces/7.png"
 	);
 	loadtextures(texloaded, texfiles);
+
+}
+void domLoaded()
+{
+	client::console.log("domloaded");
+	/*
+	auto elem = client::document.getElementById("texcontainer");
+	elem->addEventListener("load",client::Callback(texloaded));
+	*/
+
+	FileLoader::setcallback(fileloaded);
+	FileLoader::load({"shader.frag","shader.vert","shaderglobal.frag","shaderglobal.vert"});
+	FileLoader::go();
 	//texloaded();
 }
 int webMain() [[client]]
