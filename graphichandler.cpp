@@ -29,6 +29,17 @@ typedef GLsizei glvapt;
 typedef void * glvapt;
 #endif
 
+//FIND smallest power of two greater than width or height
+int findsmallestpot(int x)
+{
+	int potx = 1;
+	for (potx = 1; potx<=8192; potx*=2)
+	{
+		if(potx > x)
+			break;
+	}
+	return potx;
+}
 void printLog(GLuint obj, const std::string & str)
 {
 #ifndef __DUETTO__
@@ -90,31 +101,10 @@ void eye(GLfloat * out)
 
 #define WEBPREAMBLE "precision mediump float;\n"
 
-#if 0
-std::string file2string(const std::string & filename)
-{
-	std::ifstream t(filename);
-	if(!t)
-	{
-		std::cerr << "Error reading file "<< filename <<std::endl;
-		return "";
-	}
-	std::string str;
-	t.seekg(0, std::ios::end);   
-	str.reserve(t.tellg());
-	t.seekg(0, std::ios::beg);
-
-	str.assign((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
-	#ifdef EMSCRIPTEN
-	return std::string(WEBPREAMBLE) + str;
-	#else
-	return str;
-	#endif
-}
-#endif
-
 GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(width), height(height)
 {
+	float imgquad = height/18.0;
+	float piecesAA = 16;
 	#ifndef __DUETTO__
 	glfwInit();
 	glfwOpenWindowHint(GLFW_FSAA_SAMPLES,8);
@@ -220,7 +210,6 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 	SOIL_free_image_data( image );
 	#else
 	gl->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById("imgs/newgamebackground.png")));
-	//TODO:load textures for DUETTO
 	#endif
 	glGenerateMipmap( GL_TEXTURE_2D );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
@@ -228,10 +217,20 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 
 
 	glGenTextures(7, tex);
+	glGenTextures(7, tex_small);
+
+	glUseProgram(gsp);
+
+	GLuint vbo_ident;
+	glGenBuffers(1, &vbo_ident);
+	glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_ident);
+	GLfloat vert_ident [] = {-1, -1, -1, 1, 1, -1, 1, 1, 
+		0, 0, 0, 1, 1,0, 1,1};
+	glBufferData(GL_ARRAY_BUFFER_ARB, 4*2*2*sizeof(float), vert_ident, GL_STATIC_DRAW_ARB);
 
 	for (int i = 0; i < 7; i++)
 	{
-		glBindTexture( GL_TEXTURE_2D, tex[i]);
+		glBindTexture( GL_TEXTURE_2D, tex_small[i]);
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );//TODO:make it work with GL_CLAMP_TO_EDGE
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );//TODO:make it work with GL_CLAMP_TO_EDGE
 		#ifndef __DUETTO__
@@ -246,16 +245,56 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 				GL_UNSIGNED_BYTE, image );
 		SOIL_free_image_data( image );
 		#else
-		//TODO:load textures for DUETTO
 		client::String prefixname("imgs/pieces/");
 		client::String * pname = prefixname.concat(i+1);
 		client::String * idname = pname->concat(".png");
 		gl->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById(*idname)));
 		#endif
-		glGenerateMipmap( GL_TEXTURE_2D );
+		//glGenerateMipmap( GL_TEXTURE_2D );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR ); //TODO: test linear
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST ); //TODO: test linear
+
+		glBindTexture(GL_TEXTURE_2D, tex[i]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+		int piecefbosize = findsmallestpot(piecesAA*imgquad);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, piecefbosize, piecefbosize, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+		glGenFramebuffers(1, &(pieces_fbo[i]));
+		glBindFramebuffer(GL_FRAMEBUFFER, pieces_fbo[i]);
+		
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex[i], 0);
+		glViewport(0, 0, piecefbosize, piecefbosize);
+
+		#ifndef __DUETTO__
+		glEnableClientState(GL_VERTEX_ARRAY);
+		#endif
+		glEnableVertexAttribArray(aGlobalVertexPositionLoc);
+		glEnableVertexAttribArray(aGlobalTextureCoordLoc);
+
+		glBindTexture(GL_TEXTURE_2D, tex_small[i]);
+		glGenerateMipmap(GL_TEXTURE_2D);
+
+		glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_ident);
+		glVertexAttribPointer(aGlobalVertexPositionLoc, 2, GL_FLOAT, false, 0, (glvapt)0);
+		glVertexAttribPointer(aGlobalTextureCoordLoc, 2, GL_FLOAT, false, 0, (glvapt)(4*2*sizeof(GLfloat)));
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+		glDisableVertexAttribArray(aGlobalVertexPositionLoc);
+		glDisableVertexAttribArray(aGlobalTextureCoordLoc);
+		
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		glBindTexture(GL_TEXTURE_2D, tex[i]);
+		glGenerateMipmap(GL_TEXTURE_2D);
+
+
 	}
+	glUseProgram(sp);
 	
 	glDisable(GL_DEPTH_TEST);
 
@@ -265,26 +304,18 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 	glBindTexture(GL_TEXTURE_2D, tex_fbo);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	/*
 	#ifndef __DUETTO__
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, log(fsaa)/log(2));
 	#endif
 	*/
+	
 	//FIND smallest power of two greater than width or height
-	int potfsaawidth = 1;
-	int potfsaaheight = 1;
-	for (potfsaawidth = 1; potfsaawidth<=8192; potfsaawidth*=2)
-	{
-		if(potfsaawidth > fsaa*width)
-			break;
-	}
-	for (potfsaaheight = 1; potfsaaheight<=8192; potfsaaheight*=2)
-	{
-		if(potfsaaheight > fsaa*height)
-			break;
-	}
+	int potfsaawidth = findsmallestpot(fsaa*width);
+	int potfsaaheight = findsmallestpot(fsaa*height);
+
 	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fsaa*width, fsaa*height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);//NPOT
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, potfsaawidth, potfsaaheight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	

@@ -28,10 +28,12 @@ class GraphicHandler
 	GLint uMyTexLoc;
 	GLint aVertexPositionLoc;
 	GLuint tex_background;
+	GLuint tex_small[7];
 	GLuint tex[7];
 
 	GLuint tex_fbo;
 	GLuint fbo;
+	GLuint pieces_fbo[7];
 	GLuint vbo_main_rect;
 	GLuint vbo_all_screen;
 

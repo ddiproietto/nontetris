@@ -22,7 +22,7 @@ WebGLUniformLocation * gaUniformLocation[200];
 unsigned int gaiUniformLocation = 0;
 
 WebGLTexture * gaTexture[200];
-unsigned int gaiTexture = 0;
+unsigned int gaiTexture = 0; //TODO: 0 should be reserved
 
 WebGLFramebuffer * gaFramebuffer[200];
 unsigned int gaiFramebuffer = 1; //0 is reserved
