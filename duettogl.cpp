@@ -22,7 +22,7 @@ WebGLUniformLocation * gaUniformLocation[200];
 unsigned int gaiUniformLocation = 0;
 
 WebGLTexture * gaTexture[200];
-unsigned int gaiTexture = 0; //TODO: 0 should be reserved
+unsigned int gaiTexture = 1; //0 is reserved
 
 WebGLFramebuffer * gaFramebuffer[200];
 unsigned int gaiFramebuffer = 1; //0 is reserved
@@ -107,7 +107,10 @@ GL_APICALL void         GL_APIENTRY glGenTextures (GLsizei n, GLuint* textures)
 }
 GL_APICALL void         GL_APIENTRY glBindTexture (GLenum target, GLuint texture)
 {
-	gl->bindTexture(target, gaTexture[texture]);
+	if (texture == 0)
+		gl->bindTexture(target, NULL);
+	else
+		gl->bindTexture(target, gaTexture[texture]);
 }
 
 GL_APICALL void         GL_APIENTRY glTexParameteri (GLenum target, GLenum pname, GLint param)

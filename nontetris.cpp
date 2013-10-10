@@ -151,11 +151,13 @@ int main(int argc, char * argv[]);
 
 void texloaded()
 {
-	client::console.log("texloaded");
+	//client::console.log("The textures have been loaded");
 	main(1, argv);
 }
 void fileloaded()
 {
+	//client::console.log("The files have been loaded");
+	
 	auto texfiles = make_array(
 	"imgs/newgamebackground.png",
 	"imgs/pieces/1.png",
@@ -171,16 +173,11 @@ void fileloaded()
 }
 void domLoaded()
 {
-	client::console.log("domloaded");
-	/*
-	auto elem = client::document.getElementById("texcontainer");
-	elem->addEventListener("load",client::Callback(texloaded));
-	*/
+	//client::console.log("The DOM has been loaded");
 
 	FileLoader::setcallback(fileloaded);
-	FileLoader::load({"shader.frag","shader.vert","shaderglobal.frag","shaderglobal.vert"});
+	FileLoader::load({"shader.frag","shader.vert","shaderident.vert"});
 	FileLoader::go();
-	//texloaded();
 }
 int webMain() [[client]]
 {
@@ -195,10 +192,7 @@ int main(int argc, char * argv[])
 	pphh = new PhysicHandler (10.25, 18);
 	pgrh = new GraphicHandler (600,540);
 	pinh = new InputHandler();
-	/*
-	PhysicHandler phh(10.25, 18);
-	GraphicHandler grh(600,540);
-	*/
+
 	PhysicHandler &phh = *pphh;
 	GraphicHandler &grh = *pgrh;
 	InputHandler &inh = *pinh;
@@ -206,16 +200,8 @@ int main(int argc, char * argv[])
 	newrandompiece(phh, grh);
 
 	#ifdef EMSCRIPTEN
-	/*
-	pphh = &phh;
-	pgrh = &grh;
-	*/
 	emscripten_set_main_loop( oneiterationwrapper, 0, false);
 	#elif defined(__DUETTO__)
-	/*
-	pphh = &phh;
-	pgrh = &grh;
-	*/
 	compatRequestAnimationFrame(client::Callback(oneiterationwrapper));
 	#else
 	bool running = true;

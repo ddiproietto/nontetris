@@ -104,48 +104,45 @@ void eye(GLfloat * out)
 GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(width), height(height)
 {
 	float imgquad = height/18.0;
-	float piecesAA = 16;
+	float piecesAA = 4;
+
 	#ifndef __DUETTO__
 	glfwInit();
-	glfwOpenWindowHint(GLFW_FSAA_SAMPLES,8);
+	//glfwOpenWindowHint(GLFW_FSAA_SAMPLES, 8);
 	glfwOpenWindow(width, height, 5, 6, 5, 8, 0, 0, fullscreen?GLFW_FULLSCREEN:GLFW_WINDOW );
-
-	#if !defined(EMSCRIPTEN) && !defined(__DUETTO__)
-	if(glewInit() != GLEW_OK)
-		std::cerr<<"GLEW fail"<<std::endl;
-	#endif
+		#ifndef EMSCRIPTEN
+		if(glewInit() != GLEW_OK)
+			std::cerr<<"GLEW fail"<<std::endl;
+		#endif //defined(__EMSCRIPTEN__)
+	glEnableClientState(GL_VERTEX_ARRAY);
 	#else //defined(__DUETTO__)
 	duettoGLInit(width, height);
 	#endif
 
+	glDisable(GL_DEPTH_TEST);
+
 	GLuint vs, /* Vertex Shader */
 	       fs, /* Fragment Shader */
-	       gvs,
-	       gfs;
+	       ivs;
 
 
 	#ifdef __DUETTO__
 		auto * c_vsSource = FileLoader::getfilecontent("shader.vert");
 		auto * c_fsSource = client::String(WEBPREAMBLE).concat(FileLoader::getfilecontent("shader.frag"));
-		auto * c_gvsSource = FileLoader::getfilecontent("shaderglobal.vert");
-		auto * c_gfsSource = client::String(WEBPREAMBLE).concat(FileLoader::getfilecontent("shaderglobal.frag"));
+		auto * c_ivsSource = FileLoader::getfilecontent("shaderident.vert");
 	#else
 		#if !defined(EMSCRIPTEN)
 		std::string vsSource = FileLoader::getfilecontent("../shader.vert");
 		std::string fsSource = FileLoader::getfilecontent("../shader.frag");
-		std::string gvsSource = FileLoader::getfilecontent("../shaderglobal.vert");
-		std::string gfsSource = FileLoader::getfilecontent("../shaderglobal.frag");
+		std::string ivsSource = FileLoader::getfilecontent("../shaderident.vert");
 		#else
 		std::string vsSource = FileLoader::getfilecontent("shader.vert");
 		std::string fsSource = std::string(WEBPREAMBLE) + FileLoader::getfilecontent("shader.frag");
-		std::string gvsSource = FileLoader::getfilecontent("shaderglobal.vert");
-		std::string gfsSource = std::string(WEBPREAMBLE) + FileLoader::getfilecontent("shaderglobal.frag");
+		std::string ivsSource = FileLoader::getfilecontent("shaderident.vert");
 		#endif
-
 		const char * c_vsSource = vsSource.c_str();
 		const char * c_fsSource = fsSource.c_str();
-		const char * c_gvsSource = gvsSource.c_str();
-		const char * c_gfsSource = gfsSource.c_str();
+		const char * c_ivsSource = ivsSource.c_str();
 	#endif
 
 	vs = glCreateShader(GL_VERTEX_SHADER);
@@ -153,20 +150,15 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 	glCompileShader(vs);
 	printLog(vs,"vertex shader:");
 
-	gvs = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(gvs, 1, &c_gvsSource, NULL);
-	glCompileShader(gvs);
-	printLog(vs,"global vertex shader:");
+	ivs = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(ivs, 1, &c_ivsSource, NULL);
+	glCompileShader(ivs);
+	printLog(vs,"ident vertex shader:");
 
 	fs = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fs, 1, &c_fsSource, NULL);
 	glCompileShader(fs);
 	printLog(fs, "fragment shader:");
-
-	gfs = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(gfs, 1, &c_gfsSource, NULL);
-	glCompileShader(gfs);
-	printLog(gfs, "fragment shader:");
 
 	sp = glCreateProgram();
 	glAttachShader(sp, vs);
@@ -174,30 +166,30 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 	glLinkProgram(sp);
 	printLog(sp, "linking shader:");
 
-	gsp = glCreateProgram();
-	glAttachShader(gsp, gvs);
-	glAttachShader(gsp, gfs);
-	glLinkProgram(gsp);
-	printLog(gsp, "linking shader:");
+	isp = glCreateProgram();
+	glAttachShader(isp, ivs);
+	glAttachShader(isp, fs);
+	glLinkProgram(isp);
+	printLog(isp, "linking shader:");
 
 	glUseProgram(sp);
-
 	uPMatrixLoc = glGetUniformLocation(sp, "uPMatrix");
 	uRTVecLoc = glGetUniformLocation(sp, "uRTVec");
 	aVertexPositionLoc = glGetAttribLocation(sp, "aVertexPosition");
-	aGlobalVertexPositionLoc = glGetAttribLocation(gsp, "aVertexPosition");
-	aGlobalTextureCoordLoc = glGetAttribLocation(gsp, "aTextureCoord");
+
+	//glUseProgram(isp);
+	aGlobalVertexPositionLoc = glGetAttribLocation(isp, "aVertexPosition");
+	aGlobalTextureCoordLoc = glGetAttribLocation(isp, "aTextureCoord");
 	glEnableVertexAttribArray(aVertexPositionLoc);
 
-	ortho(PMatrix,0,10.25,18,0,-1,1);
+	GLfloat PMatrix[16];
+
+	//ortho(PMatrix,0,10.25,18,0,-1,1);
+	ortho(PMatrix,-2.05,18.45,18,0,-1,1);
 	glUniformMatrix4fv(uPMatrixLoc, 1, false, PMatrix);
 
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	
 	//TEXTURE
 
-	uMyTexLoc = glGetUniformLocation(sp, "myTexture");
-	
 	glGenTextures(1, &tex_background);
 	glBindTexture( GL_TEXTURE_2D, tex_background);
 	int twidth, theight;
@@ -215,24 +207,30 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 
-
+	GLuint tex_small[7];
 	glGenTextures(7, tex);
 	glGenTextures(7, tex_small);
 
-	glUseProgram(gsp);
+	glUseProgram(isp);
 
 	GLuint vbo_ident;
 	glGenBuffers(1, &vbo_ident);
 	glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_ident);
+	/*
 	GLfloat vert_ident [] = {-1, -1, -1, 1, 1, -1, 1, 1, 
 		0, 0, 0, 1, 1,0, 1,1};
+	*/
+	GLfloat vert_ident [] = {
+		-1, -1, 0, 0,
+		-1, 1, 0, 1,
+		1, -1, 1, 0,
+		1, 1, 1, 1
+	};
 	glBufferData(GL_ARRAY_BUFFER_ARB, 4*2*2*sizeof(float), vert_ident, GL_STATIC_DRAW_ARB);
 
 	for (int i = 0; i < 7; i++)
 	{
 		glBindTexture( GL_TEXTURE_2D, tex_small[i]);
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );//TODO:make it work with GL_CLAMP_TO_EDGE
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );//TODO:make it work with GL_CLAMP_TO_EDGE
 		#ifndef __DUETTO__
 			#ifndef EMSCRIPTEN
 			std::string path = std::string("../imgs/pieces/")+std::to_string(i+1)+std::string(".png");
@@ -250,17 +248,14 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 		client::String * idname = pname->concat(".png");
 		gl->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById(*idname)));
 		#endif
-		//glGenerateMipmap( GL_TEXTURE_2D );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR ); //TODO: test linear
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST ); //TODO: test linear
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 
 		glBindTexture(GL_TEXTURE_2D, tex[i]);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-		int piecefbosize = findsmallestpot(piecesAA*imgquad);
+		int piecefbosize = findsmallestpot(piecesAA*4*imgquad);
 
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, piecefbosize, piecefbosize, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
@@ -269,19 +264,17 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 		
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex[i], 0);
 		glViewport(0, 0, piecefbosize, piecefbosize);
+		glClearColor(0.0, 0.0, 0.0, 1.0);
+		glClear( GL_COLOR_BUFFER_BIT );
 
-		#ifndef __DUETTO__
-		glEnableClientState(GL_VERTEX_ARRAY);
-		#endif
 		glEnableVertexAttribArray(aGlobalVertexPositionLoc);
 		glEnableVertexAttribArray(aGlobalTextureCoordLoc);
 
 		glBindTexture(GL_TEXTURE_2D, tex_small[i]);
-		glGenerateMipmap(GL_TEXTURE_2D);
 
 		glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_ident);
-		glVertexAttribPointer(aGlobalVertexPositionLoc, 2, GL_FLOAT, false, 0, (glvapt)0);
-		glVertexAttribPointer(aGlobalTextureCoordLoc, 2, GL_FLOAT, false, 0, (glvapt)(4*2*sizeof(GLfloat)));
+		glVertexAttribPointer(aGlobalVertexPositionLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)0);
+		glVertexAttribPointer(aGlobalTextureCoordLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)(2*sizeof(GLfloat)));
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 		glDisableVertexAttribArray(aGlobalVertexPositionLoc);
@@ -292,63 +285,13 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 		glBindTexture(GL_TEXTURE_2D, tex[i]);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
-
 	}
 	glUseProgram(sp);
 	
-	glDisable(GL_DEPTH_TEST);
-
-	//ANTIALIASING
-	fsaa = 1;
-	glGenTextures(1, &tex_fbo);
-	glBindTexture(GL_TEXTURE_2D, tex_fbo);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	/*
-	#ifndef __DUETTO__
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, log(fsaa)/log(2));
-	#endif
-	*/
-	
-	//FIND smallest power of two greater than width or height
-	int potfsaawidth = findsmallestpot(fsaa*width);
-	int potfsaaheight = findsmallestpot(fsaa*height);
-
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fsaa*width, fsaa*height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);//NPOT
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, potfsaawidth, potfsaaheight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	
-	//glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE); // automatic mipmap: deprecated
-	glBindTexture(GL_TEXTURE_2D, 0);
-	
-	glGenFramebuffers(1, &fbo);
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-	
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex_fbo, 0);
-	//WARNING:no depth test in the texture, should use another renderbuffer
-	
-	#ifndef __DUETTO__
-	fbo_used = (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
-	if(!fbo_used)
-		std::cerr << "error initializing fbo" << std::endl;
-	#else
-	fbo_used = true;
-	#endif
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	glGenBuffers(1, &vbo_main_rect);
-	glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_main_rect);
-	float rapx = float(potfsaawidth) / (fsaa*width);
-	float rapy = float(potfsaaheight) / (fsaa*height);
-	GLfloat vertices [] = {-0.8, -1, -0.8, 1, 0.2, -1, 0.2, 1, 
-		0, 0, 0, 1/rapy, 1/rapx,0, 1/rapx,1/rapy};
-	glBufferData(GL_ARRAY_BUFFER_ARB, 4*2*2*sizeof(float), vertices, GL_STATIC_DRAW_ARB);
-
-	glGenBuffers(1, &vbo_all_screen);
-	glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_all_screen);
-	rapx = 256.0/160.0;
-	rapy = 256.0/144.0;
+	glGenBuffers(1, &vbo_background);
+	glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_background);
+	float rapx = 256.0/160.0;
+	float rapy = 256.0/144.0;
 	GLfloat vertices2 [] = {-1, -1, -1, 1, 1, -1, 1, 1,
 		0, 1/rapy, 0, 0, 1/rapx,1/rapy, 1/rapx,0};
 	glBufferData(GL_ARRAY_BUFFER_ARB, 4*2*2*sizeof(float), vertices2, GL_STATIC_DRAW_ARB);
@@ -415,74 +358,44 @@ GraphicPiece * GraphicHandler::createpiece(piece<float> pie)
 
 bool GraphicHandler::render(std::function< void(std::function<void(float x, float y, float rot, GraphicPiece * d)>)>allbodies )
 {
-	if(fbo_used)
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-		glViewport(0, 0, fsaa*width, fsaa*height);
-		glUseProgram(sp);
-	}
+	glViewport(0, 0, width, height);
 	glClearColor(1.0, 1.0, 1.0, 1.0);
 	glClear( GL_COLOR_BUFFER_BIT );
-	glEnableVertexAttribArray(aVertexPositionLoc);
-	allbodies([this](float x, float y, float rot, GraphicPiece * d)
-	{
-		GraphicPiece & gp = *(GraphicPiece * )d;
-		//std::cerr <<"(" << x << ", " << y << "); rot:"<< rot<<std::endl;
-		//std::cerr <<" VBO:" << gp.VBOid << " num:"<< gp.num << std::endl;
 
+	//DRAW BACKGROUND
+	glUseProgram(isp);
+	glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_background);
+	glEnableVertexAttribArray(aGlobalVertexPositionLoc);
+	glEnableVertexAttribArray(aGlobalTextureCoordLoc);
+
+	glBindTexture(GL_TEXTURE_2D, tex_background);
+	glVertexAttribPointer(aGlobalVertexPositionLoc, 2, GL_FLOAT, false, 0, (glvapt)0);
+	glVertexAttribPointer(aGlobalTextureCoordLoc, 2, GL_FLOAT, false, 0, (glvapt)(4*2*sizeof(GLfloat)));
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+	glDisableVertexAttribArray(aGlobalVertexPositionLoc);
+	glDisableVertexAttribArray(aGlobalTextureCoordLoc);
+	//END DRAW BACKGROUND
+
+	glUseProgram(sp);
+	glEnableVertexAttribArray(aVertexPositionLoc);
+
+	allbodies([this](float x, float y, float rot, GraphicPiece * gp)
+	{
 		GLfloat RTVec[4] = {(GLfloat)sin(rot), (GLfloat)cos(rot), x, y};
 		glUniform4fv(uRTVecLoc, 1, RTVec);
 
-		glBindTexture( GL_TEXTURE_2D, gp.tex);
-		glBindBuffer(GL_ARRAY_BUFFER_ARB, gp.VBOid);
+		glBindTexture( GL_TEXTURE_2D, gp->tex);
+		glBindBuffer(GL_ARRAY_BUFFER_ARB, gp->VBOid);
 
-		#ifndef __DUETTO__
-		glEnableClientState(GL_VERTEX_ARRAY);
-		#endif
 		glVertexAttribPointer(aVertexPositionLoc, 2, GL_FLOAT, false, 0, 0);
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, gp.num);
-
-		//glDisableClientState(GL_VERTEX_ARRAY);
-		//glBindBuffer(GL_ARRAY_BUFFER_ARB, 0);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, gp->num);
 	});
 	glDisableVertexAttribArray(aVertexPositionLoc);
-
-	if(fbo_used)
-	{
-		
-		glUseProgram(gsp);
-		glViewport(0, 0, width, height);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-		glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_all_screen);
-		#ifndef __DUETTO__
-		glEnableClientState(GL_VERTEX_ARRAY);
-		#endif
-		glEnableVertexAttribArray(aGlobalVertexPositionLoc);
-		glEnableVertexAttribArray(aGlobalTextureCoordLoc);
-
-		glBindTexture(GL_TEXTURE_2D, tex_background);
-		glVertexAttribPointer(aGlobalVertexPositionLoc, 2, GL_FLOAT, false, 0, (glvapt)0);
-		glVertexAttribPointer(aGlobalTextureCoordLoc, 2, GL_FLOAT, false, 0, (glvapt)(4*2*sizeof(GLfloat)));
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-
-		glBindTexture(GL_TEXTURE_2D, tex_fbo);
-		glGenerateMipmap(GL_TEXTURE_2D);
-
-		glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_main_rect);
-		glVertexAttribPointer(aGlobalVertexPositionLoc, 2, GL_FLOAT, false, 0, (glvapt)0);
-		glVertexAttribPointer(aGlobalTextureCoordLoc, 2, GL_FLOAT, false, 0, (glvapt)(4*2*sizeof(GLfloat)));
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-
-		glDisableVertexAttribArray(aGlobalVertexPositionLoc);
-		glDisableVertexAttribArray(aGlobalTextureCoordLoc);
-	}
 
 	#ifndef __DUETTO__
 	glfwSwapBuffers();
 	#endif
+
 	return true;
 }

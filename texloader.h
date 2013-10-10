@@ -9,7 +9,6 @@ std::function<void()> texdonefunc;
 
 void onetexloaded()
 {
-	//client::console.log("HERE");
 	if ((--textodo)==0)
 		texdonefunc();
 
@@ -22,7 +21,6 @@ void loadtextures(std::function<void()> f, T v)
 	for(const auto & s: v)
 	{
 		auto *imgel = static_cast<client::HTMLImageElement*>(client::document.createElement("img"));
-		//imgel->set_onload(client::Callback(onetexloaded));
 		imgel->addEventListener("load",client::Callback(onetexloaded));
 		imgel->setAttribute("style", "display:none");
 		imgel->setAttribute("id", s);
