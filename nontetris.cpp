@@ -131,7 +131,6 @@ bool one_iteration(PhysicHandler & phh, GraphicHandler & grh, InputHandler & inh
 PhysicHandler * pphh = NULL;
 GraphicHandler * pgrh = NULL;
 InputHandler * pinh = NULL;
-TextureLoader * texloader = NULL;
 FileLoader * fileloader = NULL;
 
 #if defined(EMSCRIPTEN) || defined(__DUETTO__)
@@ -146,6 +145,8 @@ void oneiterationwrapper()
 }
 #endif
 #ifdef __DUETTO__
+
+TextureLoader * texloader = NULL;
 
 char argv1 [] = "nontetris";
 char * argv [] = {argv1};

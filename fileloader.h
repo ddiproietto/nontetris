@@ -6,6 +6,7 @@
 #include <duetto/clientlib.h>
 #else
 #include <fstream>
+#include <iostream>
 #endif
 
 #include <functional>
