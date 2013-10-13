@@ -11,7 +11,7 @@ configure_file (
 
 include_directories("${PROJECT_BINARY_DIR}")
 
-set(MY_SOURCES nontetris.cpp physichandler.cpp inputhandler.cpp graphichandler.cpp inputhandler.cpp fileloader.cpp)
+set(MY_SOURCES nontetris.cpp physichandler.cpp inputhandler.cpp graphichandler.cpp inputhandler.cpp)
 
 if(DEFINED DUETTO)
 	set (MY_SOURCES ${MY_SOURCES} duettogl.cpp)

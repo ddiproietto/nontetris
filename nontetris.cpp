@@ -3,7 +3,6 @@
 #include <duetto/clientlib.h>
 #include "texloader.h"
 #endif
-
 #include <cstdlib>
 #include <array>
 #include <list>
@@ -15,9 +14,9 @@
 #include "graphichandler.h"
 #include "physichandler.h"
 #include "inputhandler.h"
-#include "myutil.h"
-#include "fileloader.h"
 
+#include "fileloader.h"
+#include "myutil.h"
 #ifdef EMSCRIPTEN
 #include <emscripten.h>
 #elif defined(__DUETTO__)
@@ -91,7 +90,7 @@ bool one_iteration(PhysicHandler & phh, GraphicHandler & grh, InputHandler & inh
 	//phh.drawbodies([](float x, float y, float rot, void * d){cout <<"(" << x << ", " << y << "); rot:"<< rot << endl;});
 	//running = grh.render(std::bind(&PhysicHandler::drawbodies, &phh, std::placeholders::_1));
 	//grh.render([& phh](std::function<void(float x, float y, float rot, void * d)> x){phh.drawbodies(x);}); //also sleeps because of vsync(not on every platform)
-	grh.render([](std::function<void(float x, float y, float rot, GraphicPiece * d)> x)
+	grh.render([](const std::function<void(float x, float y, float rot, GraphicPiece * d)> & x)
 	{
 		for(auto i : ingamepieces)
 		{
@@ -129,9 +128,12 @@ bool one_iteration(PhysicHandler & phh, GraphicHandler & grh, InputHandler & inh
 	);
 	return running;
 }
-PhysicHandler * pphh;
-GraphicHandler * pgrh;
-InputHandler * pinh;
+PhysicHandler * pphh = NULL;
+GraphicHandler * pgrh = NULL;
+InputHandler * pinh = NULL;
+TextureLoader * texloader = NULL;
+FileLoader * fileloader = NULL;
+
 #if defined(EMSCRIPTEN) || defined(__DUETTO__)
 
 void oneiterationwrapper()
@@ -143,22 +145,18 @@ void oneiterationwrapper()
 	#endif
 }
 #endif
-
 #ifdef __DUETTO__
+
 char argv1 [] = "nontetris";
 char * argv [] = {argv1};
 int main(int argc, char * argv[]);
 
-void texloaded()
-{
-	//client::console.log("The textures have been loaded");
-	main(1, argv);
-}
-void fileloaded()
-{
-	//client::console.log("The files have been loaded");
-	
-	auto texfiles = make_array(
+auto filestoload = make_array(
+	"shader.frag",
+	"shader.vert",
+	"shaderident.vert"
+);
+auto texturestoload = make_array(
 	"imgs/newgamebackground.png",
 	"imgs/pieces/1.png",
 	"imgs/pieces/2.png",
@@ -167,21 +165,26 @@ void fileloaded()
 	"imgs/pieces/5.png",
 	"imgs/pieces/6.png",
 	"imgs/pieces/7.png"
-	);
-	loadtextures(texloaded, texfiles);
+);
 
-}
-void domLoaded()
-{
-	//client::console.log("The DOM has been loaded");
-
-	FileLoader::setcallback(fileloaded);
-	FileLoader::load({"shader.frag","shader.vert","shaderident.vert"});
-	FileLoader::go();
-}
 int webMain() [[client]]
 {
-	client::document.addEventListener("DOMContentLoaded", client::Callback(domLoaded));
+	texloader = new TextureLoader;
+	fileloader = new FileLoader;
+
+	client::document.addEventListener("DOMContentLoaded", client::Callback([=](){
+		//The DOM has been loaded
+		client::console.log("DOMloaded");
+		fileloader->load(filestoload, [=](){
+			client::console.log("FILESloaded");
+			//The files have been loaded
+			texloader->load(texturestoload, [=](){
+				client::console.log("TEXTURESloaded");
+				//The textures have been loaded
+				main(1, argv);
+			});
+		});
+	}));
 
 	return 0;
 }
@@ -190,7 +193,7 @@ int webMain() [[client]]
 int main(int argc, char * argv[])
 {
 	pphh = new PhysicHandler (10.25, 18);
-	pgrh = new GraphicHandler (600,540);
+	pgrh = new GraphicHandler (600, 540, fileloader);
 	pinh = new InputHandler();
 
 	PhysicHandler &phh = *pphh;
@@ -200,7 +203,7 @@ int main(int argc, char * argv[])
 	newrandompiece(phh, grh);
 
 	#ifdef EMSCRIPTEN
-	emscripten_set_main_loop( oneiterationwrapper, 0, false);
+	emscripten_set_main_loop(oneiterationwrapper, 0, false);
 	#elif defined(__DUETTO__)
 	compatRequestAnimationFrame(client::Callback(oneiterationwrapper));
 	#else

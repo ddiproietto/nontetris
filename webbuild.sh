@@ -1,3 +1,5 @@
+#!/bin/sh
+#Build script for emscripten: still not working
 rm -Rf webbuild/
 mkdir webbuild/
 

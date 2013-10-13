@@ -9,6 +9,7 @@
 
 #include "polygon.h"
 #include "piece.h"
+#include "fileloader.h"
 
 #include <functional>
 #include "NontetrisConfig.h"
@@ -41,10 +42,10 @@ class GraphicHandler
 	GLint aGlobalTextureCoordLoc;
 
 public:
-	GraphicHandler(int width = 600, int height = 540, bool fullscreen = false);
+	GraphicHandler(int width = 600, int height = 540, bool fullscreen = false, FileLoader * fileloader = NULL);
 	~GraphicHandler();
 	GraphicPiece * createpiece(piece<float> pol);
-	bool render(std::function< void(std::function<void(float x, float y, float rot, GraphicPiece * d)>)>allbodies );
+	bool render(const std::function< void(const std::function<void(float x, float y, float rot, GraphicPiece * d)> &)> & allbodies );
 };
 
 #endif //_GRAPHIC_HANDLER_H

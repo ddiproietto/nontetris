@@ -1,33 +1,84 @@
 #ifndef _FILELOADER_H
 #define _FILELOADER_H
 
+#ifdef __DUETTO__
+#include <duetto/client.h>
+#include <duetto/clientlib.h>
+#else
+#include <fstream>
+#endif
+
 #include <functional>
 #include <vector>
 #include <string>
 
-#ifdef __DUETTO__
-#include <map>
-#endif
-
-
 class FileLoader
 {
-	//TODO: shouldn't be static.
 	#ifdef __DUETTO__
-	static int todo;
+	int todo;
 	#endif
-	static std::function <void()> done;
+	std::function <void()> done;
 public:
-	static void setcallback(std::function<void()> f);
-	static void load(const std::vector<std::string>);
-	static void go();
-	#ifdef __DUETTO__
-	static void recvonload(client::Event * e, const char * file);
-	static client::String * getfilecontent(std::string);
-	#else
-	static std::string getfilecontent(std::string);
-	#endif
+	template<typename T>
+	void load(T files, const std::function<void()> &f)
+	{
+		done = f;
+		#ifdef __DUETTO__
+		for(const auto & file: files)
+		{
+			auto xhr = new client::XMLHttpRequest();
+			xhr->open("get", file, true);
+			todo ++;
+			xhr->set_onload(client::Callback([this, file](client::Event * e){
+				auto res = static_cast<client::XMLHttpRequest *>(e->get_target());
+				auto contents = res->get_responseText();
 
+				auto scriptTag = client::document.createElement("script");
+				scriptTag->setAttribute("type", "customscript");
+				scriptTag->setAttribute("id", file);
+
+				scriptTag->appendChild(client::document.createTextNode(*contents));
+
+				(client::document.getElementsByTagName("head"))->item(0)->appendChild(scriptTag);
+
+				if(!(--todo))
+					done();
+					;
+			}));
+			xhr->send();
+		}
+		#else
+		done();
+		#endif
+	}
+
+	#ifdef __DUETTO__
+	client::String * getfilecontent(std::string f)
+	{
+		auto elem = client::document.getElementById(f.c_str());
+		auto res = (elem->get_childNodes())->item(0)->get_nodeValue();
+		//console.log(*res);
+		return res;
+
+	}
+	#else
+	static std::string getfilecontent(std::string f)
+	{
+		std::ifstream t(f);
+		if(!t)
+		{
+			std::cerr << "Error reading file "<< f <<std::endl;
+			return "";
+		}
+		std::string str;
+		t.seekg(0, std::ios::end);   
+		str.reserve(t.tellg());
+		t.seekg(0, std::ios::beg);
+
+		str.assign((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+		return str;
+	}
+	#endif
 };
 
 #endif //_FILELOADER_H

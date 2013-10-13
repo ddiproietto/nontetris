@@ -101,7 +101,7 @@ void eye(GLfloat * out)
 
 #define WEBPREAMBLE "precision mediump float;\n"
 
-GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(width), height(height)
+GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoader * fileloader):width(width), height(height)
 {
 	float imgquad = height/18.0;
 	float piecesAA = 4;
@@ -127,9 +127,9 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen):width(wid
 
 
 	#ifdef __DUETTO__
-		auto * c_vsSource = FileLoader::getfilecontent("shader.vert");
-		auto * c_fsSource = client::String(WEBPREAMBLE).concat(FileLoader::getfilecontent("shader.frag"));
-		auto * c_ivsSource = FileLoader::getfilecontent("shaderident.vert");
+		auto * c_vsSource = fileloader->getfilecontent("shader.vert");
+		auto * c_fsSource = client::String(WEBPREAMBLE).concat(fileloader->getfilecontent("shader.frag"));
+		auto * c_ivsSource = fileloader->getfilecontent("shaderident.vert");
 	#else
 		#if !defined(EMSCRIPTEN)
 		std::string vsSource = FileLoader::getfilecontent("../shader.vert");
@@ -356,7 +356,7 @@ GraphicPiece * GraphicHandler::createpiece(piece<float> pie)
 	return pgp;
 }
 
-bool GraphicHandler::render(std::function< void(std::function<void(float x, float y, float rot, GraphicPiece * d)>)>allbodies )
+bool GraphicHandler::render(const std::function< void(const std::function<void(float x, float y, float rot, GraphicPiece * d)>&)> & allbodies )
 {
 	glViewport(0, 0, width, height);
 	glClearColor(1.0, 1.0, 1.0, 1.0);

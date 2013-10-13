@@ -40,6 +40,7 @@ inline bool b2IsValid(float32 x)
 	return -infinity < x && x < infinity;
 }
 
+#ifndef __DUETTO__
 /// This is a approximate yet fast inverse square-root.
 inline float32 b2InvSqrt(float32 x)
 {
@@ -56,6 +57,7 @@ inline float32 b2InvSqrt(float32 x)
 	x = x * (1.5f - xhalf * x * x);
 	return x;
 }
+#endif
 
 #define	b2Sqrt(x)	std::sqrt(x)
 #define	b2Atan2(y, x)	std::atan2(y, x)

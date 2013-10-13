@@ -4,31 +4,31 @@
 #include <functional>
 #include <array>
 
-int textodo = 0;
-std::function<void()> texdonefunc;
-
-void onetexloaded()
+class TextureLoader
 {
-	if ((--textodo)==0)
-		texdonefunc();
+	int textodo;
+	std::function<void()> texdonefunc;
 
-}
-
-template<typename T>
-void loadtextures(std::function<void()> f, T v)
-{
-	texdonefunc = f;
-	for(const auto & s: v)
+public:
+	template<typename T>
+	void load(T v, const std::function<void()> & f)
 	{
-		auto *imgel = static_cast<client::HTMLImageElement*>(client::document.createElement("img"));
-		imgel->addEventListener("load",client::Callback(onetexloaded));
-		imgel->setAttribute("style", "display:none");
-		imgel->setAttribute("id", s);
-		imgel->setAttribute("src",s);
-		auto * elem = static_cast<client::Node*>(client::document.getElementById("texcontainer"));
-		elem->appendChild(static_cast<client::Element*>(imgel));
-		textodo++;
+		texdonefunc = f;
+		textodo = 0;
+		for(const auto & s: v)
+		{
+			auto *imgel = static_cast<client::HTMLImageElement*>(client::document.createElement("img"));
+			imgel->addEventListener("load",client::Callback([&](){
+				if ((--textodo)==0)
+					texdonefunc();
+			}));
+			imgel->setAttribute("style", "display:none");
+			imgel->setAttribute("id", s);
+			imgel->setAttribute("src",s);
+			auto * elem = static_cast<client::Node*>(client::document.getElementById("texcontainer"));
+			elem->appendChild(static_cast<client::Element*>(imgel));
+			textodo++;
+		}
 	}
-}
-
+};
 #endif //_TEXLOADER_H
