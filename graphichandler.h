@@ -26,7 +26,6 @@ class GraphicHandler
 {
 	GLint uPMatrixLoc;
 	GLint uRTVecLoc;
-	GLint uMyTexLoc;
 	GLint aVertexPositionLoc;
 	GLuint tex_background;
 	GLuint tex[7];

@@ -328,7 +328,7 @@ GraphicPiece * GraphicHandler::createpiece(piece<float> pie)
 		vertices.push_back(pol[0].y);
 		//std::cerr<<0<<std::endl;
 
-		for ( int i = 1; i <= pol.size()/2; ++i)
+		for ( unsigned int i = 1; i <= pol.size()/2; ++i)
 		{
 			auto & vert = pol[i];
 

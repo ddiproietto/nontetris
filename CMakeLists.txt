@@ -11,6 +11,7 @@ configure_file (
 
 include_directories("${PROJECT_BINARY_DIR}")
 
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 set(MY_SOURCES nontetris.cpp physichandler.cpp inputhandler.cpp graphichandler.cpp inputhandler.cpp)
 
 if(DEFINED DUETTO)
