@@ -222,7 +222,7 @@ int main(int argc, char * argv[])
 	}
 	delete pinh;
 	delete pgrh;
-	delete pinh;
+	delete pphh;
 	#endif
 	return EXIT_SUCCESS;
 }

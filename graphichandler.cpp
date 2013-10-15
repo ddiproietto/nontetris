@@ -118,13 +118,12 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 	float piecesAA = 4;
 
 	#ifndef __DUETTO__
+	glfwInit();
 	#if GLFW_VERSION_MAJOR == 3
 	//TODO: honor fullscreen
-	glfwInit();
 	glfwwindow = glfwCreateWindow(width, height, "nontetris", NULL, NULL);
 	glfwMakeContextCurrent(glfwwindow);
 	#else
-	glfwInit();
 	//glfwOpenWindowHint(GLFW_FSAA_SAMPLES, 8);
 	glfwOpenWindow(width, height, 5, 6, 5, 8, 0, 0, fullscreen?GLFW_FULLSCREEN:GLFW_WINDOW );
 	#endif
@@ -199,7 +198,7 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 	//glUseProgram(isp);
 	aGlobalVertexPositionLoc = glGetAttribLocation(isp, "aVertexPosition");
 	aGlobalTextureCoordLoc = glGetAttribLocation(isp, "aTextureCoord");
-	glEnableVertexAttribArray(aVertexPositionLoc);
+	//glEnableVertexAttribArray(aVertexPositionLoc);
 
 	GLfloat PMatrix[16];
 
@@ -222,9 +221,9 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 	#else
 	gl->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById("imgs/newgamebackground.png")));
 	#endif
-	glGenerateMipmap( GL_TEXTURE_2D );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+	glGenerateMipmap( GL_TEXTURE_2D );
 
 	GLuint tex_small[7];
 	glGenTextures(7, tex);
@@ -235,10 +234,7 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 	GLuint vbo_ident;
 	glGenBuffers(1, &vbo_ident);
 	glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_ident);
-	/*
-	GLfloat vert_ident [] = {-1, -1, -1, 1, 1, -1, 1, 1, 
-		0, 0, 0, 1, 1,0, 1,1};
-	*/
+
 	GLfloat vert_ident [] = {
 		-1, -1, 0, 0,
 		-1, 1, 0, 1,
@@ -299,10 +295,10 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 		glDisableVertexAttribArray(aGlobalVertexPositionLoc);
 		glDisableVertexAttribArray(aGlobalTextureCoordLoc);
 		
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
 		glBindTexture(GL_TEXTURE_2D, tex[i]);
 		glGenerateMipmap(GL_TEXTURE_2D);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	}
 	glUseProgram(sp);
@@ -320,6 +316,7 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 GraphicHandler::~GraphicHandler()
 {
 	#ifndef __DUETTO__
+	glfwDestroyWindow(glfwwindow);
 	glfwTerminate();
 	#endif
 }
@@ -331,6 +328,12 @@ GLFWwindow * GraphicHandler::getglfwwindow()
 }
 #endif
 
+// Very simple tessellation: FROM counterclockwise list of vertices TO triangle strip
+// Since all polygons are convex all we need to do is reorder the vertices.
+// e.g. 1 2 3 4 5 6 -> 1 2 6 3 4 5
+// If the piece is made of two convex polygons we simply put twice the first vertex of the second polygon,
+// thus creating a degenerate triangle. This works properly if:
+// - the first vertex of the second polygon lies on a side of the first polygon.
 GraphicPiece * GraphicHandler::createpiece(piece<float> pie)
 {
 	GraphicPiece * pgp = new GraphicPiece;

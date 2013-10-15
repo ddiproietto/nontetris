@@ -13,15 +13,6 @@
 
 #include "polygon.h"
 
-struct userData
-{
-	enum {GROUND, LEFT, RIGHT, FALLING_PIECE, OLD_PIECE} type;
-	void * otherdata;
-	userData():otherdata(NULL)
-	{
-	}
-};
-
 PhysicHandler::MyContactListener::MyContactListener():callcollision(false)
 {
 	
@@ -52,7 +43,8 @@ PhysicHandler::PhysicHandler(float w_width, float w_height):world(b2Vec2(0.0F, 1
 	b2PolygonShape polShape;
 	userData * ud;
 
-	ud = new userData;
+
+	ud = &udground;
 	ud->type = userData::GROUND;
 	bodyDef.type = b2_staticBody;
 	bodyDef.position.Set(w_width/2, w_height +0.5F);
@@ -62,7 +54,7 @@ PhysicHandler::PhysicHandler(float w_width, float w_height):world(b2Vec2(0.0F, 1
 	fixDef.density = 32.0F * 32.0F;
 	world.CreateBody(&bodyDef)->CreateFixture(&fixDef);
 
-	ud = new userData;
+	ud = &udleft;
 	ud->type = userData::LEFT;
 	bodyDef.type = b2_staticBody;
 	bodyDef.position.Set(-0.5F, w_height/2);
@@ -73,7 +65,7 @@ PhysicHandler::PhysicHandler(float w_width, float w_height):world(b2Vec2(0.0F, 1
 	fixDef.friction = 0.00001;
 	world.CreateBody(&bodyDef)->CreateFixture(&fixDef);
 
-	ud = new userData;
+	ud = &udright;
 	ud->type = userData::RIGHT;
 	bodyDef.type = b2_staticBody;
 	bodyDef.position.Set(w_width + 0.5F, w_height/2);
@@ -92,10 +84,10 @@ PhysicPiece * PhysicHandler::createpiece(piece<float> pie, float x, float y, flo
 	b2FixtureDef fixDef;
 	b2PolygonShape polShape;
 	userData * ud;
+	PhysicPiece * ret = new PhysicPiece;
 	b2Body * body;
-	b2Vec2 * vertarr, * curvert;
 
-	ud = new userData;
+	ud = &(ret->ud);
 	ud->type = userData::FALLING_PIECE;
 	ud->otherdata = userdata;
 	bodyDef.type = b2_dynamicBody;
@@ -104,9 +96,11 @@ PhysicPiece * PhysicHandler::createpiece(piece<float> pie, float x, float y, flo
 	bodyDef.angle = rot;
 	bodyDef.userData = ud;
 	body = world.CreateBody(&bodyDef);
+	ret->ptr = body;
 
 	for (auto pol: pie)
 	{
+		b2Vec2 * vertarr, * curvert;
 		curvert = vertarr = new b2Vec2[pol.size()];
 		for_each(pol.begin(), pol.end(), [&](point<float> p){
 				curvert->Set(p.x, p.y);
@@ -117,11 +111,12 @@ PhysicPiece * PhysicHandler::createpiece(piece<float> pie, float x, float y, flo
 		fixDef.density = 32.0F * 32.0F;
 		fixDef.friction = 1.0;
 		body->CreateFixture(&fixDef);
+		delete [] vertarr;
 	}
 	if(fallingpiece != NULL)
 		((userData*)fallingpiece->GetUserData())->type = userData::OLD_PIECE;
 	fallingpiece = body;
-	return new PhysicPiece(body);
+	return ret;
 }
 
 void PhysicHandler::piecerotate(float rot)
