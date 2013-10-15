@@ -6,11 +6,19 @@
 #include "duettogl.h"
 #include <duetto/client.h>
 #include <duetto/clientlib.h>
-#elif defined(EMSCRIPTEN)
-#include <GL/glfw.h>
 #else
+
+#ifndef EMSCRIPTEN
+#define GLEW_NO_GLU
 #include <GL/glew.h>
+#endif
+
+#if (USE_GLFW_VERSION==3)
+#include <GLFW/glfw3.h>
+#else
 #include <GL/glfw.h>
+#endif
+
 #endif
 
 #include <algorithm>
@@ -30,6 +38,9 @@ typedef void * glvapt;
 #endif
 
 //FIND smallest power of two greater than width or height
+//could it be done better, but
+//1. used only during init few times
+//2. surely safe also in duetto
 int findsmallestpot(int x)
 {
 	int potx = 1;
@@ -107,10 +118,18 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 	float piecesAA = 4;
 
 	#ifndef __DUETTO__
+	#if GLFW_VERSION_MAJOR == 3
+	//TODO: honor fullscreen
+	glfwInit();
+	glfwwindow = glfwCreateWindow(width, height, "nontetris", NULL, NULL);
+	glfwMakeContextCurrent(glfwwindow);
+	#else
 	glfwInit();
 	//glfwOpenWindowHint(GLFW_FSAA_SAMPLES, 8);
 	glfwOpenWindow(width, height, 5, 6, 5, 8, 0, 0, fullscreen?GLFW_FULLSCREEN:GLFW_WINDOW );
+	#endif
 		#ifndef EMSCRIPTEN
+		glewExperimental = GL_TRUE;
 		if(glewInit() != GLEW_OK)
 			std::cerr<<"GLEW fail"<<std::endl;
 		#endif //defined(__EMSCRIPTEN__)
@@ -257,7 +276,7 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 
 		int piecefbosize = findsmallestpot(piecesAA*4*imgquad);
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, piecefbosize, piecefbosize, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, piecefbosize, piecefbosize, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
 		glGenFramebuffers(1, &(pieces_fbo[i]));
 		glBindFramebuffer(GL_FRAMEBUFFER, pieces_fbo[i]);
@@ -304,6 +323,13 @@ GraphicHandler::~GraphicHandler()
 	glfwTerminate();
 	#endif
 }
+
+#if !defined( __DUETTO__) && (GLFW_VERSION_MAJOR == 3)
+GLFWwindow * GraphicHandler::getglfwwindow()
+{
+	return glfwwindow;
+}
+#endif
 
 GraphicPiece * GraphicHandler::createpiece(piece<float> pie)
 {
@@ -394,7 +420,12 @@ bool GraphicHandler::render(const std::function< void(const std::function<void(f
 	glDisableVertexAttribArray(aVertexPositionLoc);
 
 	#ifndef __DUETTO__
+	#if GLFW_VERSION_MAJOR == 3
+	glfwSwapBuffers(glfwwindow);
+	glfwPollEvents();
+	#else
 	glfwSwapBuffers();
+	#endif
 	#endif
 
 	return true;

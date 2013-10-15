@@ -35,6 +35,12 @@ void duettoGLInit(int width, int height)
 {
 	auto canvas = static_cast<client::HTMLCanvasElement*>(client::document.getElementById("glcanvas"));
 	gl = reinterpret_cast<client::WebGLRenderingContext*>(canvas->getContext("experimental-webgl"));
+	/*
+	if (gl == NULL)//TODO: make this compare work on duetto
+	{
+		client::window.alert("Sorry, your browser doesn't seem to support WebGL :(");
+	}
+	*/
 }
 
 GLuint glCreateShader(GLenum type)

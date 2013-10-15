@@ -1,8 +1,15 @@
+#include "NontetrisConfig.h"
 #ifdef __DUETTO__
 #include <duetto/client.h>
 #include <duetto/clientlib.h>
 #else
+#define GLEW_NO_GLU
+#include <GL/glew.h>
+#if (USE_GLFW_VERSION==3)
+#include <GLFW/glfw3.h>
+#else
 #include <GL/glfw.h>
+#endif
 #endif
 #include "inputhandler.h"
 
@@ -26,6 +33,10 @@ InputHandler::InputHandler()
 	document.addEventListener("keydown",Callback(keydown));
 	document.addEventListener("keyup",Callback(keyup));
 
+}
+#elif GLFW_VERSION_MAJOR == 3
+InputHandler::InputHandler(GLFWwindow * w):glfwwindow(w)
+{
 }
 #else
 InputHandler::InputHandler()
@@ -58,25 +69,33 @@ void InputHandler::process_input(const std::function<void()> & exit, const std::
 	}
 
 #else
-	if(glfwGetKey( GLFW_KEY_ESC ) || !glfwGetWindowParam( GLFW_OPENED ))
+	#if (GLFW_VERSION_MAJOR == 3)
+	#define WINDOW glfwwindow,
+	#define WINDOW_OPENED !glfwWindowShouldClose(glfwwindow)
+	#define GLFW_KEY_ESC GLFW_KEY_ESCAPE
+	#else
+	#define WINDOW
+	#define WINDOW_OPENED glfwGetWindowParam( GLFW_OPENED )
+	#endif
+	if(glfwGetKey(WINDOW GLFW_KEY_ESC ) || ! WINDOW_OPENED)
 		exit();
-	if(glfwGetKey( GLFW_KEY_LEFT))
+	if(glfwGetKey(WINDOW GLFW_KEY_LEFT))
 	{
 		left();
 	}
-	if(glfwGetKey( GLFW_KEY_RIGHT))
+	if(glfwGetKey(WINDOW GLFW_KEY_RIGHT))
 	{
 		right();
 	}
-	if(glfwGetKey( GLFW_KEY_DOWN))
+	if(glfwGetKey(WINDOW GLFW_KEY_DOWN))
 	{
 		down();
 	}
-	if(glfwGetKey('Z') || glfwGetKey('W') || glfwGetKey('Y'))
+	if(glfwGetKey(WINDOW 'Z') || glfwGetKey(WINDOW 'W') || glfwGetKey(WINDOW 'Y'))
 	{
 		z();
 	}
-	if(glfwGetKey('X'))
+	if(glfwGetKey(WINDOW 'X'))
 	{
 		x();
 	}

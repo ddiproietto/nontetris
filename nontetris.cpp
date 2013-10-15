@@ -195,7 +195,11 @@ int main(int argc, char * argv[])
 {
 	pphh = new PhysicHandler (10.25, 18);
 	pgrh = new GraphicHandler (600, 540, fileloader);
+	#if !defined( __DUETTO__) && (GLFW_VERSION_MAJOR == 3)
+	pinh = new InputHandler(pgrh->getglfwwindow());
+	#else
 	pinh = new InputHandler();
+	#endif
 
 	PhysicHandler &phh = *pphh;
 	GraphicHandler &grh = *pgrh;

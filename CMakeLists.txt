@@ -4,6 +4,14 @@ project (Nontetris)
 set (NONTETRIS_VERSION_MAJOR 0)
 set (NONTETRIS_VERSION_MINOR 1)
 
+option(USE_GLFW_3 "Use glfw3(otherwise use glfw2)" ON)
+
+if(USE_GLFW_3)
+set(USE_GLFW_VERSION 3)
+else(USE_GLFW_3)
+set(USE_GLFW_VERSION 2)
+endif(USE_GLFW_3)
+
 configure_file (
 	"${PROJECT_SOURCE_DIR}/NontetrisConfig.h.in"
 	"${PROJECT_BINARY_DIR}/NontetrisConfig.h"
@@ -65,8 +73,13 @@ if(NOT DEFINED DUETTO)
 
 ##GLFW##
 find_package(PkgConfig REQUIRED)
-pkg_search_module(GLFW REQUIRED libglfw)
-target_link_libraries(nontetris ${GLFW_LIBRARIES})
+if(USE_GLFW_3)
+	pkg_search_module(GLFW REQUIRED glfw3)
+	target_link_libraries(nontetris ${GLFW_STATIC_LIBRARIES})
+else(USE_GLFW_3)
+	pkg_search_module(GLFW REQUIRED libglfw)
+	target_link_libraries(nontetris ${GLFW_LIBRARIES})
+endif(USE_GLFW_3)
 ##END GLFW##
 
 ##GLEW##
