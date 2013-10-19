@@ -190,15 +190,14 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 	glLinkProgram(isp);
 	printLog(isp, "linking shader:");
 
+	glUseProgram(isp);
+	aGlobalVertexPositionLoc = glGetAttribLocation(isp, "aVertexPosition");
+	aGlobalTextureCoordLoc = glGetAttribLocation(isp, "aTextureCoord");
+
 	glUseProgram(sp);
 	uPMatrixLoc = glGetUniformLocation(sp, "uPMatrix");
 	uRTVecLoc = glGetUniformLocation(sp, "uRTVec");
 	aVertexPositionLoc = glGetAttribLocation(sp, "aVertexPosition");
-
-	//glUseProgram(isp);
-	aGlobalVertexPositionLoc = glGetAttribLocation(isp, "aVertexPosition");
-	aGlobalTextureCoordLoc = glGetAttribLocation(isp, "aTextureCoord");
-	//glEnableVertexAttribArray(aVertexPositionLoc);
 
 	GLfloat PMatrix[16];
 
@@ -225,11 +224,11 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 	glGenerateMipmap( GL_TEXTURE_2D );
 
+	glUseProgram(isp);
+
 	GLuint tex_small[7];
 	glGenTextures(7, tex);
 	glGenTextures(7, tex_small);
-
-	glUseProgram(isp);
 
 	GLuint vbo_ident;
 	glGenBuffers(1, &vbo_ident);
@@ -246,6 +245,8 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 	for (int i = 0; i < 7; i++)
 	{
 		glBindTexture( GL_TEXTURE_2D, tex_small[i]);
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 		#ifndef __DUETTO__
 			#ifndef EMSCRIPTEN
 			std::string path = std::string("../imgs/pieces/")+std::to_string(i+1)+std::string(".png");
@@ -263,8 +264,6 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 		client::String * idname = pname->concat(".png");
 		gl->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById(*idname)));
 		#endif
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 
 		glBindTexture(GL_TEXTURE_2D, tex[i]);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -301,8 +300,7 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	}
-	glUseProgram(sp);
-	
+
 	glGenBuffers(1, &vbo_background);
 	glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_background);
 	float rapx = 256.0/160.0;
