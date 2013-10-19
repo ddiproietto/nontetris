@@ -38,7 +38,7 @@ typedef void * glvapt;
 #endif
 
 //FIND smallest power of two greater than width or height
-//could it be done better, but
+//it could be done better, but
 //1. used only during init few times
 //2. surely safe also in duetto
 int findsmallestpot(int x)
@@ -316,7 +316,9 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 GraphicHandler::~GraphicHandler()
 {
 	#ifndef __DUETTO__
+	#if GLFW_VERSION_MAJOR == 3
 	glfwDestroyWindow(glfwwindow);
+	#endif
 	glfwTerminate();
 	#endif
 }
