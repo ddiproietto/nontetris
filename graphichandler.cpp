@@ -270,6 +270,7 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 		int piecefbosize = findsmallestpot(piecesAA*4*imgquad);
 
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, piecefbosize, piecefbosize, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		glGenerateMipmap(GL_TEXTURE_2D);
 
 		glGenFramebuffers(1, &(pieces_fbo[i]));
 		glBindFramebuffer(GL_FRAMEBUFFER, pieces_fbo[i]);
