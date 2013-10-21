@@ -27,9 +27,12 @@ if(DEFINED DUETTO)
 	add_library (nontetris ${MY_SOURCES})
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
 else(DEFINED DUETTO)
-	#include SOIL library
-	set (EXTERNAL_SOURCES SOIL/SOIL.c SOIL/image_DXT.c SOIL/image_helper.c SOIL/stb_image_aug.c)
+	#include lode library
+	set (EXTERNAL_SOURCES lodepng/lodepng.cpp)
 	add_executable (nontetris ${MY_SOURCES} ${EXTERNAL_SOURCES})
+	SET_TARGET_PROPERTIES(nontetris PROPERTIES
+		COMPILE_FLAGS "-DLODEPNG_NO_COMPILE_ENCODER -DLODEPNG_NO_COMPILE_CPP"
+		  )
 endif(DEFINED DUETTO)
 
 

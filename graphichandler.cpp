@@ -25,7 +25,7 @@
 #include <cmath>
 #ifndef __DUETTO__
 #include <iostream>
-#include "SOIL/SOIL.h"
+#include "lodepng/lodepng.h"
 #endif
 #include <string>
 #include "fileloader.h"
@@ -207,14 +207,15 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 
 	glGenTextures(1, &tex_background);
 	glBindTexture( GL_TEXTURE_2D, tex_background);
-	int twidth, theight;
+	unsigned int twidth, theight;
 
 	#ifndef __DUETTO__
-	unsigned char * image =
-		SOIL_load_image("../imgs/newgamebackground_pc.png" , &twidth, &theight, 0, SOIL_LOAD_RGB );
+	unsigned char * image;
+	lodepng_decode24_file(&image, &twidth, &theight, "../imgs/newgamebackground.png");
+
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, twidth, theight, 0, GL_RGB,
 			GL_UNSIGNED_BYTE, image );
-	SOIL_free_image_data( image );
+	free(image);
 	#else
 	gl->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById("imgs/newgamebackground.png")));
 	#endif
@@ -251,11 +252,12 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 			#else
 			std::string path = std::to_string(i+1)+std::string(".png");
 			#endif //EMSCRIPTEN
-		image =
-			SOIL_load_image(path.c_str() , &twidth, &theight, 0, SOIL_LOAD_RGB );
+
+		lodepng_decode24_file(&image, &twidth, &theight, path.c_str());
+
 		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, twidth, theight, 0, GL_RGB,
 				GL_UNSIGNED_BYTE, image );
-		SOIL_free_image_data( image );
+		free(image);
 		#else
 		client::String prefixname("imgs/pieces/");
 		client::String * pname = prefixname.concat(i+1);
