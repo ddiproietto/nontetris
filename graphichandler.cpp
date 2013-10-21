@@ -38,18 +38,16 @@ typedef void * glvapt;
 #endif
 
 //FIND smallest power of two greater than width or height
-//it could be done better, but
-//1. used only during init few times
-//2. surely safe also in duetto
 int findsmallestpot(int x)
 {
-	int potx = 1;
-	for (potx = 1; potx<=8192; potx*=2)
-	{
-		if(potx > x)
-			break;
-	}
-	return potx;
+	--x;
+	x |= x >> 1;
+	x |= x >> 2;
+	x |= x >> 4;
+	x |= x >> 8;
+	x |= x >> 16;
+
+	return x + 1;
 }
 void printLog(GLuint obj, const std::string & str)
 {
@@ -115,7 +113,7 @@ void eye(GLfloat * out)
 GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoader * fileloader):width(width), height(height)
 {
 	float imgquad = height/18.0;
-	float piecesAA = 4;
+	float piecesAA = 2;
 
 	#ifndef __DUETTO__
 	glfwInit();
