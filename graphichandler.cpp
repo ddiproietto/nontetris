@@ -296,16 +296,18 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 		glBindTexture(GL_TEXTURE_2D, tex[i]);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	glGenBuffers(1, &vbo_background);
 	glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_background);
 	float rapx = 256.0/160.0;
 	float rapy = 256.0/144.0;
-	GLfloat vertices2 [] = {-1, -1, -1, 1, 1, -1, 1, 1,
-		0, 1/rapy, 0, 0, 1/rapx,1/rapy, 1/rapx,0};
+	GLfloat vertices2 [] = {-1, -1,  0, 1/rapy,
+				-1,  1,  0, 0,
+				 1, -1,  1/rapx, 1/rapy,
+				 1,  1,  1/rapx, 0};
 	glBufferData(GL_ARRAY_BUFFER_ARB, 4*2*2*sizeof(float), vertices2, GL_STATIC_DRAW_ARB);
 
 }
@@ -397,8 +399,10 @@ bool GraphicHandler::render(const std::function< void(const std::function<void(f
 	glEnableVertexAttribArray(aGlobalTextureCoordLoc);
 
 	glBindTexture(GL_TEXTURE_2D, tex_background);
-	glVertexAttribPointer(aGlobalVertexPositionLoc, 2, GL_FLOAT, false, 0, (glvapt)0);
-	glVertexAttribPointer(aGlobalTextureCoordLoc, 2, GL_FLOAT, false, 0, (glvapt)(4*2*sizeof(GLfloat)));
+
+	glVertexAttribPointer(aGlobalVertexPositionLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)0);
+	glVertexAttribPointer(aGlobalTextureCoordLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)(2*sizeof(GLfloat)));
+
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 	glDisableVertexAttribArray(aGlobalVertexPositionLoc);
