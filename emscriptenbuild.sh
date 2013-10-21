@@ -1,7 +1,7 @@
 #!/bin/sh
 #Build script for emscripten: still not working
-rm -Rf webbuild/
-mkdir webbuild/
+rm -Rf emscriptenbuild/
+mkdir emscriptenbuild/
 
 cd webbuild/
 cmake -DEMSCRIPTEN=1 -DCMAKE_TOOLCHAIN_FILE=~/homemade/emscripten/cmake/Platform/Emscripten_unix.cmake -DCMAKE_MODULE_PATH=~/homemade/emscripten/cmake -DCMAKE_BUILD_TYPE=Release -G "Unix Makefiles" ..

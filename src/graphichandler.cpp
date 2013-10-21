@@ -25,7 +25,9 @@
 #include <cmath>
 #ifndef __DUETTO__
 #include <iostream>
-#include "lodepng/lodepng.h"
+#define LODEPNG_NO_COMPILE_ENCODER
+#define LODEPNG_NO_COMPILE_CPP
+#include "lodepng.h"
 #endif
 #include <string>
 #include "fileloader.h"
