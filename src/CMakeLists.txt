@@ -15,10 +15,9 @@ set(MY_SOURCES nontetris.cpp physichandler.cpp inputhandler.cpp graphichandler.c
 
 if(DEFINED DUETTO)
 	set (MY_SOURCES ${MY_SOURCES} duettogl.cpp)
-	add_library (nontetris ${MY_SOURCES})
-else(DEFINED DUETTO)
-	add_executable (nontetris ${MY_SOURCES})
 endif(DEFINED DUETTO)
+
+add_executable (nontetris ${MY_SOURCES})
 
 target_link_libraries(nontetris Box2D)
 

@@ -4,7 +4,7 @@ project (Nontetris)
 set (NONTETRIS_VERSION_MAJOR 0)
 set (NONTETRIS_VERSION_MINOR 1)
 
-option(USE_GLFW_3 "Use glfw3(otherwise use glfw2)" ON)
+option(USE_GLFW_3 "Use glfw3(otherwise use glfw2)" OFF)
 
 if(USE_GLFW_3)
 set(USE_GLFW_VERSION 3)

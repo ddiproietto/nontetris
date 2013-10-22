@@ -3,7 +3,7 @@
 rm -Rf emscriptenbuild/
 mkdir emscriptenbuild/
 
-cd webbuild/
+cd emscriptenbuild/
 cmake -DEMSCRIPTEN=1 -DCMAKE_TOOLCHAIN_FILE=~/homemade/emscripten/cmake/Platform/Emscripten_unix.cmake -DCMAKE_MODULE_PATH=~/homemade/emscripten/cmake -DCMAKE_BUILD_TYPE=Release -G "Unix Makefiles" ..
 ~/homemade/emscripten/emmake make VERBOSE=1
 mv nontetris nontetris.bc
