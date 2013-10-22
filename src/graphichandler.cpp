@@ -126,6 +126,7 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 	#else
 	//glfwOpenWindowHint(GLFW_FSAA_SAMPLES, 8);
 	glfwOpenWindow(width, height, 5, 6, 5, 8, 0, 0, fullscreen?GLFW_FULLSCREEN:GLFW_WINDOW );
+	glfwSetWindowTitle("nontetris");
 	#endif
 		#ifndef EMSCRIPTEN
 		glewExperimental = GL_TRUE;
