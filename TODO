@@ -2,3 +2,5 @@ cutting
 proper memory management
 texture piece caching (good for AA)
 do not draw piece outside game box
+fix Box2D issues with duetto
+fix emscripten build

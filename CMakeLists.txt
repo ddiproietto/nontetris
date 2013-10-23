@@ -1,4 +1,12 @@
-cmake_minimum_required (VERSION 2.8)
+if(DEFINED DUETTO)
+	cmake_minimum_required (VERSION 2.6) #Decent version
+else(DEFINED DUETTO)
+	if(NOT DEFINED EMSCRIPTEN)
+		cmake_minimum_required (VERSION 2.8) #For file( COPY)
+	else(NOT DEFINED EMSCRIPTEN)
+		cmake_minimum_required (VERSION 2.8.8) #For object libraries
+	endif(NOT DEFINED EMSCRIPTEN)
+endif(DEFINED DUETTO)
 project (Nontetris)
 
 set (NONTETRIS_VERSION_MAJOR 0)

@@ -112,6 +112,13 @@ void eye(GLfloat * out)
 
 #define WEBPREAMBLE "precision mediump float;\n"
 
+#ifdef EMSCRIPTEN
+#define DATAPATHPREAMBLE ""
+#else
+#define DATAPATHPREAMBLE "../"
+#endif
+
+
 GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoader * fileloader):width(width), height(height)
 {
 	float imgquad = height/18.0;
@@ -150,14 +157,11 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 		auto * c_fsSource = client::String(WEBPREAMBLE).concat(fileloader->getfilecontent("shader.frag"));
 		auto * c_ivsSource = fileloader->getfilecontent("shaderident.vert");
 	#else
-		#if !defined(EMSCRIPTEN)
-		std::string vsSource = FileLoader::getfilecontent("../shader.vert");
-		std::string fsSource = FileLoader::getfilecontent("../shader.frag");
-		std::string ivsSource = FileLoader::getfilecontent("../shaderident.vert");
-		#else
-		std::string vsSource = FileLoader::getfilecontent("shader.vert");
-		std::string fsSource = std::string(WEBPREAMBLE) + FileLoader::getfilecontent("shader.frag");
-		std::string ivsSource = FileLoader::getfilecontent("shaderident.vert");
+		std::string vsSource = FileLoader::getfilecontent(DATAPATHPREAMBLE "shader.vert");
+		std::string ivsSource = FileLoader::getfilecontent(DATAPATHPREAMBLE "shaderident.vert");
+		std::string fsSource = FileLoader::getfilecontent(DATAPATHPREAMBLE "shader.frag");
+		#ifdef EMSCRIPTEN
+		fsSource = std::string(WEBPREAMBLE) + fsSource;
 		#endif
 		const char * c_vsSource = vsSource.c_str();
 		const char * c_fsSource = fsSource.c_str();
@@ -250,11 +254,7 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 		#ifndef __DUETTO__
-			#ifndef EMSCRIPTEN
-			std::string path = std::string("../imgs/pieces/")+std::to_string(i+1)+std::string(".png");
-			#else
-			std::string path = std::to_string(i+1)+std::string(".png");
-			#endif //EMSCRIPTEN
+		std::string path = std::string(DATAPATHPREAMBLE "imgs/pieces/")+std::to_string(i+1)+std::string(".png");
 
 		lodepng_decode24_file(&image, &twidth, &theight, path.c_str());
 

@@ -17,14 +17,18 @@ if(DEFINED DUETTO)
 	set (MY_SOURCES ${MY_SOURCES} duettogl.cpp)
 endif(DEFINED DUETTO)
 
+if(DEFINED EMSCRIPTEN)
+	set (MY_SOURCES ${MY_SOURCES} $<TARGET_OBJECTS:lodepng>)
+endif(DEFINED EMSCRIPTEN)
+
 add_executable (nontetris ${MY_SOURCES})
 
 target_link_libraries(nontetris Box2D)
 
 if(NOT DEFINED DUETTO)
-	target_link_libraries(nontetris ${OPENGL_LIBRARIES} lodepng)
 
 	if(NOT DEFINED EMSCRIPTEN)
+		target_link_libraries(nontetris ${OPENGL_LIBRARIES} lodepng)
 		target_link_libraries(nontetris ${GLEW_LIBRARIES})
 	endif(NOT DEFINED EMSCRIPTEN)
 
