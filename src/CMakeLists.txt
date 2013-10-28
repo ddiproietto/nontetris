@@ -33,7 +33,8 @@ if(NOT DEFINED DUETTO)
 	endif(NOT DEFINED EMSCRIPTEN)
 
 	if(USE_GLFW_3)
-		target_link_libraries(nontetris ${GLFW_STATIC_LIBRARIES})
+		target_link_libraries(nontetris ${GLFW_STATIC_LIBRARIES})#link statically
+		#target_link_libraries(nontetris ${GLFW_LIBRARIES})#Link dynamically
 	else(USE_GLFW_3)
 		target_link_libraries(nontetris ${GLFW_LIBRARIES})
 	endif(USE_GLFW_3)
