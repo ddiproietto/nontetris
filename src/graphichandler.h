@@ -7,12 +7,11 @@
 #include "duettogl.h"
 #else
 
-#define GLEW_NO_GLU
-#include <GL/glew.h>
-
+#include "glwrapper.h"
 #if (USE_GLFW_VERSION==3)
 #include <GLFW/glfw3.h>
 #else
+#define GLFW_NO_GLU
 #include <GL/glfw.h>
 #endif
 

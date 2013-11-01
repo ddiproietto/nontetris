@@ -1,4 +1,5 @@
 build/
 emscriptenbuild/
 duettobuild/
+windowsbuild/
 www/nontetris.min.js

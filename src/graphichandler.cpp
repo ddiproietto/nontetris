@@ -8,14 +8,12 @@
 #include <duetto/clientlib.h>
 #else
 
-#ifndef EMSCRIPTEN
-#define GLEW_NO_GLU
-#include <GL/glew.h>
-#endif
+#include "glwrapper.h"
 
 #if (USE_GLFW_VERSION==3)
 #include <GLFW/glfw3.h>
 #else
+#define GLFW_NO_GLU
 #include <GL/glfw.h>
 #endif
 
@@ -112,7 +110,7 @@ void eye(GLfloat * out)
 
 #define WEBPREAMBLE "precision mediump float;\n"
 
-#ifdef EMSCRIPTEN
+#if defined(EMSCRIPTEN) || defined(__MINGW32__)
 #define DATAPATHPREAMBLE ""
 #else
 #define DATAPATHPREAMBLE "../"
@@ -131,7 +129,7 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 	glfwwindow = glfwCreateWindow(width, height, "nontetris", NULL, NULL);
 	glfwMakeContextCurrent(glfwwindow);
 	#else
-	//glfwOpenWindowHint(GLFW_FSAA_SAMPLES, 8);
+	glfwOpenWindowHint(GLFW_FSAA_SAMPLES, 8);
 	glfwOpenWindow(width, height, 5, 6, 5, 8, 0, 0, fullscreen?GLFW_FULLSCREEN:GLFW_WINDOW );
 	glfwSetWindowTitle("nontetris");
 	#endif
@@ -218,7 +216,7 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 
 	#ifndef __DUETTO__
 	unsigned char * image;
-	lodepng_decode24_file(&image, &twidth, &theight, "../imgs/newgamebackground.png");
+	lodepng_decode24_file(&image, &twidth, &theight, DATAPATHPREAMBLE "imgs/newgamebackground.png");
 
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, twidth, theight, 0, GL_RGB,
 			GL_UNSIGNED_BYTE, image );
@@ -254,7 +252,13 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 		#ifndef __DUETTO__
+		#ifdef __MINGW32__
+		//Mingw still doesn't have std::to_string
+		char ctmp = '0'+(i+1);
+		std::string path = std::string(DATAPATHPREAMBLE "imgs/pieces/")+ctmp+std::string(".png");
+		#else
 		std::string path = std::string(DATAPATHPREAMBLE "imgs/pieces/")+std::to_string(i+1)+std::string(".png");
+		#endif
 
 		lodepng_decode24_file(&image, &twidth, &theight, path.c_str());
 

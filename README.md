@@ -1,11 +1,12 @@
 Nontetris
 =================
 
-Nontetris is a multiplatform demo that uses GL for rendering. When I say multiplatform, I mean:
+Nontetris is inspired by (i.e. a clone of) the awesome Not Tetris 2 (http://stabyourself.net/nottetris2/) by Maurice Guégan.
+It is a multiplatform demo (just playable) that uses GL for rendering. When I say multiplatform, I mean:
 
-* Linux: currently supported with glfw
-* Windows: it used to work with mingw, the new code has still to be tested
-* Web with duetto: it works at least with Firefox and Chrome, if WebGL is available
+* Web with duetto: it works at least with Firefox and Chrome, if WebGL is available. It still has issues, but we hope to fix them soon. Play online here (http://allievi.sssup.it/jacopone/cnontetris/)
+* Windows: working with MXE cross compiler toolchain! Get the executable here (http://allievi.sssup.it/jacopone/cnontetris-win/cnontetris-latest.zip)
+* Linux: currently supported with glfw (You have to build the source yourself)
 * Web with emscripten: work in progress
 
 Building
@@ -15,6 +16,10 @@ Linux
 ---------------
 
 Prerequisites: cmake(2.8), glfw(2 or 3), glew, GL headers(mesa-dev).
+
+Get the source code with
+	
+	git clone
 
 Edit CMakeLists.txt and change the line
 
@@ -41,7 +46,24 @@ The run the following commands to build and run
 Windows
 -------
 
-I've successully managed once to do a build with mingw-w64. You need a pretty recent version(g++ 4.7 should be fine), since the code is using C++11.
+If you manage to install GLEW and GLFW in your favourite compiler (Visual Studio 2012, maybe?) you're free to try.
+Here I'm describing the procedure to cross compile from linux using MXE(http://mxe.cc/).
+
+* Download MXE(http://mxe.cc/#download). Now you can build libraries as explained here(http://mxe.cc/#usage)
+* Build at least gcc, glew, glfw
+	
+	make gcc glew glfw
+
+* Change directory to nontetris sources and then
+	
+	mkdir windowsbuild/
+	cd windowsbuild/
+	#Replace <PATH TO MXE> with the path where you installed MXE
+	cmake -DCMAKE_TOOLCHAIN_FILE=<PATH TO MXE>usr/i686-pc-mingw32/share/cmake/mxe-conf.cmake ..
+	make
+
+* Now you will find in windowsbuild/src/ an executable named nontetris.exe. Yay! Rembember to run it in the same folder as shader.vert, shader.frag, shaderident.vert and the imgs/ folder
+
 
 Web with Duetto
 ---------------
@@ -67,6 +89,8 @@ You can access localhost:8888 with your browser and play nontetris.
 Emscripten
 ----------
 
+Prerequisites: cmake(2.8.8)
+
 Edit the script emscriptenbuild.sh to reflect the Emscripten location in your system
 
 	#Path to emscripten
@@ -82,7 +106,7 @@ Unfortunately there is a problem with Emscripten GL wrapper, which I hope to inv
 Technology
 ==========
 
-The code makes use of C++11 features (lambdas, std::array, initializer lists)
+The code makes use of C++11 features (lambdas, std::array, std::chrono, initializer lists, ...)
 
 This project uses the Box2D library. The code has been modified to be built successfully under Duetto(no custom allocators, no unions). All the modification are enclosed by #ifdef __DUETTO__.
 
@@ -105,3 +129,18 @@ srclib/ contains some libraries that have been embedded (Box2D and lodepng)
 
 www/ contains html files and symlink to the built code for duetto. After the build it contains all the files necessary to run on the web.
 
+Todo
+====
+
+Fix the build under emscripten.
+Fix Box2D glitches with duetto.
+(...) check TODO file.
+Make it a game!
+
+Acknowledgements
+================
+
+I would like to thank:
+* The awesome people at Leaningtech: Alessandro, Massimo and Stefano
+* A lot of friend who helped me with the math(and with some coding): Sbabbi, Peoro, Tommy, Davide
+* The man who made me discover the original Not Tetris 2: Enrico

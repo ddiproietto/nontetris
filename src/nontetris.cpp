@@ -25,7 +25,13 @@ extern "C" {
 	void compatRequestAnimationFrame(const client::EventListener&);
 }
 #else
-#include "timemanager.h"
+//#include "timemanager.h"
+#include <chrono>
+#include <thread>
+#ifdef __MINGW32__
+//Mingw doesn't have std:::this_thread
+#include <windows.h> //For Sleep
+#endif
 #endif
 
 
@@ -213,12 +219,20 @@ int main(int argc, char * argv[])
 	compatRequestAnimationFrame(client::Callback(oneiterationwrapper));
 	#else
 	bool running = true;
-	MyTime next;
+	auto next = std::chrono::steady_clock::now();
 	while (running)
 	{
 		running = one_iteration(phh, grh, inh);
-		next+=(MyTime(0,1000000000.0/60.0));
-		next.sleepuntil();
+		next+=(std::chrono::nanoseconds(1000000000/60));
+		#ifdef __MINGW32__
+		//Mingw doesn't have std::this_thread
+		auto diff = next - std::chrono::steady_clock::now();
+		int millitosleep = std::chrono::duration_cast<std::chrono::milliseconds>(diff).count();
+		if(millitosleep > 0)
+			Sleep(millitosleep);
+		#else
+		std::this_thread::sleep_until(next);
+		#endif
 	}
 	delete pinh;
 	delete pgrh;

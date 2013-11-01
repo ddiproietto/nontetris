@@ -7,6 +7,7 @@
 #if (USE_GLFW_VERSION==3)
 #include <GLFW/glfw3.h>
 #else
+#define GLFW_NO_GLU
 #include <GL/glfw.h>
 #endif
 #endif

@@ -3,8 +3,6 @@
 #include <duetto/client.h>
 #include <duetto/clientlib.h>
 #else
-#define GLEW_NO_GLU
-#include <GL/glew.h>
 #if (USE_GLFW_VERSION==3)
 #include <GLFW/glfw3.h>
 #else

@@ -29,6 +29,10 @@ IF(DEFINED DUETTO)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
 ENDIF(DEFINED DUETTO)
 
+IF(MINGW)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mwindows")
+ENDIF(MINGW)
+
 if(NOT DEFINED DUETTO)
 	if(NOT DEFINED EMSCRIPTEN)
 		##OpenGL##
@@ -36,8 +40,8 @@ if(NOT DEFINED DUETTO)
 		##END OpenGL##
 	endif(NOT DEFINED EMSCRIPTEN)
 
-	##GLFW##
 	find_package(PkgConfig REQUIRED)
+	##GLFW##
 	if(USE_GLFW_3)
 		pkg_search_module(GLFW REQUIRED glfw3)
 	else(USE_GLFW_3)
@@ -46,7 +50,6 @@ if(NOT DEFINED DUETTO)
 	##END GLFW##
 
 	##GLEW##
-	find_package(PkgConfig REQUIRED)
 	pkg_search_module(GLEW REQUIRED glew)
 	##END GLEW##
 
