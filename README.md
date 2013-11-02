@@ -4,10 +4,10 @@ Nontetris
 Nontetris is inspired by (i.e. a clone of) the awesome  [Not Tetris 2](http://stabyourself.net/nottetris2/) by Maurice Guégan.
 It is a multiplatform demo (just playable) that uses GL for rendering. When I say multiplatform, I mean:
 
-* Web with duetto: it works at least with Firefox and Chrome, if WebGL is available. It still has issues, but we hope to fix them soon. Play online [here](http://allievi.sssup.it/jacopone/cnontetris/)
-* Windows: working with MXE cross compiler toolchain! Get the executable [here](https://allievi.sssup.it/jacopone/cnontetris-win/nontetris.zip)
-* Linux: currently supported with glfw (You have to build the source yourself)
-* Web with emscripten: work in progress
+* **Web with duetto**: it works at least with Firefox and Chrome, if WebGL is available. It still has issues, but we hope to fix them soon. Play online [here](http://allievi.sssup.it/jacopone/cnontetris/)
+* **Windows**: working with MXE cross compiler toolchain! Get the executable [here](https://allievi.sssup.it/jacopone/cnontetris-win/nontetris.zip)
+* **Linux**: currently supported with glfw (You have to build the source yourself)
+* **Web with emscripten**: work in progress
 
 Building
 ================
@@ -123,7 +123,7 @@ build/ cmake build directory for the native target
 
 imgs/ contains the textures in png format
 
-src/ contains the sources of the demo
+src/ contains the sources of the project
 
 srclib/ contains some libraries that have been embedded (Box2D and lodepng)
 
@@ -142,6 +142,6 @@ Acknowledgements
 
 I would like to thank:
 
-* The awesome people at Leaningtech: Alessandro, Massimo and Stefano
-* A lot of friend who helped me with the math(and with some coding): Sbabbi, Peoro, Tommy, Davide
+* The awesome people at [Leaningtech](http://leaningtech.com/): Alessandro, Massimo and Stefano
+* A lot of friends who helped me with the math (and with some coding): Sbabbi, Peoro, Tom, Davide
 * The man who made me discover the original Not Tetris 2: Enrico
