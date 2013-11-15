@@ -33,6 +33,7 @@ b2StackAllocator::~b2StackAllocator()
 	b2Assert(m_entryCount == 0);
 }
 
+#ifndef __DUETTO__
 void* b2StackAllocator::Allocate(int32 size)
 {
 	b2Assert(m_entryCount < b2_maxStackEntries);
@@ -76,6 +77,7 @@ void b2StackAllocator::Free(void* p)
 
 	p = NULL;
 }
+#endif
 
 int32 b2StackAllocator::GetMaxAllocation() const
 {
