@@ -18,41 +18,35 @@
      along with nontetris.  If not, see <http://www.gnu.org/licenses/>.
 
 *****************************************************************************/
-#ifndef _INPUT_HANDLER
-#define _INPUT_HANDLER
+#ifndef GAMEHANDLER_H
+#define GAMEHANDLER_H
 
-#include <functional>
+#include "graphichandler.h"
+#include "physichandler.h"
+#include "inputhandler.h"
 
-#ifndef __DUETTO__
-#if (USE_GLFW_VERSION==3)
-#include <GLFW/glfw3.h>
-#else
-#define GLFW_NO_GLU
-#include <GL/glfw.h>
-#endif
-#endif
+#include <list>
 
-#include "graphictoinput.h"
-
-class InputHandler
+class GameHandler
 {
-	#ifdef __DUETTO__
-	static bool k_down;
-	static bool k_left;
-	static bool k_right;
-	static bool k_z;
-	static bool k_x;
-	#elif GLFW_VERSION_MAJOR == 3
-	GLFWwindow * glfwwindow;
-	#endif
+	struct GamePiece
+	{
+		PhysicPiece * php;
+		GraphicPiece * grp;
+	};
 
-	#ifdef __DUETTO__
-	static void keydown(client::KeyboardEvent * _e);
-	static void keyup(client::KeyboardEvent * _e);
-	#endif
+	std::list<GamePiece> ingamepieces;
+
+	PhysicHandler * phphysic;
+	GraphicHandler * phgraphic;
+	InputHandler * phinput;
+
+	void newrandompiece();
+
 public:
-	InputHandler(GraphicToInput);
-	void process_input(const std::function<void()> & exit, const std::function<void()> & left, const std::function<void()> & right, const std::function<void()> & down, const std::function<void()> & z, const std::function<void()> & x);
+	GameHandler(const GraphicOptions & gopt, const FileLoader & fl, float width=10.25, float height=18);
+	bool oneiteration();
+	~GameHandler();
 };
 
-#endif //_INPUT_HANDLER
+#endif //GAMEHANDLER_H

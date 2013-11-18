@@ -18,10 +18,8 @@
      along with nontetris.  If not, see <http://www.gnu.org/licenses/>.
 
 *****************************************************************************/
-#ifndef _INPUT_HANDLER
-#define _INPUT_HANDLER
-
-#include <functional>
+#ifndef _GRAPHICTOINPUT
+#define _GRAPHICTOINPUT
 
 #ifndef __DUETTO__
 #if (USE_GLFW_VERSION==3)
@@ -32,27 +30,11 @@
 #endif
 #endif
 
-#include "graphictoinput.h"
-
-class InputHandler
+struct GraphicToInput
 {
-	#ifdef __DUETTO__
-	static bool k_down;
-	static bool k_left;
-	static bool k_right;
-	static bool k_z;
-	static bool k_x;
-	#elif GLFW_VERSION_MAJOR == 3
-	GLFWwindow * glfwwindow;
-	#endif
-
-	#ifdef __DUETTO__
-	static void keydown(client::KeyboardEvent * _e);
-	static void keyup(client::KeyboardEvent * _e);
-	#endif
-public:
-	InputHandler(GraphicToInput);
-	void process_input(const std::function<void()> & exit, const std::function<void()> & left, const std::function<void()> & right, const std::function<void()> & down, const std::function<void()> & z, const std::function<void()> & x);
+#if !defined( __DUETTO__) && (GLFW_VERSION_MAJOR == 3)
+	GLFWwindow * window;
+#endif
 };
 
-#endif //_INPUT_HANDLER
+#endif //_GRAPHICTOINPUT

@@ -4,4 +4,6 @@ texture piece caching (good for AA)
 do not draw piece outside game box
 fix Box2D issues with duetto
 fix emscripten build
-multiple physic steps
+multiple physics steps
+
+build for duetto by copying from /opt
