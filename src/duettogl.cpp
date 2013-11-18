@@ -26,10 +26,7 @@
 
 using namespace client;
 
-void myteximage2Dnull(WebGLRenderingContext* gl, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type);
-void myglbindnullframebuffer(WebGLRenderingContext* gl);
 WebGLRenderingContext* gl;
-
 
 
 WebGLShader * gaShader[200];
@@ -227,4 +224,21 @@ GL_APICALL void         GL_APIENTRY glDisableVertexAttribArray (GLuint index)
 GL_APICALL void         GL_APIENTRY glGenerateMipmap (GLenum target)
 {
 	gl->generateMipmap(target);
+}
+GL_APICALL void         GL_APIENTRY glDeleteTextures (GLsizei n, const GLuint* textures)
+{
+	for (int i = 0; i < n; ++i)
+	{
+		gl->deleteTexture(gaTexture[textures[i]]);
+		gaTexture[i] = NULL;
+	}
+}
+GL_APICALL void         GL_APIENTRY glDeleteFramebuffers (GLsizei n, const GLuint* framebuffers)
+{
+	for (int i = 0; i < n; ++i)
+	{
+		gl->deleteFramebuffer(gaFramebuffer[framebuffers[i]]);
+		gaFramebuffer[i] = NULL;
+	}
+
 }

@@ -74,7 +74,7 @@ public:
 	}
 
 	#ifdef __DUETTO__
-	client::String * getfilecontent(std::string f)
+	client::String * getfilecontent(std::string f) const
 	{
 		auto elem = client::document.getElementById(f.c_str());
 		auto res = (elem->get_childNodes())->item(0)->get_nodeValue();

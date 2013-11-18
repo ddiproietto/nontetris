@@ -31,15 +31,15 @@ include_directories("${PROJECT_SOURCE_DIR}/srclib/lodepng/")
 endif(NOT DEFINED DUETTO)
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
-set(MY_SOURCES nontetris.cpp physichandler.cpp inputhandler.cpp graphichandler.cpp inputhandler.cpp)
+set(MY_SOURCES physichandler.cpp inputhandler.cpp graphichandler.cpp inputhandler.cpp gamehandler.cpp)
 
 if(DEFINED DUETTO)
-	set (MY_SOURCES ${MY_SOURCES} duettogl.cpp)
+	set (MY_SOURCES ${MY_SOURCES} duettogl.cpp main_duetto.cpp)
+elseif(DEFINED EMSCRIPTEN)
+	set (MY_SOURCES ${MY_SOURCES} $<TARGET_OBJECTS:lodepng> main_emscripten.cpp)
+else(DEFINED EMSCRIPTEN)
+	set (MY_SOURCES ${MY_SOURCES} main_pc.cpp)
 endif(DEFINED DUETTO)
-
-if(DEFINED EMSCRIPTEN)
-	set (MY_SOURCES ${MY_SOURCES} $<TARGET_OBJECTS:lodepng>)
-endif(DEFINED EMSCRIPTEN)
 
 add_executable (nontetris ${MY_SOURCES})
 

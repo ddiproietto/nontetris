@@ -44,6 +44,14 @@
 #include <functional>
 #include "NontetrisConfig.h"
 
+#include "graphictoinput.h"
+
+struct GraphicOptions
+{
+	int width;
+	int height;
+	bool fullscreen;
+};
 
 struct GraphicPiece
 {
@@ -74,14 +82,12 @@ class GraphicHandler
 	GLint aGlobalTextureCoordLoc;
 
 public:
-	GraphicHandler(int width = 600, int height = 540, bool fullscreen = false, FileLoader * fileloader = NULL);
+	GraphicHandler(const GraphicOptions & gopt, const FileLoader & fileloader);
 	~GraphicHandler();
 	GraphicPiece * createpiece(piece<float> pol);
 	bool render(const std::function< void(const std::function<void(float x, float y, float rot, GraphicPiece * d)> &)> & allbodies );
 
-	#if !defined( __DUETTO__) && (GLFW_VERSION_MAJOR == 3)
-	GLFWwindow * getglfwwindow();
-	#endif
+	GraphicToInput toinput();
 };
 
 #endif //_GRAPHIC_HANDLER_H

@@ -50,9 +50,9 @@ If you manage to install GLEW and GLFW in your favourite compiler (Visual Studio
 Here I'm describing the procedure to cross compile from linux using [MXE](http://mxe.cc/).
 
 * Download [MXE](http://mxe.cc/#download). Now you can build libraries as explained [here](http://mxe.cc/#usage)
-* Build at least gcc, glew, glfw
+* Build at least gcc, glew, glfw2 (You can also use glfw3, if you want. You'll have to change the CMakeList.txt, as explained for linux)
 	
-		make gcc glew glfw
+		make gcc glew glfw2
 
 * Change directory to nontetris sources and then
 	

@@ -40,27 +40,22 @@ bool InputHandler::k_left = false;
 bool InputHandler::k_right = false;
 bool InputHandler::k_z = false;
 bool InputHandler::k_x = false;
+#endif
 
-InputHandler::InputHandler()
+InputHandler::InputHandler(GraphicToInput gti)
 {
 	/*
 	auto canvas = static_cast<client::HTMLCanvasElement*>(client::document.getElementById("glcanvas"));
 	canvas->addEventListener("keydown",Callback(keydown));
 	canvas->addEventListener("keyup",Callback(keyup));
 	*/
+#ifdef __DUETTO__
 	document.addEventListener("keydown",Callback(keydown));
 	document.addEventListener("keyup",Callback(keyup));
-
-}
 #elif GLFW_VERSION_MAJOR == 3
-InputHandler::InputHandler(GLFWwindow * w):glfwwindow(w)
-{
-}
-#else
-InputHandler::InputHandler()
-{
-}
+	glfwwindow = gti.window;
 #endif
+}
 
 void InputHandler::process_input(const std::function<void()> & exit, const std::function<void()> & left, const std::function<void()> & right, const std::function<void()> & down, const std::function<void()> & z, const std::function<void()> & x)
 {

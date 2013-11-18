@@ -32,6 +32,8 @@
 #endif
 #endif
 
+#include "graphictoinput.h"
+
 class InputHandler
 {
 	#ifdef __DUETTO__
@@ -44,17 +46,13 @@ class InputHandler
 	GLFWwindow * glfwwindow;
 	#endif
 
-public:
-	#if !defined( __DUETTO__) && (GLFW_VERSION_MAJOR == 3)
-	InputHandler(GLFWwindow *);
-	#else
-	InputHandler();
-	#endif
-	void process_input(const std::function<void()> & exit, const std::function<void()> & left, const std::function<void()> & right, const std::function<void()> & down, const std::function<void()> & z, const std::function<void()> & x);
 	#ifdef __DUETTO__
 	static void keydown(client::KeyboardEvent * _e);
 	static void keyup(client::KeyboardEvent * _e);
 	#endif
+public:
+	InputHandler(GraphicToInput);
+	void process_input(const std::function<void()> & exit, const std::function<void()> & left, const std::function<void()> & right, const std::function<void()> & down, const std::function<void()> & z, const std::function<void()> & x);
 };
 
 #endif //_INPUT_HANDLER

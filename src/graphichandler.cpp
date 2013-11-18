@@ -137,7 +137,7 @@ void eye(GLfloat * out)
 #endif
 
 
-GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoader * fileloader):width(width), height(height)
+GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & fileloader):width(gopt.width), height(gopt.height)
 {
 	float imgquad = height/18.0;
 	float piecesAA = 2;
@@ -150,7 +150,7 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 	glfwMakeContextCurrent(glfwwindow);
 	#else
 	glfwOpenWindowHint(GLFW_FSAA_SAMPLES, 8);
-	glfwOpenWindow(width, height, 5, 6, 5, 8, 0, 0, fullscreen?GLFW_FULLSCREEN:GLFW_WINDOW );
+	glfwOpenWindow(width, height, 5, 6, 5, 8, 0, 0, gopt.fullscreen?GLFW_FULLSCREEN:GLFW_WINDOW );
 	glfwSetWindowTitle("nontetris");
 	#endif
 		#ifndef EMSCRIPTEN
@@ -171,9 +171,9 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 
 
 	#ifdef __DUETTO__
-		auto * c_vsSource = fileloader->getfilecontent("shader.vert");
-		auto * c_fsSource = client::String(WEBPREAMBLE).concat(fileloader->getfilecontent("shader.frag"));
-		auto * c_ivsSource = fileloader->getfilecontent("shaderident.vert");
+		auto * c_vsSource = fileloader.getfilecontent("shader.vert");
+		auto * c_fsSource = client::String(WEBPREAMBLE).concat(fileloader.getfilecontent("shader.frag"));
+		auto * c_ivsSource = fileloader.getfilecontent("shaderident.vert");
 	#else
 		std::string vsSource = FileLoader::getfilecontent(DATAPATHPREAMBLE "shader.vert");
 		std::string ivsSource = FileLoader::getfilecontent(DATAPATHPREAMBLE "shaderident.vert");
@@ -328,6 +328,7 @@ GraphicHandler::GraphicHandler(int width, int height, bool fullscreen, FileLoade
 
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	//glDeleteTextures(7, tex_small); //I should delete textures, but it doesn't work on duetto
 
 	glGenBuffers(1, &vbo_background);
 	glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_background);
@@ -351,12 +352,14 @@ GraphicHandler::~GraphicHandler()
 	#endif
 }
 
-#if !defined( __DUETTO__) && (GLFW_VERSION_MAJOR == 3)
-GLFWwindow * GraphicHandler::getglfwwindow()
+GraphicToInput GraphicHandler::toinput()
 {
-	return glfwwindow;
+	#if !defined( __DUETTO__) && (GLFW_VERSION_MAJOR == 3)
+	return GraphicToInput{.window=glfwwindow};
+	#else
+	return GraphicToInput();
+	#endif
 }
-#endif
 
 // Very simple tessellation: FROM counterclockwise list of vertices TO triangle strip
 // Since all polygons are convex all we need to do is reorder the vertices.
