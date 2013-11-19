@@ -34,7 +34,7 @@ endif(NOT DEFINED DUETTO)
 set(MY_SOURCES physichandler.cpp inputhandler.cpp graphichandler.cpp inputhandler.cpp gamehandler.cpp)
 
 if(DEFINED DUETTO)
-	set (MY_SOURCES ${MY_SOURCES} duettogl.cpp main_duetto.cpp)
+	set (MY_SOURCES ${MY_SOURCES} main_duetto.cpp)
 elseif(DEFINED EMSCRIPTEN)
 	set (MY_SOURCES ${MY_SOURCES} $<TARGET_OBJECTS:lodepng> main_emscripten.cpp)
 else(DEFINED EMSCRIPTEN)
@@ -44,6 +44,10 @@ endif(DEFINED DUETTO)
 add_executable (nontetris ${MY_SOURCES})
 
 target_link_libraries(nontetris Box2D)
+
+if(DEFINED DUETTO)
+	target_link_libraries(nontetris "${CMAKE_FIND_ROOT_PATH}/lib/libGLESv2.bc")
+endif(DEFINED DUETTO)
 
 if(NOT DEFINED DUETTO)
 

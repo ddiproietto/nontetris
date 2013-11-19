@@ -24,7 +24,7 @@
 #include "NontetrisConfig.h"
 
 #ifdef __DUETTO__
-#include "duettogl.h"
+#include <GLES2/gl2.h>
 #else
 
 #include "glwrapper.h"

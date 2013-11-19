@@ -23,9 +23,10 @@
 #include "NontetrisConfig.h"
 
 #ifdef __DUETTO__
-#include "duettogl.h"
 #include <duetto/client.h>
 #include <duetto/clientlib.h>
+#include <GLES2/gl2.h>
+#include <GLES2/webgles.h>
 #else
 
 #include "glwrapper.h"
@@ -160,7 +161,7 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 		#endif //defined(__EMSCRIPTEN__)
 	glEnableClientState(GL_VERTEX_ARRAY);
 	#else //defined(__DUETTO__)
-	duettoGLInit(width, height);
+	webGLESInit("glcanvas");
 	#endif
 
 	glDisable(GL_DEPTH_TEST);
@@ -187,17 +188,29 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 	#endif
 
 	vs = glCreateShader(GL_VERTEX_SHADER);
+	#ifdef __DUETTO__
+	webGLES->shaderSource(webGLESLookupWebGLShader(vs), *c_vsSource);
+	#else
 	glShaderSource(vs, 1, &c_vsSource, NULL);
+	#endif
 	glCompileShader(vs);
 	printLog(vs,"vertex shader:");
 
 	ivs = glCreateShader(GL_VERTEX_SHADER);
+	#ifdef __DUETTO__
+	webGLES->shaderSource(webGLESLookupWebGLShader(ivs), *c_ivsSource);
+	#else
 	glShaderSource(ivs, 1, &c_ivsSource, NULL);
+	#endif
 	glCompileShader(ivs);
 	printLog(vs,"ident vertex shader:");
 
 	fs = glCreateShader(GL_FRAGMENT_SHADER);
+	#ifdef __DUETTO__
+	webGLES->shaderSource(webGLESLookupWebGLShader(fs), *c_fsSource);
+	#else
 	glShaderSource(fs, 1, &c_fsSource, NULL);
+	#endif
 	glCompileShader(fs);
 	printLog(fs, "fragment shader:");
 
@@ -242,7 +255,7 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 			GL_UNSIGNED_BYTE, image );
 	free(image);
 	#else
-	gl->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById("imgs/newgamebackground.png")));
+	webGLES->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById("imgs/newgamebackground.png")));
 	#endif
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
@@ -256,7 +269,7 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 
 	GLuint vbo_ident;
 	glGenBuffers(1, &vbo_ident);
-	glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_ident);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_ident);
 
 	GLfloat vert_ident [] = {
 		-1, -1, 0, 0,
@@ -264,7 +277,7 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 		1, -1, 1, 0,
 		1, 1, 1, 1
 	};
-	glBufferData(GL_ARRAY_BUFFER_ARB, 4*2*2*sizeof(float), vert_ident, GL_STATIC_DRAW_ARB);
+	glBufferData(GL_ARRAY_BUFFER, 4*2*2*sizeof(float), vert_ident, GL_STATIC_DRAW);
 
 	for (int i = 0; i < 7; i++)
 	{
@@ -289,7 +302,7 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 		client::String prefixname("imgs/pieces/");
 		client::String * pname = prefixname.concat(i+1);
 		client::String * idname = pname->concat(".png");
-		gl->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById(*idname)));
+		webGLES->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById(*idname)));
 		#endif
 
 		glBindTexture(GL_TEXTURE_2D, tex[i]);
@@ -314,7 +327,7 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 
 		glBindTexture(GL_TEXTURE_2D, tex_small[i]);
 
-		glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_ident);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_ident);
 		glVertexAttribPointer(aGlobalVertexPositionLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)0);
 		glVertexAttribPointer(aGlobalTextureCoordLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)(2*sizeof(GLfloat)));
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -331,14 +344,14 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 	//glDeleteTextures(7, tex_small); //I should delete textures, but it doesn't work on duetto
 
 	glGenBuffers(1, &vbo_background);
-	glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_background);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_background);
 	float rapx = 256.0/160.0;
 	float rapy = 256.0/144.0;
 	GLfloat vertices2 [] = {-1, -1,  0, 1/rapy,
 				-1,  1,  0, 0,
 				 1, -1,  1/rapx, 1/rapy,
 				 1,  1,  1/rapx, 0};
-	glBufferData(GL_ARRAY_BUFFER_ARB, 4*2*2*sizeof(float), vertices2, GL_STATIC_DRAW_ARB);
+	glBufferData(GL_ARRAY_BUFFER, 4*2*2*sizeof(float), vertices2, GL_STATIC_DRAW);
 
 }
 
@@ -408,8 +421,8 @@ GraphicPiece * GraphicHandler::createpiece(piece<float> pie)
 	}
 
 	glGenBuffers(1, &VBOid);
-	glBindBuffer(GL_ARRAY_BUFFER_ARB, VBOid);
-	glBufferData(GL_ARRAY_BUFFER_ARB, vertices.size()*sizeof(float), vertices.data(), GL_STATIC_DRAW_ARB);
+	glBindBuffer(GL_ARRAY_BUFFER, VBOid);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(float), vertices.data(), GL_STATIC_DRAW);
 
 	pgp->VBOid = VBOid;
 	pgp->num = static_cast<int>(size/2);
@@ -426,7 +439,7 @@ bool GraphicHandler::render(const std::function< void(const std::function<void(f
 
 	//DRAW BACKGROUND
 	glUseProgram(isp);
-	glBindBuffer(GL_ARRAY_BUFFER_ARB, vbo_background);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_background);
 	glEnableVertexAttribArray(aGlobalVertexPositionLoc);
 	glEnableVertexAttribArray(aGlobalTextureCoordLoc);
 
@@ -450,7 +463,7 @@ bool GraphicHandler::render(const std::function< void(const std::function<void(f
 		glUniform4fv(uRTVecLoc, 1, RTVec);
 
 		glBindTexture( GL_TEXTURE_2D, gp->tex);
-		glBindBuffer(GL_ARRAY_BUFFER_ARB, gp->VBOid);
+		glBindBuffer(GL_ARRAY_BUFFER, gp->VBOid);
 
 		glVertexAttribPointer(aVertexPositionLoc, 2, GL_FLOAT, false, 0, 0);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, gp->num);

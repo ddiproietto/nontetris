@@ -84,4 +84,3 @@ endif(NOT DEFINED DUETTO)
 
 add_subdirectory(srclib)
 add_subdirectory(src)
-
