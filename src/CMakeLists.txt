@@ -46,7 +46,7 @@ add_executable (nontetris ${MY_SOURCES})
 target_link_libraries(nontetris Box2D)
 
 if(DEFINED DUETTO)
-	target_link_libraries(nontetris "${CMAKE_FIND_ROOT_PATH}/lib/libGLESv2.bc")
+	target_link_libraries(nontetris GLESv2)
 endif(DEFINED DUETTO)
 
 if(NOT DEFINED DUETTO)
