@@ -21,6 +21,19 @@
 
 #include <Box2D/Common/b2Settings.h>
 
+#ifdef __DUETTO__
+#include <Box2D/Dynamics/Contacts/b2ContactSolver.h>
+#include <Box2D/Dynamics/b2TimeStep.h>
+
+class b2ContactPositionConstraint;
+class b2ContactVelocityConstraint;
+class b2Body;
+class b2Contact;
+class b2Joint;
+struct b2Velocity;
+struct b2Position;
+#endif
+
 const int32 b2_stackSize = 100 * 1024;	// 100k
 const int32 b2_maxStackEntries = 32;
 
@@ -40,7 +53,17 @@ public:
 	b2StackAllocator();
 	~b2StackAllocator();
 
-#ifndef __DUETTO__
+#ifdef __DUETTO__
+
+#define DEFINE_TYPE(a,b) a * Allocate_ ## b (int32 num);
+#include <Box2D/Common/b2StackAllocatorTypesDuetto.h>
+#undef DEFINE_TYPE
+
+#define DEFINE_TYPE(a,b) void Free_ ## b (a * p);
+#include <Box2D/Common/b2StackAllocatorTypesDuetto.h>
+#undef DEFINE_TYPE
+
+#else
 	void* Allocate(int32 size);
 	void Free(void* p);
 #endif
@@ -49,14 +72,29 @@ public:
 
 private:
 
+#ifdef __DUETTO__
+
+// TODO the size is fixed and there is no allocation
+
+#define DEFINE_TYPE(a,b) a m_data_ ## b[b2_stackSize/sizeof(a)];
+#include <Box2D/Common/b2StackAllocatorTypesDuetto.h>
+#undef DEFINE_TYPE
+
+#define DEFINE_TYPE(a,b) a * pointer_ ## b;
+#include <Box2D/Common/b2StackAllocatorTypesDuetto.h>
+#undef DEFINE_TYPE
+
+#else
 	char m_data[b2_stackSize];
 	int32 m_index;
-
 	int32 m_allocation;
-	int32 m_maxAllocation;
 
 	b2StackEntry m_entries[b2_maxStackEntries];
 	int32 m_entryCount;
+#endif
+
+	int32 m_maxAllocation;
+
 };
 
 #endif

@@ -425,7 +425,10 @@ void b2World::Solve(const b2TimeStep& step)
 	// Build and simulate all awake islands.
 	int32 stackSize = m_bodyCount;
 	#ifdef __DUETTO__
+	/*
 	b2Body** stack = new b2Body*[stackSize];
+	*/
+	b2Body** stack = m_stackAllocator.Allocate_pb2Body(stackSize);
 	#else
 	b2Body** stack = (b2Body**)m_stackAllocator.Allocate(stackSize * sizeof(b2Body*));
 	#endif
@@ -562,7 +565,10 @@ void b2World::Solve(const b2TimeStep& step)
 	}
 
 	#ifdef __DUETTO__
+	/*
 	delete [] stack;
+	*/
+	m_stackAllocator.Free_pb2Body(stack);
 	#else
 	m_stackAllocator.Free(stack);
 	#endif

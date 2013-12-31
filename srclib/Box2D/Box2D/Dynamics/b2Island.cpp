@@ -163,12 +163,20 @@ b2Island::b2Island(
 	m_listener = listener;
 
 	#ifdef __DUETTO__
+	/*
 	m_bodies = new b2Body* [bodyCapacity];
 	m_contacts = new b2Contact* [contactCapacity];
 	m_joints = new b2Joint* [jointCapacity];
 
 	m_velocities = new b2Velocity [m_bodyCapacity];
 	m_positions = new b2Position [m_bodyCapacity];
+	*/
+	m_bodies = m_allocator->Allocate_pb2Body(bodyCapacity);
+	m_contacts = m_allocator->Allocate_pb2Contact(contactCapacity);
+	m_joints = m_allocator->Allocate_pb2Joint(jointCapacity);
+
+	m_velocities = m_allocator->Allocate_b2Velocity(m_bodyCapacity);
+	m_positions = m_allocator->Allocate_b2Position(m_bodyCapacity);
 	#else
 	m_bodies = (b2Body**)m_allocator->Allocate(bodyCapacity * sizeof(b2Body*));
 	m_contacts = (b2Contact**)m_allocator->Allocate(contactCapacity	 * sizeof(b2Contact*));
@@ -182,11 +190,18 @@ b2Island::b2Island(
 b2Island::~b2Island()
 {
 	#ifdef __DUETTO__
+	/*
 	delete [] m_positions;
 	delete [] m_velocities;
 	delete [] m_joints;
 	delete [] m_contacts;
 	delete [] m_bodies;
+	*/
+	m_allocator->Free_b2Position(m_positions);
+	m_allocator->Free_b2Velocity(m_velocities);
+	m_allocator->Free_pb2Joint(m_joints);
+	m_allocator->Free_pb2Contact(m_contacts);
+	m_allocator->Free_pb2Body(m_bodies);
 	#else
 	// Warning: the order should reverse the constructor order.
 	m_allocator->Free(m_positions);

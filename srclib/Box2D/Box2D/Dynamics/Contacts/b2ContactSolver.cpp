@@ -26,6 +26,7 @@
 
 #define B2_DEBUG_SOLVER 0
 
+#ifndef __DUETTO__
 struct b2ContactPositionConstraint
 {
 	b2Vec2 localPoints[b2_maxManifoldPoints];
@@ -40,6 +41,7 @@ struct b2ContactPositionConstraint
 	float32 radiusA, radiusB;
 	int32 pointCount;
 };
+#endif
 
 b2ContactSolver::b2ContactSolver(b2ContactSolverDef* def)
 {
@@ -47,8 +49,12 @@ b2ContactSolver::b2ContactSolver(b2ContactSolverDef* def)
 	m_allocator = def->allocator;
 	m_count = def->count;
 	#ifdef __DUETTO__
+	/*
 	m_positionConstraints = new b2ContactPositionConstraint[m_count];
 	m_velocityConstraints = new b2ContactVelocityConstraint[m_count];
+	*/
+	m_positionConstraints = m_allocator->Allocate_b2ContactPositionConstraint(m_count);
+	m_velocityConstraints = m_allocator->Allocate_b2ContactVelocityConstraint(m_count);
 	#else
 	m_positionConstraints = (b2ContactPositionConstraint*)m_allocator->Allocate(m_count * sizeof(b2ContactPositionConstraint));
 	m_velocityConstraints = (b2ContactVelocityConstraint*)m_allocator->Allocate(m_count * sizeof(b2ContactVelocityConstraint));
@@ -136,8 +142,12 @@ b2ContactSolver::b2ContactSolver(b2ContactSolverDef* def)
 b2ContactSolver::~b2ContactSolver()
 {
 	#ifdef __DUETTO__
+	/*
 	delete [] m_velocityConstraints;
 	delete [] m_positionConstraints;
+	*/
+	m_allocator->Free_b2ContactVelocityConstraint(m_velocityConstraints);
+	m_allocator->Free_b2ContactPositionConstraint(m_positionConstraints);
 	#else
 	m_allocator->Free(m_velocityConstraints);
 	m_allocator->Free(m_positionConstraints);
