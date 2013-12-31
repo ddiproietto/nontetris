@@ -35,9 +35,9 @@ namespace
 			);
 }
 
-GameHandler::GameHandler(const GraphicOptions & gopt, const FileLoader & fl, float width, float height)
+GameHandler::GameHandler(const GraphicOptions & gopt, const GameOptions & gameopt, const FileLoader & fl, double physicstep)
 {
-	phphysic = new PhysicHandler (width, height);
+	phphysic = new PhysicHandler (gameopt.columns, gameopt.rows, physicstep);
 	phgraphic = new GraphicHandler (gopt, fl);
 	phinput = new InputHandler(phgraphic->toinput());
 
@@ -75,15 +75,10 @@ void GameHandler::newrandompiece()
 	ingamepieces.insert(ingamepieces.begin(), GamePiece{.php=php,.grp=grp});
 }
 
-bool GameHandler::oneiteration()
+void GameHandler::step_physic()
 {
 	PhysicHandler &phh = *phphysic;
-	GraphicHandler &grh = *phgraphic;
-	InputHandler &inh = *phinput;
 
-	bool running = true;
-
-	//TODO: restructure main loop so that eventually multiple physic steps are done at once
 	phh.step([&](float x, float y)
 	{
 		//The falling piece has landed:
@@ -91,6 +86,12 @@ bool GameHandler::oneiteration()
 		if( y > 0 )
 			newrandompiece();
 	});
+}
+
+void GameHandler::step_graphic()
+{
+	GraphicHandler &grh = *phgraphic;
+	PhysicHandler &phh = *phphysic;
 
 	grh.render([this](const std::function<void(float x, float y, float rot, GraphicPiece * d)> & x)
 	{
@@ -100,10 +101,18 @@ bool GameHandler::oneiteration()
 			auto grp = i.grp;
 			x(php->getX(),php->getY(),php->getRot(),grp);
 		}
-			
 	});
+}
 
-	inh.process_input([&]()//EXIT
+bool GameHandler::step_logic()
+{
+	PhysicHandler &phh = *phphysic;
+	InputHandler &inh = *phinput;
+
+	bool running = true;
+
+	inh.process_input(
+		[&]()//EXIT
 		{
 			running = false;
 		},

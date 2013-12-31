@@ -27,6 +27,12 @@
 
 #include <list>
 
+struct GameOptions
+{
+	double rows;
+	double columns;
+};
+
 class GameHandler
 {
 	struct GamePiece
@@ -44,8 +50,10 @@ class GameHandler
 	void newrandompiece();
 
 public:
-	GameHandler(const GraphicOptions & gopt, const FileLoader & fl, float width=10.25, float height=18);
-	bool oneiteration();
+	GameHandler(const GraphicOptions & gopt, const GameOptions & gameopt, const FileLoader & fl, double physicstep);
+	void step_physic();
+	void step_graphic();
+	bool step_logic();
 	~GameHandler();
 };
 

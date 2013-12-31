@@ -56,7 +56,7 @@ void PhysicHandler::MyContactListener::BeginContact(b2Contact* contact)
 	}
 }
 
-PhysicHandler::PhysicHandler(float w_width, float w_height):world(b2Vec2(0.0F, 15.625F)), w_width(w_width), w_height(w_height), fallingpiece(NULL), stepInterval(1.0/60.0), accelerating(false)
+PhysicHandler::PhysicHandler(float w_width, float w_height, double pstep):world(b2Vec2(0.0F, 15.625F)), w_width(w_width), w_height(w_height), fallingpiece(NULL), stepInterval(pstep), accelerating(false)
 {
 	b2BodyDef bodyDef;
 	b2FixtureDef fixDef;

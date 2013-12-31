@@ -33,13 +33,39 @@ extern "C" {
 
 namespace
 {
+	const double PHYSICSTEP = 1.0/60.0;
+
 	TextureLoader texloader;
 	FileLoader fileloader;
 	GameHandler * pgh;
 
+#ifdef MULTIPLE_PHYSICS_STEPS
+	double next;
+#endif
+
 	void oneiterationwrapper()
 	{
-		pgh->oneiteration();
+#ifdef MULTIPLE_PHYSICS_STEPS
+		auto * nowdate = new client::Date::Date();
+		double now = nowdate->getTime();
+		//If lag is too much, maybe it means simply that the user is doing something else
+		if(now - next > 2000)
+		{
+			now = next - 1;
+		}
+		while(now > next)
+		{
+			pgh->step_physic();
+			pgh->step_logic();
+
+			next += PHYSICSTEP * 1000.0;
+		}
+#else
+		pgh->step_physic();
+		pgh->step_logic();
+
+#endif
+		pgh->step_graphic();
 
 		compatRequestAnimationFrame(client::Callback(oneiterationwrapper));
 	}
@@ -53,7 +79,18 @@ namespace
 			.height     = 540,
 			.fullscreen = false,
 		};
-		pgh = new GameHandler(gopt, fileloader, 10.25, 18);
+		GameOptions gameopt =
+		{
+			.rows = 18,
+			.columns = 10.25,
+		};
+		pgh = new GameHandler(gopt, gameopt, fileloader, PHYSICSTEP);
+
+
+#ifdef MULTIPLE_PHYSICS_STEPS
+		auto * nowdate = new client::Date::Date();
+		next = nowdate->getTime();
+#endif
 		oneiterationwrapper();
 	}
 }
@@ -76,7 +113,7 @@ int webMain() [[client]]
 		"imgs/pieces/7.png"
 	);
 
-	//TODO: the two operation could be done in parallel
+	//TODO: the two operations could be done in parallel
 	
 	client::document.addEventListener("DOMContentLoaded", client::Callback([=](){
 		//The DOM has been loaded

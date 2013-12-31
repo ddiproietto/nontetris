@@ -35,11 +35,16 @@
 #include "myutil.h"
 
 #ifdef __MINGW32__
-//Mingw doesn't have std:::this_thread
+//Mingw doesn't have std::this_thread
 #include <windows.h> //For Sleep
 #endif
 
 using namespace std;
+
+namespace
+{
+	const double PHYSICSTEP = 1.0/60.0;
+}
 
 int main(int argc, char * argv[])
 {
@@ -49,15 +54,33 @@ int main(int argc, char * argv[])
 		.height     = 540,
 		.fullscreen = false,
 	};
+	GameOptions gameopt =
+	{
+		.rows = 18,
+		.columns = 10.25,
+	};
 	FileLoader fl;
-	GameHandler gh(gopt, fl, 10.25, 18);
+	GameHandler gh(gopt, gameopt, fl, PHYSICSTEP);
 
 	bool running = true;
 	auto next = std::chrono::steady_clock::now();
 	while (running)
 	{
-		running = gh.oneiteration();
-		next+=(std::chrono::nanoseconds(1000000000/60));
+#ifdef MULTIPLE_PHYSICS_STEPS
+		auto now = std::chrono::steady_clock::now();
+		while(now > next)
+		{
+			gh.step_physic();
+			running = gh.step_logic();
+			next+=(std::chrono::nanoseconds(static_cast<int>(1000000000*PHYSICSTEP)));
+		}
+#else
+		gh.step_physic();
+		running = gh.step_logic();
+		next+=(std::chrono::nanoseconds(static_cast<int>(1000000000*PHYSICSTEP)));
+#endif
+		gh.step_graphic();
+
 		#ifdef __MINGW32__
 		//Mingw doesn't have std::this_thread
 		auto diff = next - std::chrono::steady_clock::now();

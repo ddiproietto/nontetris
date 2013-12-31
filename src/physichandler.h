@@ -77,7 +77,7 @@ class PhysicHandler
 	}contactlistener;
 	userData udright, udleft, udground;
 public:
-	PhysicHandler(float width, float height);
+	PhysicHandler(float width, float height, double pstep = (1.0/60.0));
 	PhysicPiece * createpiece(piece<float>, float, float, float, void *);
 	void step(std::function<void(float x, float y)> cb);
 	void debugprint();
