@@ -133,7 +133,6 @@ Todo
 ====
 
 Fix the build under emscripten.
-Fix Box2D glitches with duetto.
 (...) check TODO file.
 Make it a game!
 
