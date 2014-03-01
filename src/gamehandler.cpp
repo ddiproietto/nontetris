@@ -93,15 +93,14 @@ void GameHandler::step_graphic()
 	GraphicHandler &grh = *phgraphic;
 	PhysicHandler &phh = *phphysic;
 
-	grh.render([this](const std::function<void(float x, float y, float rot, GraphicPiece * d)> & x)
+	grh.beginrender();
+	for(auto i : ingamepieces)
 	{
-		for(auto i : ingamepieces)
-		{
-			auto php = i.php;
-			auto grp = i.grp;
-			x(php->getX(),php->getY(),php->getRot(),grp);
-		}
-	});
+		auto php = i.php;
+		auto grp = i.grp;
+		grh.renderpiece(php->getX(),php->getY(),php->getRot(),grp);
+	}
+	grh.endrender();
 }
 
 bool GameHandler::step_logic()

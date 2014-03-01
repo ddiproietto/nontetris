@@ -431,7 +431,7 @@ GraphicPiece * GraphicHandler::createpiece(piece<float> pie)
 	return pgp;
 }
 
-bool GraphicHandler::render(const std::function< void(const std::function<void(float x, float y, float rot, GraphicPiece * d)>&)> & allbodies )
+void GraphicHandler::beginrender()
 {
 	glViewport(0, 0, width, height);
 	glClearColor(1.0, 1.0, 1.0, 1.0);
@@ -456,18 +456,22 @@ bool GraphicHandler::render(const std::function< void(const std::function<void(f
 
 	glUseProgram(sp);
 	glEnableVertexAttribArray(aVertexPositionLoc);
+}
 
-	allbodies([this](float x, float y, float rot, GraphicPiece * gp)
-	{
-		GLfloat RTVec[4] = {(GLfloat)sin(rot), (GLfloat)cos(rot), x, y};
-		glUniform4fv(uRTVecLoc, 1, RTVec);
+void GraphicHandler::renderpiece(float x, float y, float rot, GraphicPiece * gp)
+{
+	GLfloat RTVec[4] = {(GLfloat)sin(rot), (GLfloat)cos(rot), x, y};
+	glUniform4fv(uRTVecLoc, 1, RTVec);
 
-		glBindTexture( GL_TEXTURE_2D, gp->tex);
-		glBindBuffer(GL_ARRAY_BUFFER, gp->VBOid);
+	glBindTexture( GL_TEXTURE_2D, gp->tex);
+	glBindBuffer(GL_ARRAY_BUFFER, gp->VBOid);
 
-		glVertexAttribPointer(aVertexPositionLoc, 2, GL_FLOAT, false, 0, 0);
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, gp->num);
-	});
+	glVertexAttribPointer(aVertexPositionLoc, 2, GL_FLOAT, false, 0, 0);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, gp->num);
+}
+
+void GraphicHandler::endrender()
+{
 	glDisableVertexAttribArray(aVertexPositionLoc);
 
 	#ifndef __DUETTO__
@@ -478,6 +482,4 @@ bool GraphicHandler::render(const std::function< void(const std::function<void(f
 	glfwSwapBuffers();
 	#endif
 	#endif
-
-	return true;
 }

@@ -85,7 +85,9 @@ public:
 	GraphicHandler(const GraphicOptions & gopt, const FileLoader & fileloader);
 	~GraphicHandler();
 	GraphicPiece * createpiece(piece<float> pol);
-	bool render(const std::function< void(const std::function<void(float x, float y, float rot, GraphicPiece * d)> &)> & allbodies );
+	void beginrender();
+	void renderpiece(float x, float y, float rot, GraphicPiece * gp);
+	void endrender();
 
 	GraphicToInput toinput();
 };
