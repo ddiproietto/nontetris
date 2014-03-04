@@ -94,14 +94,18 @@ Prerequisites: cmake(2.8.8)
 Edit the script emscriptenbuild.sh to reflect the Emscripten location in your system
 
 	#Path to emscripten
-	WHEREISEMSCRIPTEN=~/homemade/emscripten/
+	WHEREISEMSCRIPTEN= /usr/share/emscripten/
+
+Emscripten provides glfw 2, so this option must be OFF in CMakeLists.txt
+
+	option(USE_GLFW_3 "Use glfw3(otherwise use glfw2)" OFF)
 
 Now by typing
 
 	./emscriptenbuild.sh
 
 the build process should start. The built file is emscriptenbuild/project.html.
-Unfortunately there is a problem with Emscripten GL wrapper, which I hope to investigate.
+
 
 Technology
 ==========

@@ -158,8 +158,8 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 		glewExperimental = GL_TRUE;
 		if(glewInit() != GLEW_OK)
 			std::cerr<<"GLEW fail"<<std::endl;
+		glEnableClientState(GL_VERTEX_ARRAY);
 		#endif //defined(__EMSCRIPTEN__)
-	glEnableClientState(GL_VERTEX_ARRAY);
 	#else //defined(__DUETTO__)
 	webGLESInit("glcanvas");
 	#endif
