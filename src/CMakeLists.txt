@@ -26,6 +26,7 @@ configure_file (
 
 include_directories("${PROJECT_BINARY_DIR}")
 include_directories("${PROJECT_SOURCE_DIR}/srclib/Box2D/")
+include_directories("${PROJECT_SOURCE_DIR}/srclib/boost/")
 if(NOT DEFINED DUETTO)
 include_directories("${PROJECT_SOURCE_DIR}/srclib/lodepng/")
 endif(NOT DEFINED DUETTO)

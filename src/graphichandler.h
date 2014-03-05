@@ -41,7 +41,8 @@
 #include "piece.h"
 #include "fileloader.h"
 
-#include <functional>
+#include <iterator>
+#include <boost/range/iterator_range.hpp>
 #include "NontetrisConfig.h"
 
 #include "graphictoinput.h"
@@ -85,9 +86,13 @@ public:
 	GraphicHandler(const GraphicOptions & gopt, const FileLoader & fileloader);
 	~GraphicHandler();
 	GraphicPiece * createpiece(piece<float> pol);
+
+	void render(boost::iterator_range<std::iterator<std::forward_iterator_tag, std::tuple<float, float, float, GraphicPiece *> > >);
+#if 0
 	void beginrender();
 	void renderpiece(float x, float y, float rot, GraphicPiece * gp);
 	void endrender();
+#endif
 
 	GraphicToInput toinput();
 };

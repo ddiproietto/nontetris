@@ -431,6 +431,7 @@ GraphicPiece * GraphicHandler::createpiece(piece<float> pie)
 	return pgp;
 }
 
+#if 0
 void GraphicHandler::beginrender()
 {
 	glViewport(0, 0, width, height);
@@ -483,3 +484,4 @@ void GraphicHandler::endrender()
 	#endif
 	#endif
 }
+#endif

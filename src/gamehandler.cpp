@@ -22,6 +22,9 @@
 
 #include "myutil.h"
 
+#define BOOST_RESULT_OF_USE_DECLTYPE
+#include <boost/range/adaptor/transformed.hpp>
+
 namespace
 {
 	auto pieces = make_array(
@@ -93,6 +96,12 @@ void GameHandler::step_graphic()
 	GraphicHandler &grh = *phgraphic;
 	PhysicHandler &phh = *phphysic;
 
+	grh.render(ingamepieces | boost::adaptors::transformed([](const struct GamePiece & i)->std::tuple<float, float, float, GraphicPiece *>{
+				auto php = i.php;
+				auto grp = i.grp;
+				return std::make_tuple(php->getX(), php->getY(), php->getRot(), grp);
+			}));
+#if 0
 	grh.beginrender();
 	for(auto i : ingamepieces)
 	{
@@ -101,6 +110,7 @@ void GameHandler::step_graphic()
 		grh.renderpiece(php->getX(),php->getY(),php->getRot(),grp);
 	}
 	grh.endrender();
+#endif
 }
 
 bool GameHandler::step_logic()
