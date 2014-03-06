@@ -31,35 +31,41 @@
 #endif
 #include "inputhandler.h"
 
-
 #ifdef __DUETTO__
 using namespace client;
+#endif
 
+bool InputHandler::k_esc = false;
 bool InputHandler::k_down = false;
 bool InputHandler::k_left = false;
 bool InputHandler::k_right = false;
 bool InputHandler::k_z = false;
 bool InputHandler::k_x = false;
-#endif
 
 InputHandler::InputHandler(GraphicToInput gti)
 {
-	/*
-	auto canvas = static_cast<client::HTMLCanvasElement*>(client::document.getElementById("glcanvas"));
-	canvas->addEventListener("keydown",Callback(keydown));
-	canvas->addEventListener("keyup",Callback(keyup));
-	*/
 #ifdef __DUETTO__
 	document.addEventListener("keydown",Callback(keydown));
 	document.addEventListener("keyup",Callback(keyup));
 #elif GLFW_VERSION_MAJOR == 3
 	glfwwindow = gti.window;
+	glfwSetKeyCallback(glfwwindow, keycallback);
+#else
+	glfwSetKeyCallback(keycallback);
 #endif
 }
 
 void InputHandler::process_input(const std::function<void()> & exit, const std::function<void()> & left, const std::function<void()> & right, const std::function<void()> & down, const std::function<void()> & z, const std::function<void()> & x)
 {
 #ifdef __DUETTO__
+#define WINDOW_OPENED true
+#elif (GLFW_VERSION_MAJOR == 3)
+#define WINDOW_OPENED !glfwWindowShouldClose(glfwwindow)
+#else
+#define WINDOW_OPENED glfwGetWindowParam( GLFW_OPENED )
+#endif
+	if(k_esc || ! WINDOW_OPENED)
+		exit();
 	if(k_down)
 	{
 		down();
@@ -80,68 +86,69 @@ void InputHandler::process_input(const std::function<void()> & exit, const std::
 	{
 		x();
 	}
+}
 
+void InputHandler::keyset(int key, bool setto)
+{
+#ifdef __DUETTO__
+#define NONTETRIS_ESC 27
+#define NONTETRIS_LEFT 37
+#define NONTETRIS_RIGHT 39
+#define NONTETRIS_DOWN 40
 #else
-	#if (GLFW_VERSION_MAJOR == 3)
-	#define WINDOW glfwwindow,
-	#define WINDOW_OPENED !glfwWindowShouldClose(glfwwindow)
-	#define GLFW_KEY_ESC GLFW_KEY_ESCAPE
-	#else
-	#define WINDOW
-	#define WINDOW_OPENED glfwGetWindowParam( GLFW_OPENED )
-	#endif
-	if(glfwGetKey(WINDOW GLFW_KEY_ESC ) || ! WINDOW_OPENED)
-		exit();
-	if(glfwGetKey(WINDOW GLFW_KEY_LEFT))
-	{
-		left();
-	}
-	if(glfwGetKey(WINDOW GLFW_KEY_RIGHT))
-	{
-		right();
-	}
-	if(glfwGetKey(WINDOW GLFW_KEY_DOWN))
-	{
-		down();
-	}
-	if(glfwGetKey(WINDOW 'Z') || glfwGetKey(WINDOW 'W') || glfwGetKey(WINDOW 'Y'))
-	{
-		z();
-	}
-	if(glfwGetKey(WINDOW 'X'))
-	{
-		x();
-	}
+#if (GLFW_VERSION_MAJOR == 3)
+#define NONTETRIS_ESC GLFW_KEY_ESCAPE
+#else
+#define NONTETRIS_ESC GLFW_KEY_ESC
 #endif
+#define NONTETRIS_LEFT GLFW_KEY_LEFT
+#define NONTETRIS_RIGHT GLFW_KEY_RIGHT
+#define NONTETRIS_DOWN GLFW_KEY_DOWN
+#endif
+	switch (key)
+	{
+	case NONTETRIS_ESC:
+		k_esc = setto;
+		break;
+	case NONTETRIS_LEFT:
+		k_left = setto;
+		break;
+	case NONTETRIS_RIGHT:
+		k_right = setto;
+		break;
+	case NONTETRIS_DOWN:
+		k_down = setto;
+		break;
+	case 'Z':
+	case 'W':
+	case 'Y':
+		k_z = setto;
+		break;
+	case 'X':
+		k_x = setto;
+		break;
+	}
 }
 
 #ifdef __DUETTO__
 void InputHandler::keyup(KeyboardEvent * e)
 {
-	if(e->get_keyCode() == 90)//Z
-		k_z = false;
-	if(e->get_keyCode() == 88)//X
-		k_x = false;
-	if(e->get_keyCode() == 40)//DOWN
-		k_down = false;
-	if(e->get_keyCode() == 37)//LEFT
-		k_left = false;
-	if(e->get_keyCode() == 39)//RIGHT
-		k_right = false;
-
+	keyset(e->get_keyCode(), false);
 }
 
 void InputHandler::keydown(KeyboardEvent * e)
 {
-	if(e->get_keyCode() == 90)//Z
-		k_z = true;
-	if(e->get_keyCode() == 88)//X
-		k_x = true;
-	if(e->get_keyCode() == 40)//DOWN
-		k_down = true;
-	if(e->get_keyCode() == 37)//LEFT
-		k_left = true;
-	if(e->get_keyCode() == 39)//RIGHT
-		k_right = true;
+	keyset(e->get_keyCode(), true);
+}
+
+#else
+#if GLFW_VERSION_MAJOR == 3
+void InputHandler::keycallback(GLFWwindow * window, int key, int scancode, int action, int mods)
+#else
+void InputHandler::keycallback(int key, int action)
+#endif
+{
+	bool setto = action == GLFW_PRESS;
+	keyset(key, setto);
 }
 #endif

@@ -36,20 +36,25 @@
 
 class InputHandler
 {
-	#ifdef __DUETTO__
+	static bool k_esc;
 	static bool k_down;
 	static bool k_left;
 	static bool k_right;
 	static bool k_z;
 	static bool k_x;
-	#elif GLFW_VERSION_MAJOR == 3
+	#if GLFW_VERSION_MAJOR == 3
 	GLFWwindow * glfwwindow;
 	#endif
 
 	#ifdef __DUETTO__
 	static void keydown(client::KeyboardEvent * _e);
 	static void keyup(client::KeyboardEvent * _e);
+	#elif GLFW_VERSION_MAJOR == 3
+	static void keycallback(GLFWwindow * window, int key, int scancode, int action, int mods);
+	#else
+	static void keycallback(int key, int action);
 	#endif
+	static void keyset(int key, bool setto);
 public:
 	InputHandler(GraphicToInput);
 	void process_input(const std::function<void()> & exit, const std::function<void()> & left, const std::function<void()> & right, const std::function<void()> & down, const std::function<void()> & z, const std::function<void()> & x);
