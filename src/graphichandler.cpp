@@ -146,8 +146,8 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 	#ifndef __DUETTO__
 	glfwInit();
 	#if GLFW_VERSION_MAJOR == 3
-	//TODO: honor fullscreen
-	glfwwindow = glfwCreateWindow(width, height, "nontetris", NULL, NULL);
+	glfwWindowHint(GLFW_SAMPLES, 8);
+	glfwwindow = glfwCreateWindow(width, height, "nontetris", gopt.fullscreen?glfwGetPrimaryMonitor():NULL, NULL);
 	glfwMakeContextCurrent(glfwwindow);
 	#else
 	glfwOpenWindowHint(GLFW_FSAA_SAMPLES, 8);
