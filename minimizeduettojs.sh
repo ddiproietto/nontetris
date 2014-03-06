@@ -22,13 +22,13 @@
 #*****************************************************************************
 #
 #Path to closure compiler jar
-CLOSURE_COMPILER_PATH=~/homemade/closure-compiler/compiler.jar
+CLOSURE_COMPILER_PATH=/usr/share/java/closure-compiler.jar
 
 FILE="$(mktemp)"
 echo "\"use strict\";(function(){" > "$FILE"
-cat www/nontetris.js www/webgl-util.js >> "$FILE"
+cat www/nontetris-duetto.js www/webgl-util.js >> "$FILE"
 echo "})();" >> "$FILE"
 
-java -jar "$CLOSURE_COMPILER_PATH" --js="$FILE" --js_output_file=www/nontetris.min.js
+java -jar "$CLOSURE_COMPILER_PATH" --language_in=ECMASCRIPT5 --js="$FILE" --js_output_file=www/nontetris-duetto.min.js
 
 rm -f "$FILE"

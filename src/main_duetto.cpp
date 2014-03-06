@@ -114,8 +114,8 @@ int webMain() [[client]]
 	);
 
 	//TODO: the two operations could be done in parallel
-	
-	client::document.addEventListener("DOMContentLoaded", client::Callback([=](){
+
+	auto domloaded = [=](){
 		//The DOM has been loaded
 		client::console.log("DOMloaded");
 		fileloader.load(filestoload, [=](){
@@ -127,7 +127,14 @@ int webMain() [[client]]
 				allloaded(fileloader);
 			});
 		});
-	}));
+	};
+
+	//TODO: think of a better way to compare
+	if (client::document.get_readyState() != new client::String("loading")) {
+		domloaded();
+	} else {
+		client::document.addEventListener("DOMContentLoaded", client::Callback(domloaded));
+	}
 
 	return 0;
 }
