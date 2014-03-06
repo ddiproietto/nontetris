@@ -89,7 +89,7 @@ You can access localhost:8888 with your browser and play nontetris.
 Emscripten
 ----------
 
-Prerequisites: cmake(2.8.8)
+Prerequisites: cmake(2.8.8), emscripten(tested with 1.10)
 
 Edit the script emscriptenbuild.sh to reflect the Emscripten location in your system
 
@@ -136,7 +136,6 @@ www/ contains html files and symlink to the built code for duetto. After the bui
 Todo
 ====
 
-Fix the build under emscripten.
 (...) check TODO file.
 Make it a game!
 

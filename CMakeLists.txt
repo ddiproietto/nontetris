@@ -41,9 +41,6 @@ set(USE_GLFW_VERSION 2)
 endif(USE_GLFW_3)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-IF(DEFINED EMSCRIPTEN)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
-ENDIF(DEFINED EMSCRIPTEN)
 
 IF(DEFINED DUETTO)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
@@ -58,20 +55,20 @@ if(NOT DEFINED DUETTO)
 		##OpenGL##
 		find_package(OpenGL REQUIRED)
 		##END OpenGL##
+
+		find_package(PkgConfig REQUIRED)
+		##GLFW##
+		if(USE_GLFW_3)
+			pkg_search_module(GLFW REQUIRED glfw3)
+		else(USE_GLFW_3)
+			pkg_search_module(GLFW REQUIRED libglfw)
+		endif(USE_GLFW_3)
+		##END GLFW##
+
+		##GLEW##
+		pkg_search_module(GLEW REQUIRED glew)
+		##END GLEW##
 	endif(NOT DEFINED EMSCRIPTEN)
-
-	find_package(PkgConfig REQUIRED)
-	##GLFW##
-	if(USE_GLFW_3)
-		pkg_search_module(GLFW REQUIRED glfw3)
-	else(USE_GLFW_3)
-		pkg_search_module(GLFW REQUIRED libglfw)
-	endif(USE_GLFW_3)
-	##END GLFW##
-
-	##GLEW##
-	pkg_search_module(GLEW REQUIRED glew)
-	##END GLEW##
 
 	file(COPY src/shader.frag DESTINATION ${PROJECT_BINARY_DIR})
 	file(COPY src/shader.vert DESTINATION ${PROJECT_BINARY_DIR})

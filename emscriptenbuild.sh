@@ -21,7 +21,7 @@
 #
 #*****************************************************************************
 #
-#Build script for emscripten: still not working
+#Build script for emscripten
 
 #Path to emscripten
 WHEREISEMSCRIPTEN=/usr/share/emscripten/
@@ -36,4 +36,4 @@ mv src/nontetris nontetris.bc
 
 #cp ../src/shader.vert ../src/shader.frag ../src/shaderident.vert ../imgs/pieces/*.png ../imgs/newgamebackground.png .
 #srclib/lodepng/liblodepng.so 
-"$WHEREISEMSCRIPTEN"/emcc -0x -O2 nontetris.bc srclib/Box2D/Box2D/libBox2D.so -o project.html --preload-file shader.vert --preload-file shader.frag --preload-file shaderident.vert --preload-file imgs/pieces/1.png --preload-file imgs/pieces/2.png --preload-file imgs/pieces/3.png --preload-file imgs/pieces/4.png --preload-file imgs/pieces/5.png --preload-file imgs/pieces/6.png --preload-file imgs/pieces/7.png --preload-file imgs/newgamebackground.png
+"$WHEREISEMSCRIPTEN"/emcc -O3 nontetris.bc srclib/Box2D/Box2D/libBox2D.so -o project.html --preload-file shader.vert --preload-file shader.frag --preload-file shaderident.vert --preload-file imgs/pieces/1.png --preload-file imgs/pieces/2.png --preload-file imgs/pieces/3.png --preload-file imgs/pieces/4.png --preload-file imgs/pieces/5.png --preload-file imgs/pieces/6.png --preload-file imgs/pieces/7.png --preload-file imgs/newgamebackground.png

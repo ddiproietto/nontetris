@@ -43,7 +43,9 @@ endif(DEFINED DUETTO)
 
 add_executable (nontetris ${MY_SOURCES})
 
+if(NOT DEFINED EMSCRIPTEN)
 target_link_libraries(nontetris Box2D)
+endif(NOT DEFINED EMSCRIPTEN)
 
 if(DEFINED DUETTO)
 	target_link_libraries(nontetris GLESv2)
