@@ -68,7 +68,7 @@ int main(int argc, char * argv[])
 	{
 #ifdef MULTIPLE_PHYSICS_STEPS
 		auto now = std::chrono::steady_clock::now();
-		while(now > next)
+		while(now > next && running)
 		{
 			gh.step_physic();
 			running = gh.step_logic();

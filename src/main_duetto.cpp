@@ -45,6 +45,7 @@ namespace
 
 	void oneiterationwrapper()
 	{
+		bool running = true;
 #ifdef MULTIPLE_PHYSICS_STEPS
 		auto * nowdate = new client::Date::Date();
 		double now = nowdate->getTime();
@@ -53,21 +54,22 @@ namespace
 		{
 			now = next - 1;
 		}
-		while(now > next)
+		while(now > next && running)
 		{
 			pgh->step_physic();
-			pgh->step_logic();
+			running = pgh->step_logic();
 
 			next += PHYSICSTEP * 1000.0;
 		}
 #else
 		pgh->step_physic();
-		pgh->step_logic();
+		running = pgh->step_logic();
 
 #endif
 		pgh->step_graphic();
 
-		compatRequestAnimationFrame(client::Callback(oneiterationwrapper));
+		if(running)
+			compatRequestAnimationFrame(client::Callback(oneiterationwrapper));
 	}
 
 	void allloaded(const FileLoader & fl)

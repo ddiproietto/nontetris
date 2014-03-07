@@ -46,9 +46,13 @@ namespace
 
 	void oneiterationwrapper()
 	{
+		bool running;
 		pgh->step_physic();
-		pgh->step_logic();
+		running = pgh->step_logic();
 		pgh->step_graphic();
+
+		if(!running)
+			emscripten_cancel_main_loop();
 	}
 }
 
@@ -66,7 +70,7 @@ int main(int argc, char * argv[])
 		.columns = 10.25,
 	};
 	pgh = new GameHandler (gopt, gameopt, fileloader, PHYSICSTEP);
-	emscripten_set_main_loop(oneiterationwrapper, 60, 1);
+	emscripten_set_main_loop(oneiterationwrapper, 0, 0);
 
 	return EXIT_SUCCESS;
 }
