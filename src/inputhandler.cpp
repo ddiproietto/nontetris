@@ -45,13 +45,25 @@ bool InputHandler::k_x = false;
 InputHandler::InputHandler(GraphicToInput gti)
 {
 #ifdef __DUETTO__
-	document.addEventListener("keydown",Callback(keydown));
-	document.addEventListener("keyup",Callback(keyup));
+	document.addEventListener("keydown", Callback(keydown));
+	document.addEventListener("keyup", Callback(keyup));
 #elif GLFW_VERSION_MAJOR == 3
 	glfwwindow = gti.window;
 	glfwSetKeyCallback(glfwwindow, keycallback);
 #else
 	glfwSetKeyCallback(keycallback);
+#endif
+}
+
+InputHandler::~InputHandler()
+{
+#ifdef __DUETTO__
+	document.removeEventListener("keydown", &Callback(keydown));
+	document.removeEventListener("keyup", &Callback(keyup));
+#elif GLFW_VERSION_MAJOR == 3
+	glfwSetKeyCallback(glfwwindow, NULL);
+#else
+	glfwSetKeyCallback(NULL);
 #endif
 }
 

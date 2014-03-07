@@ -57,6 +57,7 @@ class InputHandler
 	static void keyset(int key, bool setto);
 public:
 	InputHandler(GraphicToInput);
+	~InputHandler();
 	void process_input(const std::function<void()> & exit, const std::function<void()> & left, const std::function<void()> & right, const std::function<void()> & down, const std::function<void()> & z, const std::function<void()> & x);
 };
 

@@ -52,7 +52,11 @@ namespace
 		pgh->step_graphic();
 
 		if(!running)
+		{
+			//SHUTDOWN
+			delete pgh;
 			emscripten_cancel_main_loop();
+		}
 	}
 }
 

@@ -68,8 +68,13 @@ namespace
 #endif
 		pgh->step_graphic();
 
-		if(running)
+		if(running) {
 			compatRequestAnimationFrame(client::Callback(oneiterationwrapper));
+		} else {
+			//SHUTDOWN
+			delete pgh;
+		}
+
 	}
 
 	void allloaded(const FileLoader & fl)
