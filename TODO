@@ -2,5 +2,4 @@ cutting
 proper memory management
 texture piece caching (good for AA)
 do not draw piece outside game box
-
-build for duetto by copying from /opt
+emscripten use html5 api for input (to avoid scrolling)
