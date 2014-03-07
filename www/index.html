@@ -12,40 +12,80 @@
 			<link rel="stylesheet" href="gh-fork-ribbon.ie.css">
 		<![endif]-->
 
+		<!-- DUETTO ONLY VERSION
+		<script src="nontetris-duetto.js"></script>
+		-->
+		<!-- EMSCRIPTEN ONLY VERSION
+		<script src="emscriptenwrapper.js"></script>
+		<script src="nontetris-emscripten.js"></script>
+		-->
+
+		<!-- Select version based on GET parameters -->
 		<script>
-			/*
-			 * Select js to include based on the GET parameters.
-			 * If ?compiler=emscripten select emscripten else duetto.
-			 */
+			function dowhenloaded(cb)
+			{
+				if (document.readyState != "loading") {
+					cb()
+				} else {
+					document.addEventListener("DOMContentLoaded", cb);
+				}
+			}
+			var versions = {
+				duetto: {
+					scripts:[ "nontetris-duetto.js" ],
+					logo:"logo_duetto.png",
+					link:"http://leaningtech.com/duetto",
+					otherversion: "emscripten",
+				},
+				emscripten: {
+					scripts: [ "emscriptenwrapper.js", "nontetris-emscripten.js" ],
+					logo: "emscripten-logo.png",
+					link: "http://emscripten.org",
+					otherversion: "duetto",
+				},
+			}
+			var defaultversion = "duetto";
+
+			function loadversion(comp)
+			{
+				var version = versions[comp]
+				for (var i = 0; i < version.scripts.length; ++i) {
+					var s = document.createElement("script")
+					s.type = "text/javascript"
+					s.src = version.scripts[i]
+					document.head.appendChild(s)
+				}
+				dowhenloaded(function(){
+					document.getElementById("poweredbylink").href = version.link
+					var logo = document.getElementsByClassName("poweredbylogo");
+					for(var i = 0; i < logo.length; ++i) {
+						logo[i].src = version.logo;
+					}
+					var ver = document.getElementsByClassName("otherversionname")
+					for(var i = 0; i < ver.length; ++i) {
+						ver[i].textContent = version.otherversion;
+					}
+
+					var btn = document.getElementsByClassName("otherversionlink")
+					for(var i = 0; i < btn.length; ++i) {
+						btn[i].href = "index.html?compiler=" + version.otherversion;
+					}
+				});
+			}
+
 			var queryDict = {}
-			var scriptstoload = []
 
 			// Fills queryDict with get parameters
 			window.location.search.substr(1).split("&").forEach(function(item){var s=item.split("="); queryDict[s[0]] = s[1]})
 
 			var compiler = queryDict["compiler"]
+			if (!(compiler in versions))
+				compiler = defaultversion;
 
-			switch(compiler) {
-				case "emscripten":
-					scriptstoload = [ "emscriptenwrapper.js", "nontetris-emscripten.js" ]
-					break;
-
-				case "duetto":
-				default:
-					compiler = "duetto"
-					scriptstoload = [ "nontetris-duetto.js" ]
-					break;
-			}
-
-			for (var i = 0; i < scriptstoload.length; ++i) {
-				var s = document.createElement("script");
-				s.type = "text/javascript";
-				s.src = scriptstoload[i];
-				document.head.appendChild(s);
-			}
+			loadversion(compiler)
 		</script>
 	</head>
-	<body>
+	<body style="white-space: nowrap;">
 		<canvas width=600 height=540 id="glcanvas">
 		</canvas>
 		<div style="display:inline-block; vertical-align:top;">
@@ -56,9 +96,11 @@
 			</div>
 			<div style="background-color:#2299ee; border-radius:5px; padding:5px; margin: 10px"><b>Source code</b> on <a href="http://github.com/ddiproietto/nontetris/">github</a></div>
 			<div style="background-color:#ee9922; border-radius:5px; padding:5px; margin: 10px;"><b>Windows build</b> <a href="https://allievi.sssup.it/jacopone/cnontetris-win/nontetris.zip">here</a></div>
+			<div style="background-color:#99ee22; border-radius:5px; padding:5px; margin: 10px">This was built with<br><img class="poweredbylogo" src="logo_duetto.png" style="width:357px; height:85px;"><br> Try the <a class="otherversionlink" href="index.html?compiler=emscripten"><b class="otherversionname" style="cursor: pointer;">emscripten</b> version</a></div>
+
 		</div>
 		<p>
-		&copy; <b>Daniele Di Proietto</b> 2013. Powered by <a href="http://leaningtech.com/duetto"><img src="http://leaningtech.com/duettotest/images/logo_duetto.png" style="height:20px; vertical-align:middle; padding: 2px; background-color: #303030"></a> and <a href="http://box2d.org/"><img src="http://box2d.org/images/icon.gif" style="height:25px; vertical-align:middle;">Box2D</a>. Check <a href="info.html">info</a> and <a href="thanks.html">acknowledgements</a>.
+		&copy; <b>Daniele Di Proietto</b> 2013. Powered by <a id="poweredbylink" href="http://leaningtech.com/duetto"><img class="poweredbylogo" src="logo_duetto.png" style="width:84px; height:20px; vertical-align:middle; padding: 2px; background-color: #303030"></a> and <a href="http://box2d.org/"><img src="http://box2d.org/images/icon.gif" style="height:25px; vertical-align:middle;">Box2D</a>. Check <a href="info.html">info</a> and <a href="thanks.html">acknowledgements</a>.
 
 		</p>
 
