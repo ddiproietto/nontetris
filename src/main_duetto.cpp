@@ -129,6 +129,11 @@ int webMain() [[client]]
 		});
 	};
 
+	//In the future asm could be used
+	client::eval(" \
+		_compatRequestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || \
+			window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;");
+
 	//TODO: think of a better way to compare
 	if (client::document.get_readyState() != new client::String("loading")) {
 		domloaded();

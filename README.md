@@ -84,7 +84,7 @@ After the build is finished you will find some useful symlinks to the build JS f
 
 You can access localhost:8888 with your browser and play nontetris.
 
-*Optional: you can minify all the JS in a single file with ./minimizeduettojs.sh . You should edit the script to point to the google [closure compiler](https://developers.google.com/closure/compiler/), if you are using debian you can simply install the package libclosure-compiler-java. The script puts the minified JS in www/nontetris.js.min. You may now edit www/index.html to include only the minified script*
+*Optional: you can minify all the JS in a single file with ./minimizeduettojs.sh . You should edit the script to point to the google [closure compiler](https://developers.google.com/closure/compiler/), if you are using debian you can simply install the package libclosure-compiler-java. The script replaces the built JS with a minified one.*
 
 Emscripten
 ----------
