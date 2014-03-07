@@ -150,7 +150,13 @@ void InputHandler::keyup(KeyboardEvent * e)
 
 void InputHandler::keydown(KeyboardEvent * e)
 {
+	int key = e->get_keyCode();
 	keyset(e->get_keyCode(), true);
+	if (37 <= key && key <= 40) //ARROWS
+	{
+		//AVOID SCROLLING
+		e->preventDefault();
+	}
 }
 
 #else
