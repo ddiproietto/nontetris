@@ -48,6 +48,9 @@ b2StackAllocator::~b2StackAllocator()
 a * b2StackAllocator::Allocate_ ## b(int32 size) \
 { \
 	a * ret = pointer_ ## b; \
+	if(pointer_ ## b - m_data_ ## b + size >= b2_stackSize/sizeof(a)) { \
+		return new a[size]; \
+	} \
 	pointer_ ## b += size; \
 	return ret; \
 }
@@ -57,7 +60,10 @@ a * b2StackAllocator::Allocate_ ## b(int32 size) \
 #define DEFINE_TYPE(a,b) \
 void b2StackAllocator::Free_ ## b(a * p) \
 { \
-	pointer_ ## b = p; \
+	if(m_data_ ## b <= p && p <= pointer_ ## b ) \
+		pointer_ ## b = p; \
+	else \
+		delete[] p; \
 }
 #include <Box2D/Common/b2StackAllocatorTypesDuetto.h>
 #undef DEFINE_TYPE
