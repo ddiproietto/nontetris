@@ -34,47 +34,32 @@ extern "C" {
 namespace
 {
 	const double PHYSICSTEP = 1.0/60.0;
+	bool running = true;
+	int timerHandler;
 
 	TextureLoader texloader;
 	FileLoader fileloader;
 	GameHandler * pgh;
 
-#ifdef MULTIPLE_PHYSICS_STEPS
-	double next;
-#endif
-
-	void oneiterationwrapper()
+	void oneiterationwrappergraphic()
 	{
-		bool running = true;
-#ifdef MULTIPLE_PHYSICS_STEPS
-		auto * nowdate = new client::Date::Date();
-		double now = nowdate->getTime();
-		//If lag is too much, maybe it means simply that the user is doing something else
-		if(now - next > 2000)
-		{
-			now = next - 1;
-		}
-		while(now > next && running)
-		{
-			pgh->step_physic();
-			running = pgh->step_logic();
+		if(!running)
+			return;
 
-			next += PHYSICSTEP * 1000.0;
-		}
-#else
+		pgh->step_graphic();
+		compatRequestAnimationFrame(client::Callback(oneiterationwrappergraphic));
+	}
+
+	void oneiterationwrapperlogic()
+	{
 		pgh->step_physic();
 		running = pgh->step_logic();
 
-#endif
-		pgh->step_graphic();
-
-		if(running) {
-			compatRequestAnimationFrame(client::Callback(oneiterationwrapper));
-		} else {
+		if(!running) {
 			//SHUTDOWN
 			delete pgh;
+			client::clearInterval(timerHandler);
 		}
-
 	}
 
 	void allloaded(const FileLoader & fl)
@@ -93,12 +78,8 @@ namespace
 		};
 		pgh = new GameHandler(gopt, gameopt, fileloader, PHYSICSTEP);
 
-
-#ifdef MULTIPLE_PHYSICS_STEPS
-		auto * nowdate = new client::Date::Date();
-		next = nowdate->getTime();
-#endif
-		oneiterationwrapper();
+		oneiterationwrappergraphic();
+		timerHandler = client::setInterval(client::Callback(oneiterationwrapperlogic), PHYSICSTEP*1000);
 	}
 }
 
