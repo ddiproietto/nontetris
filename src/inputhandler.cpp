@@ -166,7 +166,15 @@ void InputHandler::keycallback(GLFWwindow * window, int key, int scancode, int a
 void InputHandler::keycallback(int key, int action)
 #endif
 {
-	bool setto = action == GLFW_PRESS;
+	bool setto;
+	if (action == GLFW_PRESS)
+		setto = true;
+	else if (action == GLFW_RELEASE)
+		setto = false;
+	else
+		//GLFW_REPEAT must be ignored
+		return;
+
 	keyset(key, setto);
 }
 #endif
