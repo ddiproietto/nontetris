@@ -22,13 +22,17 @@
 #ifdef __DUETTO__
 #include <duetto/client.h>
 #include <duetto/clientlib.h>
+#elif defined(EMSCRIPTEN)
+#include "emscripten/html5.h"
 #else
 #if (USE_GLFW_VERSION==3)
 #include <GLFW/glfw3.h>
 #else
+#define GLFW_NO_GLU
 #include <GL/glfw.h>
 #endif
 #endif
+
 #include "inputhandler.h"
 
 #ifdef __DUETTO__
@@ -45,21 +49,27 @@ bool InputHandler::k_x = false;
 InputHandler::InputHandler(GraphicToInput gti)
 {
 #ifdef __DUETTO__
-	document.addEventListener("keydown", Callback(keydown));
-	document.addEventListener("keyup", Callback(keyup));
+	document.addEventListener("keydown", Callback(duetto_keydown));
+	document.addEventListener("keyup", Callback(duetto_keyup));
+#elif defined(EMSCRIPTEN)
+	emscripten_set_keydown_callback(NULL, 0, 1, emscripten_keycallback);
+	emscripten_set_keyup_callback(NULL, 0, 1, emscripten_keycallback);
 #elif GLFW_VERSION_MAJOR == 3
 	glfwwindow = gti.window;
-	glfwSetKeyCallback(glfwwindow, keycallback);
+	glfwSetKeyCallback(glfwwindow, glfw_keycallback);
 #else
-	glfwSetKeyCallback(keycallback);
+	glfwSetKeyCallback(glfw_keycallback);
 #endif
 }
 
 InputHandler::~InputHandler()
 {
 #ifdef __DUETTO__
-	document.removeEventListener("keydown", &Callback(keydown));
-	document.removeEventListener("keyup", &Callback(keyup));
+	document.removeEventListener("keydown", &Callback(duetto_keydown));
+	document.removeEventListener("keyup", &Callback(duetto_keyup));
+#elif defined(EMSCRIPTEN)
+	emscripten_set_keydown_callback(NULL, 0, 1, NULL);
+	emscripten_set_keyup_callback(NULL, 0, 1, NULL);
 #elif GLFW_VERSION_MAJOR == 3
 	glfwSetKeyCallback(glfwwindow, NULL);
 #else
@@ -102,7 +112,7 @@ void InputHandler::process_input(const std::function<void()> & exit, const std::
 
 void InputHandler::keyset(int key, bool setto)
 {
-#ifdef __DUETTO__
+#if defined(__DUETTO__) || defined(EMSCRIPTEN)
 #define NONTETRIS_ESC 27
 #define NONTETRIS_LEFT 37
 #define NONTETRIS_RIGHT 39
@@ -143,12 +153,12 @@ void InputHandler::keyset(int key, bool setto)
 }
 
 #ifdef __DUETTO__
-void InputHandler::keyup(KeyboardEvent * e)
+void InputHandler::duetto_keyup(KeyboardEvent * e)
 {
 	keyset(e->get_keyCode(), false);
 }
 
-void InputHandler::keydown(KeyboardEvent * e)
+void InputHandler::duetto_keydown(KeyboardEvent * e)
 {
 	int key = e->get_keyCode();
 	keyset(e->get_keyCode(), true);
@@ -159,11 +169,31 @@ void InputHandler::keydown(KeyboardEvent * e)
 	}
 }
 
+#elif defined(EMSCRIPTEN)
+int InputHandler::emscripten_keycallback(int action, const EmscriptenKeyboardEvent *e, void *userData)
+{
+	bool setto;
+	if (action == EMSCRIPTEN_EVENT_KEYDOWN)
+		setto = true;
+	else if (action == EMSCRIPTEN_EVENT_KEYUP)
+		setto = false;
+	else
+		//anything else must be ignored
+		return 0;
+	keyset((int)e->keyCode, setto);
+	if(37 <= e->keyCode && e->keyCode <= 40) //ARROWS
+	{
+		//AVOID SCROLLING
+		return 1;
+	}
+	return 0;
+}
+
 #else
 #if GLFW_VERSION_MAJOR == 3
-void InputHandler::keycallback(GLFWwindow * window, int key, int scancode, int action, int mods)
+void InputHandler::glfw_keycallback(GLFWwindow * window, int key, int scancode, int action, int mods)
 #else
-void InputHandler::keycallback(int key, int action)
+void InputHandler::glfw_keycallback(int key, int action)
 #endif
 {
 	bool setto;

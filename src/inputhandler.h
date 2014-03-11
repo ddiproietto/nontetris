@@ -23,7 +23,12 @@
 
 #include <functional>
 
-#ifndef __DUETTO__
+#ifdef __DUETTO__
+#include <duetto/client.h>
+#include <duetto/clientlib.h>
+#elif defined(EMSCRIPTEN)
+#include "emscripten/html5.h"
+#else
 #if (USE_GLFW_VERSION==3)
 #include <GLFW/glfw3.h>
 #else
@@ -47,12 +52,14 @@ class InputHandler
 	#endif
 
 	#ifdef __DUETTO__
-	static void keydown(client::KeyboardEvent * _e);
-	static void keyup(client::KeyboardEvent * _e);
+	static void duetto_keydown(client::KeyboardEvent * _e);
+	static void duetto_keyup(client::KeyboardEvent * _e);
+	#elif defined(EMSCRIPTEN)
+	static int emscripten_keycallback(int eventType, const EmscriptenKeyboardEvent *keyEvent, void *userData);
 	#elif GLFW_VERSION_MAJOR == 3
-	static void keycallback(GLFWwindow * window, int key, int scancode, int action, int mods);
+	static void glfw_keycallback(GLFWwindow * window, int key, int scancode, int action, int mods);
 	#else
-	static void keycallback(int key, int action);
+	static void glfw_keycallback(int key, int action);
 	#endif
 	static void keyset(int key, bool setto);
 public:
