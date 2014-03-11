@@ -31,7 +31,7 @@ include_directories("${PROJECT_SOURCE_DIR}/srclib/lodepng/")
 endif(NOT DEFINED DUETTO)
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
-set(MY_SOURCES physichandler.cpp inputhandler.cpp graphichandler.cpp inputhandler.cpp gamehandler.cpp)
+set(MY_SOURCES physichandler.cpp inputhandler.cpp graphichandler.cpp inputhandler.cpp gamehandler.cpp joystickhandler.cpp)
 
 if(DEFINED DUETTO)
 	set (MY_SOURCES ${MY_SOURCES} main_duetto.cpp)

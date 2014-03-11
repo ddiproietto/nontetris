@@ -39,8 +39,13 @@
 
 #include "graphictoinput.h"
 
+#include "joystickhandler.h"
+
 class InputHandler
 {
+	bool joystickpresent;
+	JoystickHandler jh;
+
 	static bool k_esc;
 	static bool k_down;
 	static bool k_left;

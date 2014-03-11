@@ -35,6 +35,8 @@
 
 #include "inputhandler.h"
 
+#include "joystickhandler.h"
+
 #ifdef __DUETTO__
 using namespace client;
 #endif
@@ -60,6 +62,7 @@ InputHandler::InputHandler(GraphicToInput gti)
 #else
 	glfwSetKeyCallback(glfw_keycallback);
 #endif
+	joystickpresent = jh.isJoystickPresent();
 }
 
 InputHandler::~InputHandler()
@@ -79,6 +82,12 @@ InputHandler::~InputHandler()
 
 void InputHandler::process_input(const std::function<void()> & exit, const std::function<void()> & left, const std::function<void()> & right, const std::function<void()> & down, const std::function<void()> & z, const std::function<void()> & x)
 {
+	bool l_k_esc = InputHandler::k_esc;
+	bool l_k_down = InputHandler::k_down;
+	bool l_k_left = InputHandler::k_left;
+	bool l_k_right = InputHandler::k_right;
+	bool l_k_z = InputHandler::k_z;
+	bool l_k_x = InputHandler::k_x;
 #ifdef __DUETTO__
 #define WINDOW_OPENED true
 #elif (GLFW_VERSION_MAJOR == 3)
@@ -86,25 +95,36 @@ void InputHandler::process_input(const std::function<void()> & exit, const std::
 #else
 #define WINDOW_OPENED glfwGetWindowParam( GLFW_OPENED )
 #endif
-	if(k_esc || ! WINDOW_OPENED)
+
+	if(joystickpresent)
+	{
+		auto val = jh.pollJoystick();
+		l_k_z |= val.buttons[0];
+		l_k_x |= val.buttons[1];
+		l_k_left |= val.axes[0] < -0.25;
+		l_k_right |= val.axes[0] > 0.25;
+		l_k_down |= val.axes[1] < -0.25;
+	}
+
+	if(l_k_esc || ! WINDOW_OPENED)
 		exit();
-	if(k_down)
+	if(l_k_down)
 	{
 		down();
 	}
-	if(k_left)
+	if(l_k_left)
 	{
 		left();
 	}
-	if(k_right)
+	if(l_k_right)
 	{
 		right();
 	}
-	if(k_z)
+	if(l_k_z)
 	{
 		z();
 	}
-	if(k_x)
+	if(l_k_x)
 	{
 		x();
 	}
