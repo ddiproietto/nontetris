@@ -26,7 +26,11 @@
 
 #include "myutil.h"
 
-//Bridge method implemented in JS since feature testing is not yet supported by Duetto
+/* Since feature testing (for functions) is not possible in C++,
+ * this function is defined. It is then set directly in JS,
+ * using __asm__, in webMain
+ */
+
 extern "C" {
 	void compatRequestAnimationFrame(const client::EventListener&);
 }
@@ -117,8 +121,7 @@ int webMain() [[client]]
 		});
 	};
 
-	//In the future asm could be used
-	client::eval(" \
+	__asm__(" \
 		_compatRequestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || \
 			window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;");
 
