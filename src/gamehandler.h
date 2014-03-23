@@ -39,6 +39,7 @@ class GameHandler
 	{
 		PhysicPiece * php;
 		GraphicPiece * grp;
+		piece<float> p;
 	};
 
 	std::list<GamePiece> ingamepieces;
@@ -48,6 +49,7 @@ class GameHandler
 	InputHandler * phinput;
 
 	void newrandompiece();
+	void cutlineeventually(float from, float to);
 
 	GameOptions gameopt;
 

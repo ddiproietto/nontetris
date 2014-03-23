@@ -34,6 +34,10 @@ class PhysicPiece
 	b2Body * ptr;
 	enum PhysicPieceType {GROUND, LEFT, RIGHT, FALLING_PIECE, OLD_PIECE} type;
 	void * otherdata;
+	bool iswall()
+	{
+		return type == GROUND || type == LEFT || type == RIGHT;
+	}
 public:
 	PhysicPiece(b2Body * p = NULL):ptr(p)
 	{}
@@ -73,5 +77,6 @@ public:
 	void piecerotate(float rot);
 	void piecemove(float mov);
 	void pieceaccelerate();
+	void getpieces_in_rect(float x0, float y0, float x1, float y1, std::function <void(PhysicPiece *)> cb);
 };
 #endif //_PHYSIC_HANDLER_H

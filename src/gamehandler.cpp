@@ -72,7 +72,23 @@ void GameHandler::newrandompiece()
 	auto * php = phphysic->createpiece(p, gameopt.columns/2, -1, 0.0, NULL);
 	auto * grp = phgraphic->createpiece(p);
 
-	ingamepieces.insert(ingamepieces.begin(), GamePiece{.php=php,.grp=grp});
+	ingamepieces.insert(ingamepieces.begin(), GamePiece{.php=php,.grp=grp,.p=p});
+}
+
+void GameHandler::cutlineeventually(float from, float to)
+{
+	float x0 = 0;
+	float y0 = from;
+	float x1 = gameopt.columns;
+	float y1 = to;
+
+	phphysic->getpieces_in_rect(x0, y0, x1, y1, [](PhysicPiece * p){
+		/* TODO:
+		 * - transform piece coordinate from local to global (or line): rotate & translate
+		 * - call the cutter that splits the piece in up down & mid
+		 * - put the results in a list
+		 */
+	});
 }
 
 void GameHandler::step_physic()
@@ -89,6 +105,8 @@ void GameHandler::step_physic()
 	});
 	if (checklineandnewpiece)
 	{
+		for(float i = 0.0; i < gameopt.rows; i += 1.0)
+			cutlineeventually(i, i + 1.0);
 		newrandompiece();
 	}
 }

@@ -30,6 +30,7 @@
 #include <iostream>
 #endif
 #include <algorithm>
+#include <set>
 
 #include "polygon.h"
 
@@ -211,4 +212,28 @@ void PhysicHandler::drawbodies(std::function <void (float, float, float, void *)
 
 	}
 
+}
+
+struct MyQueryCallback : public b2QueryCallback
+{
+	std::set<b2Body *> bodylist;
+
+	bool ReportFixture(b2Fixture* fixture)
+	{
+		bodylist.insert( fixture->GetBody() );
+		return true;
+	}
+};
+
+void PhysicHandler::getpieces_in_rect(float x0, float y0, float x1, float y1, std::function <void(PhysicPiece *)> cb)
+{
+	MyQueryCallback myquerycb;
+	world.QueryAABB(&myquerycb, b2AABB{.lowerBound=b2Vec2{.x=x0, .y=y0}, .upperBound=b2Vec2{.x=x1, .y=y1}});
+	for(auto &i: myquerycb.bodylist)
+	{
+		PhysicPiece * php = (PhysicPiece *) i->GetUserData();
+		if(php->iswall())
+			continue;
+		cb(php);
+	}
 }
