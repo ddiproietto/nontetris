@@ -35,7 +35,7 @@ namespace
 			);
 }
 
-GameHandler::GameHandler(const GraphicOptions & gopt, const GameOptions & gameopt, const FileLoader & fl, double physicstep)
+GameHandler::GameHandler(const GraphicOptions & gopt, const GameOptions & _gameopt, const FileLoader & fl, double physicstep):gameopt(_gameopt)
 {
 	phphysic = new PhysicHandler (gameopt.columns, gameopt.rows, physicstep);
 	phgraphic = new GraphicHandler (gopt, fl);
@@ -69,7 +69,7 @@ void GameHandler::newrandompiece()
 
 	auto & p = pieces[randpieceindex];
 
-	auto * php = phphysic->createpiece(p, 5.125, -1, 0.0, NULL);
+	auto * php = phphysic->createpiece(p, gameopt.columns/2, -1, 0.0, NULL);
 	auto * grp = phgraphic->createpiece(p);
 
 	ingamepieces.insert(ingamepieces.begin(), GamePiece{.php=php,.grp=grp});
@@ -78,14 +78,19 @@ void GameHandler::newrandompiece()
 void GameHandler::step_physic()
 {
 	PhysicHandler &phh = *phphysic;
+	bool checklineandnewpiece = false;
 
 	phh.step([&](float x, float y)
 	{
 		//The falling piece has landed:
 		//time to generate another piece if the screen is not full
 		if( y > 0 )
-			newrandompiece();
+			checklineandnewpiece = true;
 	});
+	if (checklineandnewpiece)
+	{
+		newrandompiece();
+	}
 }
 
 void GameHandler::step_graphic()

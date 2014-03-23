@@ -49,8 +49,10 @@ class GameHandler
 
 	void newrandompiece();
 
+	GameOptions gameopt;
+
 public:
-	GameHandler(const GraphicOptions & gopt, const GameOptions & gameopt, const FileLoader & fl, double physicstep);
+	GameHandler(const GraphicOptions & gopt, const GameOptions & _gameopt, const FileLoader & fl, double physicstep);
 	void step_physic();
 	void step_graphic();
 	bool step_logic();
