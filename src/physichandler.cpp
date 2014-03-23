@@ -33,63 +33,66 @@
 
 #include "polygon.h"
 
-PhysicHandler::MyContactListener::MyContactListener():callcollision(false)
+class PhysicHandlerContactListener : public b2ContactListener
 {
-	
-}
-void PhysicHandler::MyContactListener::BeginContact(b2Contact* contact)
-{
-	userData * bodyUserDataA = (userData*) contact->GetFixtureA()->GetBody()->GetUserData();
-	userData * bodyUserDataB = (userData*) contact->GetFixtureB()->GetBody()->GetUserData();
-	bool isnA;
-
-	if((isnA=(bodyUserDataA->type != userData::FALLING_PIECE)) && bodyUserDataB->type != userData::FALLING_PIECE)
-		return;
-
-	if(isnA)
-		std::swap(bodyUserDataA,bodyUserDataB);
-
-	//bodyUserDataA contains FALLING_PIECE
-	if(bodyUserDataB->type == userData::GROUND || bodyUserDataB->type == userData::OLD_PIECE)
+public:
+	bool callcollision;
+	PhysicHandlerContactListener():callcollision(false)
 	{
-		callcollision = true;
 	}
-}
+	void BeginContact(b2Contact* contact)
+	{
+		PhysicPiece * bodyUserDataA = (PhysicPiece *) contact->GetFixtureA()->GetBody()->GetUserData();
+		PhysicPiece * bodyUserDataB = (PhysicPiece *) contact->GetFixtureB()->GetBody()->GetUserData();
+		bool isnA;
+
+		if((isnA=(bodyUserDataA->type != PhysicPiece::FALLING_PIECE)) && bodyUserDataB->type != PhysicPiece::FALLING_PIECE)
+			return;
+
+		if(isnA)
+			std::swap(bodyUserDataA,bodyUserDataB);
+
+		//bodyUserDataA contains FALLING_PIECE
+		if(bodyUserDataB->type == PhysicPiece::GROUND || bodyUserDataB->type == PhysicPiece::OLD_PIECE)
+		{
+			callcollision = true;
+		}
+	}
+} contactlistener;
 
 PhysicHandler::PhysicHandler(float w_width, float w_height, double pstep):world(b2Vec2(0.0F, 15.625F)), w_width(w_width), w_height(w_height), fallingpiece(NULL), stepInterval(pstep), accelerating(false)
 {
 	b2BodyDef bodyDef;
 	b2FixtureDef fixDef;
 	b2PolygonShape polShape;
-	userData * ud;
+	PhysicPiece * piecepointer;
 
-
-	ud = &udground;
-	ud->type = userData::GROUND;
+	piecepointer = &groundwall;
+	piecepointer->type = PhysicPiece::GROUND;
 	bodyDef.type = b2_staticBody;
 	bodyDef.position.Set(w_width/2, w_height +0.5F);
-	bodyDef.userData = ud;
+	bodyDef.userData = piecepointer;
 	polShape.SetAsBox(w_width/2, 0.5F);
 	fixDef.shape = &polShape;
 	fixDef.density = 32.0F * 32.0F;
 	world.CreateBody(&bodyDef)->CreateFixture(&fixDef);
 
-	ud = &udleft;
-	ud->type = userData::LEFT;
+	piecepointer = &leftwall;
+	piecepointer->type = PhysicPiece::LEFT;
 	bodyDef.type = b2_staticBody;
 	bodyDef.position.Set(-0.5F, w_height/2);
-	bodyDef.userData = ud;
+	bodyDef.userData = piecepointer;
 	polShape.SetAsBox(0.5F, w_height/2);
 	fixDef.shape = &polShape;
 	fixDef.density = 32.0F * 32.0F;
 	fixDef.friction = 0.00001;
 	world.CreateBody(&bodyDef)->CreateFixture(&fixDef);
 
-	ud = &udright;
-	ud->type = userData::RIGHT;
+	piecepointer = &rightwall;
+	piecepointer->type = PhysicPiece::RIGHT;
 	bodyDef.type = b2_staticBody;
 	bodyDef.position.Set(w_width + 0.5F, w_height/2);
-	bodyDef.userData = ud;
+	bodyDef.userData = piecepointer;
 	polShape.SetAsBox(0.5F, w_height/2);
 	fixDef.shape = &polShape;
 	fixDef.density = 32.0F * 32.0F;
@@ -103,18 +106,16 @@ PhysicPiece * PhysicHandler::createpiece(piece<float> pie, float x, float y, flo
 	b2BodyDef bodyDef;
 	b2FixtureDef fixDef;
 	b2PolygonShape polShape;
-	userData * ud;
 	PhysicPiece * ret = new PhysicPiece;
 	b2Body * body;
 
-	ud = &(ret->ud);
-	ud->type = userData::FALLING_PIECE;
-	ud->otherdata = userdata;
+	ret->type = PhysicPiece::FALLING_PIECE;
+	ret->otherdata = userdata;
 	bodyDef.type = b2_dynamicBody;
 	bodyDef.linearDamping = 0.5;
 	bodyDef.position.Set(x, y);
 	bodyDef.angle = rot;
-	bodyDef.userData = ud;
+	bodyDef.userData = ret;
 	body = world.CreateBody(&bodyDef);
 	ret->ptr = body;
 
@@ -134,7 +135,7 @@ PhysicPiece * PhysicHandler::createpiece(piece<float> pie, float x, float y, flo
 		delete [] vertarr;
 	}
 	if(fallingpiece != NULL)
-		((userData*)fallingpiece->GetUserData())->type = userData::OLD_PIECE;
+		((PhysicPiece*)fallingpiece->GetUserData())->type = PhysicPiece::OLD_PIECE;
 	fallingpiece = body;
 	return ret;
 }
@@ -201,8 +202,8 @@ void PhysicHandler::drawbodies(std::function <void (float, float, float, void *)
 {
 	for (b2Body * body = world.GetBodyList(); body; body = body->GetNext())
 	{
-		userData * userdata = (userData *) body->GetUserData();
-		if(userdata->type != userData::FALLING_PIECE && userdata->type != userData::OLD_PIECE)
+		PhysicPiece * userdata = (PhysicPiece *) body->GetUserData();
+		if(userdata->type != PhysicPiece::FALLING_PIECE && userdata->type != PhysicPiece::OLD_PIECE)
 			continue;
 		b2Vec2 pos = body->GetPosition();
 		float rot = body->GetAngle();

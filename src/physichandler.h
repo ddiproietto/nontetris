@@ -25,21 +25,15 @@
 #include "Box2D/Box2D.h"
 #include "piece.h"
 
-struct userData
-{
-	enum {GROUND, LEFT, RIGHT, FALLING_PIECE, OLD_PIECE} type;
-	void * otherdata;
-	userData():otherdata(NULL)
-	{
-	}
-};
 
 class PhysicHandler;
+class PhysicHandlerContactListener;
 
 class PhysicPiece
 {
 	b2Body * ptr;
-	userData ud;
+	enum PhysicPieceType {GROUND, LEFT, RIGHT, FALLING_PIECE, OLD_PIECE} type;
+	void * otherdata;
 public:
 	PhysicPiece(b2Body * p = NULL):ptr(p)
 	{}
@@ -58,6 +52,7 @@ public:
 		return ptr->GetAngle();
 	}
 	friend class PhysicHandler;
+	friend class PhysicHandlerContactListener;
 	
 };
 class PhysicHandler
@@ -68,14 +63,7 @@ class PhysicHandler
 	b2Body * fallingpiece;
 	const float stepInterval;
 	bool accelerating;
-	class MyContactListener : public b2ContactListener
-	{
-	public:
-		MyContactListener();
-		void BeginContact(b2Contact* contact);
-		bool callcollision;
-	}contactlistener;
-	userData udright, udleft, udground;
+	PhysicPiece rightwall, leftwall, groundwall;
 public:
 	PhysicHandler(float width, float height, double pstep = (1.0/60.0));
 	PhysicPiece * createpiece(piece<float>, float, float, float, void *);
