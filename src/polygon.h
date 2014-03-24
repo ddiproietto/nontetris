@@ -212,6 +212,19 @@ public:
 		
 	}
 
+	T area() const
+	{
+		T doublearea = 0.0;
+		point<T> prev = vertices.back();
+		for (auto p: vertices)
+		{
+			doublearea += p.x*prev.y-p.y*prev.x;
+
+			prev = p;
+		}
+		return doublearea / 2;
+	}
+
 	/*
 	friend std::ostream & operator<< (std::ostream & os, const polygon<T> & obj)
 	{
