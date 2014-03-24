@@ -40,9 +40,10 @@ class GameHandler
 		PhysicPiece * php;
 		GraphicPiece * grp;
 		piece<float> p;
+		GamePiece(const piece<float> &p):p(p)
+		{
+		}
 	};
-
-	std::list<GamePiece> ingamepieces;
 
 	PhysicHandler * phphysic;
 	GraphicHandler * phgraphic;

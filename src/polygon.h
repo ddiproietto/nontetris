@@ -39,6 +39,34 @@ struct point
 	{
 		return sqrt(((p2.y-p1.y)*(p2.y-p1.y)+(p2.x-p1.x)*(p2.x-p1.x))*((p3.y-p2.y)*(p3.y-p2.y)+(p3.x-p2.x)*(p3.x-p2.x)));
 	}
+	point<T> returnrotate(T angle) const
+	{
+		T sinrot = sin(angle);
+		T cosrot = cos(angle);
+		point <T> ret;
+
+		ret.x = x*cosrot - y*sinrot;
+		ret.y = x*sinrot + y*cosrot;
+		return ret;
+	}
+	point<T> returntranslate(T t_x, T t_y) const
+	{
+		point <T> ret;
+
+		ret.x = x + t_x;
+		ret.y = y + t_y;
+		return ret;
+	}
+	void rotate(T angle)
+	{
+		auto newp = returnrotate(angle);
+		*this = newp;
+	}
+	void translate(T t_x, T t_y)
+	{
+		auto newp = returntranslate(t_x, t_y);
+		*this = newp;
+	}
 	/*
 	friend std::ostream & operator<< (std::ostream & os, point<T> obj)
 	{
@@ -118,6 +146,14 @@ public:
 	{
 		return vertices.end();
 	}
+	auto begin() const -> decltype(vertices.begin())
+	{
+		return vertices.begin();
+	}
+	auto end() const -> decltype(vertices.end())
+	{
+		return vertices.end();
+	}
 
 	bool isconvexcw()
 	{
@@ -135,6 +171,26 @@ public:
 	void insert(size_t pos, const point<T> & obj)
 	{
 		vertices.insert(vertices.begin()+pos,obj);
+	}
+
+	void push_back(const point<T> & p)
+	{
+		vertices.push_back(p);
+	}
+
+	void push_back(point<T> && p)
+	{
+		vertices.push_back(p);
+	}
+
+	auto back() -> decltype(vertices.back())
+	{
+		return vertices.back();
+	}
+
+	auto back() const -> decltype(vertices.back())
+	{
+		return vertices.back();
 	}
 
 	void removealignedvertices()

@@ -22,7 +22,6 @@
 #define _PIECE_H
 
 #include <vector>
-//#include <iostream>
 
 #include "polygon.h"
 
@@ -38,7 +37,7 @@ class piece
 public: 
 	piece(const polygon<T> & p, int ptype):shape(p),type(ptype)
 	{
-		convshapes = convexer(shape);
+		updateconvex();
 	}
 	piece(std::initializer_list<point<T>> l, int type):piece(polygon<T>(l),type)
 	{
@@ -71,6 +70,15 @@ public:
 	int getType() const 
 	{
 		return type;
+	}
+
+	void updateconvex()
+	{
+		convshapes = convexer(shape);
+	}
+	polygon<T> getshape() const
+	{
+		return shape;
 	}
 };
 

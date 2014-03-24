@@ -22,6 +22,8 @@
 
 #include "myutil.h"
 
+#include "cutter.h"
+
 namespace
 {
 	auto pieces = make_array(
@@ -69,10 +71,9 @@ void GameHandler::newrandompiece()
 
 	auto & p = pieces[randpieceindex];
 
-	auto * php = phphysic->createpiece(p, gameopt.columns/2, -1, 0.0, NULL);
-	auto * grp = phgraphic->createpiece(p);
-
-	ingamepieces.insert(ingamepieces.begin(), GamePiece{.php=php,.grp=grp,.p=p});
+	auto * gamepiece = new GamePiece(p);
+	gamepiece->php = phphysic->createpiece(p, gameopt.columns/2, -1, 0.0, gamepiece);
+	gamepiece->grp = phgraphic->createpiece(p);
 }
 
 void GameHandler::cutlineeventually(float from, float to)
@@ -82,10 +83,21 @@ void GameHandler::cutlineeventually(float from, float to)
 	float x1 = gameopt.columns;
 	float y1 = to;
 
-	phphysic->getpieces_in_rect(x0, y0, x1, y1, [](PhysicPiece * p){
+	Cutter<float> cutter(y0, y1);
+
+	phphysic->getpieces_in_rect(x0, y0, x1, y1, [y0,y1,&cutter](PhysicPiece * php){
+		polygon<float> p (static_cast<GamePiece *>(php->getUserData())->p.getshape());
+
+		//Transform the piece coordinates from local to global
+		for (auto & vertex: p)
+		{
+			vertex.rotate(php->getRot());
+			vertex.translate(php->getX(), php->getY());
+		}
+
+		cutter.cutbodyheight(p);
+
 		/* TODO:
-		 * - transform piece coordinate from local to global (or line): rotate & translate
-		 * - call the cutter that splits the piece in up down & mid
 		 * - put the results in a list
 		 */
 	});
@@ -117,12 +129,17 @@ void GameHandler::step_graphic()
 	PhysicHandler &phh = *phphysic;
 
 	grh.beginrender();
+	phh.drawbodies([&](PhysicPiece * php){
+		grh.renderpiece(php->getX(),php->getY(),php->getRot(),static_cast<GamePiece *>(php->getUserData())->grp);
+	});
+	/*
 	for(auto i : ingamepieces)
 	{
 		auto php = i.php;
 		auto grp = i.grp;
 		grh.renderpiece(php->getX(),php->getY(),php->getRot(),grp);
 	}
+	*/
 	grh.endrender();
 }
 

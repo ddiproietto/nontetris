@@ -55,6 +55,10 @@ public:
 	{
 		return ptr->GetAngle();
 	}
+	void * getUserData()
+	{
+		return otherdata;
+	}
 	friend class PhysicHandler;
 	friend class PhysicHandlerContactListener;
 	
@@ -73,7 +77,7 @@ public:
 	PhysicPiece * createpiece(piece<float>, float, float, float, void *);
 	void step(std::function<void(float x, float y)> cb);
 	void debugprint();
-	void drawbodies(std::function <void (float, float, float, void *)> draw);
+	void drawbodies(std::function <void (PhysicPiece *)> draw);
 	void piecerotate(float rot);
 	void piecemove(float mov);
 	void pieceaccelerate();

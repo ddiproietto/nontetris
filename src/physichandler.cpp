@@ -199,17 +199,14 @@ void PhysicHandler::debugprint()
 }
 #endif
 
-void PhysicHandler::drawbodies(std::function <void (float, float, float, void *)> draw)
+void PhysicHandler::drawbodies(std::function <void (PhysicPiece *)> draw)
 {
 	for (b2Body * body = world.GetBodyList(); body; body = body->GetNext())
 	{
 		PhysicPiece * userdata = (PhysicPiece *) body->GetUserData();
 		if(userdata->type != PhysicPiece::FALLING_PIECE && userdata->type != PhysicPiece::OLD_PIECE)
 			continue;
-		b2Vec2 pos = body->GetPosition();
-		float rot = body->GetAngle();
-		draw(pos.x, pos.y, rot ,userdata->otherdata);
-
+		draw(userdata);
 	}
 
 }
