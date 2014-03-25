@@ -31,6 +31,8 @@ struct GameOptions
 {
 	double rows;
 	double columns;
+	double rowwidth;
+	double cuttingrowarea;
 };
 
 class GameHandler
@@ -50,6 +52,7 @@ class GameHandler
 	InputHandler * phinput;
 
 	void newrandompiece();
+	void newpiece(const piece<float> & p, float x, float y, float rot);
 	void cutlineeventually(float from, float to);
 
 	GameOptions gameopt;

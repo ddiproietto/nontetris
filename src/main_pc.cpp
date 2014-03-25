@@ -58,6 +58,8 @@ int main(int argc, char * argv[])
 	{
 		.rows = 18,
 		.columns = 10.25,
+		.rowwidth = 1.0,
+		.cuttingrowarea = 8.0,
 	};
 	FileLoader fl;
 	GameHandler gh(gopt, gameopt, fl, PHYSICSTEP);

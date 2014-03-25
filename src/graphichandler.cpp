@@ -431,6 +431,12 @@ GraphicPiece * GraphicHandler::createpiece(piece<float> pie)
 	return pgp;
 }
 
+void GraphicHandler::deletepiece(GraphicPiece * pgp)
+{
+	glDeleteBuffers(1,&(pgp->VBOid));
+	delete pgp;
+}
+
 void GraphicHandler::beginrender()
 {
 	glViewport(0, 0, width, height);

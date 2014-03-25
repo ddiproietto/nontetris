@@ -14,12 +14,9 @@ class Cutter
 
 	PositionState ytoposstate(T y);
 public:
-	std::vector<polygon<T>> upres;
-	std::vector<polygon<T>> downres;
-	std::vector<polygon<T>> midres;
-
 	Cutter(T _up, T _down);
-	bool cutbodyheight(const polygon<T> & p);
+	template <typename C1, typename C2, typename C3>
+	bool cutbodyheight(const polygon<T> & p, C1 & upres, C2 & downres, C3 & midres);
 };
 
 template <typename T>
@@ -104,8 +101,10 @@ static int isvec4ordered(int arr0, int arr1, int arr2, int arr3)
 
 }
 
-template <typename T>
-bool Cutter<T>::cutbodyheight(const polygon<T> & p)
+/* Returns true if a part of the polygon is between the lines.
+ * Otherwise it does not put it in upres or downres */
+template <typename T> template<typename C1, typename C2, typename C3>
+bool Cutter<T>::cutbodyheight(const polygon<T> & p, C1 & upres, C2 & downres, C3 & midres)
 {
 	PositionState actstat, prevstat;
 	polygon<T> newp;
@@ -177,16 +176,18 @@ bool Cutter<T>::cutbodyheight(const polygon<T> & p)
 		if (newp[0].y > down)
 		{
 			downres.push_back(newp);
+			return false;
 		}
 		else if (newp[0].y < up)
 		{
 			upres.push_back(newp);
+			return false;
 		}
 		else
 		{
 			midres.push_back(newp);
+			return true;
 		}
-		return false;
 	}
 	else if (up_intersections.size() == 0 && down_intersections.size() == 2)
 	{

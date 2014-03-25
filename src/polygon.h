@@ -67,13 +67,13 @@ struct point
 		auto newp = returntranslate(t_x, t_y);
 		*this = newp;
 	}
-	#ifndef __DUETTO__
+	#if !(defined(__DUETTO__)||defined(EMSCRIPTEN))
 	friend std::ostream & operator<< (std::ostream & os, point<T> obj)
 	{
 		os<<'('<<obj.x<<", "<<obj.y<<')';
 		return os;
 	}
-	#endif /* __DUETTO__ */
+	#endif
 };
 
 template <class T = float>
@@ -146,13 +146,13 @@ public:
 	{
 		return vertices.end();
 	}
-	auto begin() const -> decltype(vertices.begin())
+	auto begin() const -> decltype(vertices.cbegin())
 	{
-		return vertices.begin();
+		return vertices.cbegin();
 	}
-	auto end() const -> decltype(vertices.end())
+	auto end() const -> decltype(vertices.cend())
 	{
-		return vertices.end();
+		return vertices.cend();
 	}
 
 	bool isconvexcw()
@@ -188,9 +188,10 @@ public:
 		return vertices.back();
 	}
 
-	auto back() const -> decltype(vertices.back())
+	auto back() const -> const point<T> &
 	{
-		return vertices.back();
+		const auto & v = vertices;
+		return v.back();
 	}
 
 	void removealignedvertices()

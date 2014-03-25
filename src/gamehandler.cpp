@@ -20,6 +20,8 @@
 *****************************************************************************/
 #include "gamehandler.h"
 
+#include <list>
+
 #include "myutil.h"
 
 #include "cutter.h"
@@ -54,6 +56,14 @@ GameHandler::~GameHandler()
 	delete phinput;
 }
 
+void GameHandler::newpiece(const piece<float> & p, float x, float y, float rot)
+{
+	//TODO: free this memory at exit
+	auto * gamepiece = new GamePiece(p);
+	gamepiece->php = phphysic->createpiece(p, x, y, rot, gamepiece);
+	gamepiece->grp = phgraphic->createpiece(p);
+}
+
 void GameHandler::newrandompiece()
 {
 //Different ways of generating random numbers
@@ -70,11 +80,7 @@ void GameHandler::newrandompiece()
 #endif
 
 	auto & p = pieces[randpieceindex];
-
-	//TODO: free this memory
-	auto * gamepiece = new GamePiece(p);
-	gamepiece->php = phphysic->createpiece(p, gameopt.columns/2, -1, 0.0, gamepiece);
-	gamepiece->grp = phgraphic->createpiece(p);
+	newpiece(p, gameopt.columns/2, -1, 0.0);
 }
 
 void GameHandler::cutlineeventually(float from, float to)
@@ -88,8 +94,19 @@ void GameHandler::cutlineeventually(float from, float to)
 
 	float linearea = 0;
 
-	phphysic->getpieces_in_rect(x0, y0, x1, y1, [y0, y1, &cutter, &linearea](PhysicPiece * php){
+	struct DeletePiece
+	{
+		std::list<polygon<float>> remainders;
+		GamePiece * pgp;
+		int originaltype;
+		float x,y,rot;
+	};
+	std::list<DeletePiece> deletelist;
+	std::list<polygon<float>> midremainders;
+
+	phphysic->getpieces_in_rect(x0, y0, x1, y1, [y0, y1, &cutter, &linearea, &deletelist, &midremainders](PhysicPiece * php){
 		polygon<float> p (static_cast<GamePiece *>(php->getUserData())->p.getshape());
+		struct DeletePiece dp;
 
 		//Transform the piece coordinates from local to global
 		for (auto & vertex: p)
@@ -98,19 +115,46 @@ void GameHandler::cutlineeventually(float from, float to)
 			vertex.translate(php->getX(), php->getY());
 		}
 
-		cutter.cutbodyheight(p);
+		bool isinbetween = cutter.cutbodyheight(p, dp.remainders, dp.remainders, midremainders);
 
-
-		/* TODO:
-		 * - put the results in a list
-		 */
+		if (isinbetween)
+		{
+			dp.pgp = static_cast<GamePiece *>(php->getUserData());
+			dp.originaltype = dp.pgp->p.getType();
+			dp.x = php->getX();
+			dp.y = php->getY();
+			dp.rot = php->getRot();
+			deletelist.push_back(std::move(dp));
+		}
 	});
 
-	for (const auto & midp: cutter.midres)
+	for (const auto & midp: midremainders)
 	{
 		linearea += midp.area();
 	}
-	std::cout<<linearea<<std::endl;
+	
+	if (linearea > gameopt.cuttingrowarea)
+	{
+		for(auto & dp: deletelist)
+		{
+			GamePiece * pgp = dp.pgp;
+			phgraphic->deletepiece(pgp->grp);
+			phphysic->destroypiece(pgp->php);
+			delete pgp;
+			
+			//Create remainders
+			for(auto & pol: dp.remainders)
+			{
+				//Transform the piece coordinates from global to local again
+				for (auto & vertex: pol)
+				{
+					vertex.translate(-dp.x, -dp.y);
+					vertex.rotate(-dp.rot);
+				}
+				newpiece(piece<float>(pol, dp.originaltype), dp.x, dp.y, dp.rot);
+			}
+		}
+	}
 }
 
 void GameHandler::step_physic()
@@ -127,10 +171,8 @@ void GameHandler::step_physic()
 	});
 	if (checklineandnewpiece)
 	{
-		std::cout << "------"<<std::endl;
-		for(float i = 0.0; i < gameopt.rows; i += 1.0)
-			cutlineeventually(i, i + 1.0);
-		std::cout << "------"<<std::endl;
+		for(float i = 0.0; i < gameopt.rows; i += gameopt.rowwidth)
+			cutlineeventually(i, i + gameopt.rowwidth);
 		newrandompiece();
 	}
 }

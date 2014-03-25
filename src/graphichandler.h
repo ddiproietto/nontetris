@@ -85,6 +85,7 @@ public:
 	GraphicHandler(const GraphicOptions & gopt, const FileLoader & fileloader);
 	~GraphicHandler();
 	GraphicPiece * createpiece(piece<float> pol);
+	void deletepiece(GraphicPiece * pgp);
 	void beginrender();
 	void renderpiece(float x, float y, float rot, GraphicPiece * gp);
 	void endrender();

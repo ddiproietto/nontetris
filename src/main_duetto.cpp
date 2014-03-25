@@ -79,6 +79,8 @@ namespace
 		{
 			.rows = 18,
 			.columns = 10.25,
+			.rowwidth = 1.0,
+			.cuttingrowarea = 8.0,
 		};
 		pgh = new GameHandler(gopt, gameopt, fileloader, PHYSICSTEP);
 

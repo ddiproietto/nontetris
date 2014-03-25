@@ -136,9 +136,19 @@ PhysicPiece * PhysicHandler::createpiece(piece<float> pie, float x, float y, flo
 		delete [] vertarr;
 	}
 	if(fallingpiece != NULL)
-		((PhysicPiece*)fallingpiece->GetUserData())->type = PhysicPiece::OLD_PIECE;
+		static_cast<PhysicPiece*>(fallingpiece->GetUserData())->type = PhysicPiece::OLD_PIECE;
 	fallingpiece = body;
 	return ret;
+}
+
+void PhysicHandler::destroypiece(PhysicPiece * p)
+{
+	b2Body* body = p->ptr;
+	if (fallingpiece == body)
+		fallingpiece = NULL;
+	world.DestroyBody(body);
+	p->otherdata = NULL;
+	delete p;
 }
 
 void PhysicHandler::piecerotate(float rot)
@@ -225,7 +235,7 @@ struct MyQueryCallback : public b2QueryCallback
 void PhysicHandler::getpieces_in_rect(float x0, float y0, float x1, float y1, std::function <void(PhysicPiece *)> cb)
 {
 	MyQueryCallback myquerycb;
-	world.QueryAABB(&myquerycb, b2AABB{.lowerBound=b2Vec2{.x=x0, .y=y0}, .upperBound=b2Vec2{.x=x1, .y=y1}});
+	world.QueryAABB(&myquerycb, b2AABB{.lowerBound=b2Vec2(x0, y0), .upperBound=b2Vec2(x1, y1)});
 	for(auto &i: myquerycb.bodylist)
 	{
 		PhysicPiece * php = (PhysicPiece *) i->GetUserData();

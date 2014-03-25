@@ -72,6 +72,8 @@ int main(int argc, char * argv[])
 	{
 		.rows = 18,
 		.columns = 10.25,
+		.rowwidth = 1.0,
+		.cuttingrowarea = 8.0,
 	};
 	pgh = new GameHandler (gopt, gameopt, fileloader, PHYSICSTEP);
 	emscripten_set_main_loop(oneiterationwrapper, 0, 0);
