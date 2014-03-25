@@ -67,13 +67,13 @@ struct point
 		auto newp = returntranslate(t_x, t_y);
 		*this = newp;
 	}
-	/*
+	#ifndef __DUETTO__
 	friend std::ostream & operator<< (std::ostream & os, point<T> obj)
 	{
 		os<<'('<<obj.x<<", "<<obj.y<<')';
 		return os;
 	}
-	*/
+	#endif /* __DUETTO__ */
 };
 
 template <class T = float>
@@ -218,19 +218,19 @@ public:
 		point<T> prev = vertices.back();
 		for (auto p: vertices)
 		{
-			doublearea += p.x*prev.y-p.y*prev.x;
+			doublearea += prev.x*p.y-prev.y*p.x;
 
 			prev = p;
 		}
 		return doublearea / 2;
 	}
 
-	/*
+	#ifndef __DUETTO__
 	friend std::ostream & operator<< (std::ostream & os, const polygon<T> & obj)
 	{
 		std::copy(obj.vertices.begin(), obj.vertices.end(), std::ostream_iterator<point<T>>(os, " "));
 		return os;
 	}
-	*/
+	#endif /* __DUETTO__ */
 };
 #endif //_POLYGON_H

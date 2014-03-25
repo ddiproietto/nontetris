@@ -71,6 +71,7 @@ void GameHandler::newrandompiece()
 
 	auto & p = pieces[randpieceindex];
 
+	//TODO: free this memory
 	auto * gamepiece = new GamePiece(p);
 	gamepiece->php = phphysic->createpiece(p, gameopt.columns/2, -1, 0.0, gamepiece);
 	gamepiece->grp = phgraphic->createpiece(p);
@@ -85,7 +86,9 @@ void GameHandler::cutlineeventually(float from, float to)
 
 	Cutter<float> cutter(y0, y1);
 
-	phphysic->getpieces_in_rect(x0, y0, x1, y1, [y0,y1,&cutter](PhysicPiece * php){
+	float linearea = 0;
+
+	phphysic->getpieces_in_rect(x0, y0, x1, y1, [y0, y1, &cutter, &linearea](PhysicPiece * php){
 		polygon<float> p (static_cast<GamePiece *>(php->getUserData())->p.getshape());
 
 		//Transform the piece coordinates from local to global
@@ -97,10 +100,17 @@ void GameHandler::cutlineeventually(float from, float to)
 
 		cutter.cutbodyheight(p);
 
+
 		/* TODO:
 		 * - put the results in a list
 		 */
 	});
+
+	for (const auto & midp: cutter.midres)
+	{
+		linearea += midp.area();
+	}
+	std::cout<<linearea<<std::endl;
 }
 
 void GameHandler::step_physic()
@@ -117,8 +127,10 @@ void GameHandler::step_physic()
 	});
 	if (checklineandnewpiece)
 	{
+		std::cout << "------"<<std::endl;
 		for(float i = 0.0; i < gameopt.rows; i += 1.0)
 			cutlineeventually(i, i + 1.0);
+		std::cout << "------"<<std::endl;
 		newrandompiece();
 	}
 }

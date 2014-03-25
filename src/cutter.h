@@ -2,6 +2,7 @@
 #define _CUTTER_H
 
 #include <vector>
+#include <algorithm>
 
 #include "polygon.h"
 
@@ -9,7 +10,7 @@ template <typename T>
 class Cutter
 {
 	enum PositionState {UP, MID, DOWN};
-	T down, up;
+	T up, down;
 
 	PositionState ytoposstate(T y);
 public:
@@ -17,22 +18,22 @@ public:
 	std::vector<polygon<T>> downres;
 	std::vector<polygon<T>> midres;
 
-	Cutter(T down, T up);
+	Cutter(T _up, T _down);
 	bool cutbodyheight(const polygon<T> & p);
 };
 
 template <typename T>
-Cutter<T>::Cutter(T down, T up):up(up),down(down)
+Cutter<T>::Cutter(T _up, T _down):up(_up),down(_down)
 {
 }
 
 template <typename T>
 typename Cutter<T>::PositionState Cutter<T>::ytoposstate(T y)
 {
-	if (y < up)
-		return UP;
-	else if (y > down)
+	if (y > down)
 		return DOWN;
+	else if (y < up)
+		return UP;
 	else
 		return MID;
 }
@@ -43,6 +44,7 @@ point<T> intersection(const point<T> & p1, const point<T> & p2, T y)
 	point <T> ret;
 	ret.y = y;
 	ret.x = ((p2.x-p1.x)/(p2.y-p1.y))*(y-p1.y) + p1.x;
+	return ret;
 }
 
 
@@ -58,7 +60,7 @@ void myslice_internal(const polygon<T> & orig, polygon<T> & dest, int from, int 
 	if (from > to)
 		to += orig.size();
 
-	for (int i = from; i < to; ++i)
+	for (int i = from; i <= to; ++i)
 	{
 		dest.push_back(orig[i]);
 	}
@@ -71,6 +73,35 @@ polygon<T> myslice(const polygon<T> & orig, Params... params)
 	polygon<T> ret;
 	myslice_internal(orig, ret, params...);
 	return ret;
+}
+
+static int signdiff(int a, int b)
+{
+	if (a > b)
+		return 1;
+	else
+		return -1;
+}
+
+static int isvec4asc(const std::vector<int> & arr)
+{
+	int tmp = signdiff(arr[0],arr[1]) + signdiff(arr[1],arr[2]) + signdiff(arr[2],arr[3]);
+
+	return (tmp < 0);
+}
+
+static int isvec4ordered(int arr0, int arr1, int arr2, int arr3)
+{
+	/* Due to a bug, in JS the whole thing returned always true, and always worked
+	 * Right now the code is a mess. I have to investigate further */
+	return true;
+
+	int tmp = (arr0>arr1) + (arr1>arr2) + (arr2 > arr3) + (arr3 > arr0);
+
+	if(tmp > 1)
+		return false;
+	return true;
+
 }
 
 template <typename T>
@@ -92,12 +123,8 @@ bool Cutter<T>::cutbodyheight(const polygon<T> & p)
 	{
 		const point<T> & prev_vertex = *pprev_vertex;
 
-		newp.push_back(vertex);
 
 		actstat = ytoposstate(vertex.y);
-
-		if(actstat == prevstat)
-			continue;
 
 		if ((actstat == MID && prevstat == DOWN) ||
 			(actstat == DOWN && prevstat == MID))
@@ -126,6 +153,8 @@ bool Cutter<T>::cutbodyheight(const polygon<T> & p)
 			down_intersections.push_back(newp.size()-1);
 		}
 
+		newp.push_back(vertex);
+
 		prevstat = actstat;
 		pprev_vertex = &vertex;
 	}
@@ -141,7 +170,7 @@ bool Cutter<T>::cutbodyheight(const polygon<T> & p)
 
 	/* Split polygon by intersections */
 
-	if (up_intersections.empty() && down_intersections.empty())
+	if (up_intersections.size() == 0 && down_intersections.size() == 0)
 	{
 		/* No intersections. The polygon must be entirely above, below,
 		 * or in the middle of the lines */
@@ -159,12 +188,143 @@ bool Cutter<T>::cutbodyheight(const polygon<T> & p)
 		}
 		return false;
 	}
-	else if (up_intersections.empty() && down_intersections.size() == 2)
+	else if (up_intersections.size() == 0 && down_intersections.size() == 2)
 	{
 		downres.push_back(myslice(newp, down_intersections[1], down_intersections[0]));
 		midres.push_back(myslice(newp, down_intersections[0], down_intersections[1]));
 	}
-	
+	else if (up_intersections.size() == 2 && down_intersections.size() == 0)
+	{
+		upres.push_back(myslice(newp, up_intersections[0], up_intersections[1]));
+		midres.push_back(myslice(newp, up_intersections[1], up_intersections[0]));
+	}
+	else if (up_intersections.size() == 2 && down_intersections.size() == 2)
+	{
+		upres.push_back(myslice(newp, up_intersections[0], up_intersections[1]));
+		downres.push_back(myslice(newp, down_intersections[1], down_intersections[0]));
+		midres.push_back(myslice(newp, down_intersections[0], up_intersections[0], up_intersections[1], down_intersections[1]));
+		/*
+		std::cout<<newp<<std::endl;
+		std::cout<<"upint:"<<up_intersections[0] << "," <<up_intersections[1]<<std::endl;
+		std::cout<<"downint:"<<down_intersections[0] << "," <<down_intersections[1]<<std::endl;
+		*/
+	}
+	else if (up_intersections.size() == 0 && down_intersections.size() == 4)
+	{
+		if(isvec4asc(down_intersections))
+		{
+			midres.push_back(myslice(newp, down_intersections[0], down_intersections[1]));
+			midres.push_back(myslice(newp, down_intersections[2], down_intersections[3]));
+			downres.push_back(myslice(newp, down_intersections[1], down_intersections[2], down_intersections[3], down_intersections[0]));
+		}
+		else
+		{
+			downres.push_back(myslice(newp, down_intersections[3], down_intersections[2]));
+			downres.push_back(myslice(newp, down_intersections[1], down_intersections[0]));
+			midres.push_back(myslice(newp, down_intersections[0], down_intersections[3], down_intersections[2], down_intersections[1]));
+		}
+	}
+	else if (up_intersections.size() == 4 && down_intersections.size() == 0)
+	{
+		if(isvec4asc(up_intersections))
+		{
+			upres.push_back(myslice(newp, up_intersections[0], up_intersections[1]));
+			upres.push_back(myslice(newp, up_intersections[2], up_intersections[3]));
+			midres.push_back(myslice(newp, up_intersections[1], up_intersections[2], up_intersections[3], up_intersections[0]));
+		}
+		else
+		{
+			midres.push_back(myslice(newp, up_intersections[3], up_intersections[2]));
+			midres.push_back(myslice(newp, up_intersections[2], up_intersections[1]));
+			upres.push_back(myslice(newp, up_intersections[0], up_intersections[3], up_intersections[2], up_intersections[1]));
+		}
+	}
+	else if (up_intersections.size() == 2 && down_intersections.size() == 4)
+	{
+		upres.push_back(myslice(newp, up_intersections[0], up_intersections[1]));
+		if(isvec4asc(down_intersections))
+		{
+			downres.push_back(myslice(newp, down_intersections[1], down_intersections[2], down_intersections[3], down_intersections[0]));
+
+			if(isvec4ordered(down_intersections[0], up_intersections[0], up_intersections[1], down_intersections[1]))
+			{
+				midres.push_back(myslice(newp, down_intersections[0], up_intersections[0], up_intersections[1], down_intersections[1]));
+				midres.push_back(myslice(newp, down_intersections[2], down_intersections[3]));
+			}
+			else
+			{
+				midres.push_back(myslice(newp, down_intersections[2], up_intersections[0], up_intersections[1], down_intersections[3]));
+				midres.push_back(myslice(newp, down_intersections[0], down_intersections[1]));
+			}
+		}
+		else
+		{
+			midres.push_back(myslice(newp, down_intersections[0], up_intersections[0], up_intersections[1], down_intersections[3], down_intersections[2], down_intersections[1]));
+			downres.push_back(myslice(newp, down_intersections[3], down_intersections[2]));
+			downres.push_back(myslice(newp, down_intersections[1], down_intersections[0]));
+		}
+	}
+	else if (up_intersections.size() == 4 && down_intersections.size() == 2)
+	{
+		downres.push_back(myslice(newp, down_intersections[1], down_intersections[0]));
+		if(isvec4asc(up_intersections))
+		{
+			midres.push_back(myslice(newp, down_intersections[0], up_intersections[0], up_intersections[1], up_intersections[2], up_intersections[3], down_intersections[1]));
+			upres.push_back(myslice(newp, up_intersections[0], up_intersections[1]));
+			upres.push_back(myslice(newp, up_intersections[2], up_intersections[3]));
+		}
+		else
+		{
+			upres.push_back(myslice(newp, up_intersections[0], up_intersections[3], up_intersections[2], up_intersections[1]));
+			if(isvec4ordered(up_intersections[1],down_intersections[1], down_intersections[0], up_intersections[0]))
+			{
+				midres.push_back(myslice(newp, down_intersections[0], up_intersections[0], up_intersections[1], down_intersections[1]));
+				midres.push_back(myslice(newp, up_intersections[3], up_intersections[2]));
+			}
+			else
+			{
+				midres.push_back(myslice(newp, down_intersections[2], up_intersections[0], up_intersections[1], down_intersections[3]));
+				midres.push_back(myslice(newp, down_intersections[0], down_intersections[1]));
+			}
+		}
+	}
+	else if (up_intersections.size() == 4 && down_intersections.size() == 4)
+	{
+		if(!isvec4asc(up_intersections) && !isvec4asc(down_intersections))
+		{
+			upres.push_back(myslice(newp, up_intersections[0], up_intersections[3], up_intersections[2], up_intersections[1]));
+			downres.push_back(myslice(newp, down_intersections[3], down_intersections[2]));
+			downres.push_back(myslice(newp, down_intersections[1], down_intersections[0]));
+			midres.push_back(myslice(newp, down_intersections[0], up_intersections[0], up_intersections[1], down_intersections[1]));
+			midres.push_back(myslice(newp, down_intersections[2], up_intersections[2], up_intersections[3], down_intersections[3]));
+		}
+		else if(isvec4asc(up_intersections) && !isvec4asc(down_intersections))
+		{
+			downres.push_back(myslice(newp, down_intersections[3], down_intersections[2]));
+			downres.push_back(myslice(newp, down_intersections[1], down_intersections[0]));
+			upres.push_back(myslice(newp, up_intersections[0], up_intersections[1]));
+			upres.push_back(myslice(newp, up_intersections[2], up_intersections[3]));
+			midres.push_back(myslice(newp, down_intersections[0], up_intersections[0], up_intersections[1], up_intersections[2], up_intersections[3], down_intersections[3], down_intersections[2], down_intersections[1]));
+		}
+		else if(isvec4asc(up_intersections) && isvec4asc(down_intersections))
+		{
+			upres.push_back(myslice(newp, up_intersections[0], up_intersections[1]));
+			upres.push_back(myslice(newp, up_intersections[2], up_intersections[3]));
+			midres.push_back(myslice(newp, down_intersections[0], up_intersections[0], up_intersections[1], down_intersections[1]));
+			midres.push_back(myslice(newp, down_intersections[2], up_intersections[2], up_intersections[3], down_intersections[3]));
+			downres.push_back(myslice(newp, down_intersections[1], down_intersections[2], down_intersections[3], down_intersections[0]));
+		}
+		else
+		{
+			//TODO: error strange ordering
+		}
+	}
+	else
+	{
+		//TODO: error strange number of intersections
+	}
+
+return true;
 }
 
 #endif //_CUTTER_H
