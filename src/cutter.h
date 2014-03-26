@@ -85,6 +85,12 @@ void myslice_internal(const polygon<T> & orig, polygon<T> & dest, int from, int 
 	myslice_internal(orig, dest, params...);
 }
 
+/* This returns a polygon that contains selected intervals of
+ * vertices from orig. The code is so long because
+ * - there can be as many intervals as one would like
+ * - polygon is a circular vector
+ * TODO: maybe this function should be a member of polygon<T>
+ */
 template <typename T, typename... Params>
 polygon<T> myslice(const polygon<T> & orig, Params... params)
 {
@@ -93,49 +99,21 @@ polygon<T> myslice(const polygon<T> & orig, Params... params)
 	return ret;
 }
 
-static int signdiff(int a, int b)
-{
-	if (a > b)
-		return 1;
-	else
-		return -1;
-}
-
-/* TODO: these functions could be merged? */
-
-/* This function takes a SORTED circular array and determines if
- * it is sorted ascendingly
- *
- * The arr parameter is a circular array. It can be sorted:
- * - ascendingly 0123 (or 1230 2301 3012, since it is circular)
- * - descendingly 3210 (or 2103 1032 0321, since it is circular)
- * - neither way (1203 0132 ...)
- * If it is ordered ascendingly the function returns TRUE
- * if it is ordered descendingly the function returns FALSE
- * else the function returns a useless value.
- */
-static int isvec4asc(const std::vector<int> & arr)
-{
-	int tmp = signdiff(arr[0],arr[1]) + signdiff(arr[1],arr[2]) + signdiff(arr[2],arr[3]);
-
-	return (tmp < 0);
-}
-
 /* This function takes a circular array and determines if
  * it is sorted ascendingly
  *
  * If arr is sorted ascendingly the function returns TRUE
  * If arr is sorted descendingly or not sorted at all the function returns FALSE
  */
-static int isvec4ordered(const std::array<int,4> & arr)
+template<typename T>
+static int isvec4ordasc(T arr)
 {
-	int tmp = (arr[0]>arr[1]) + (arr[1]>arr[2]) + (arr[2] > arr[3]) + (arr[3] > arr[0]);
+	int notascendingsteps = (arr[0]>arr[1]) + (arr[1]>arr[2]) + (arr[2] > arr[3]) + (arr[3] > arr[0]);
 
-	if(tmp > 1)
-		return false;
-	return true;
-
+	return notascendingsteps <= 1;
 }
+
+
 
 /* Returns true if a part of the polygon is between the lines.
  * Otherwise it does not put it in upres or downres */
@@ -248,7 +226,7 @@ bool Cutter<T>::cutbodyheight(const polygon<T> & p, C1 & upres, C2 & downres, C3
 	}
 	else if (up_intersections.size() == 0 && down_intersections.size() == 4)
 	{
-		if(isvec4asc(down_intersections))
+		if(isvec4ordasc(down_intersections))
 		{
 			midres.push_back(myslice(newp, down_intersections[0], down_intersections[1]));
 			midres.push_back(myslice(newp, down_intersections[2], down_intersections[3]));
@@ -263,7 +241,7 @@ bool Cutter<T>::cutbodyheight(const polygon<T> & p, C1 & upres, C2 & downres, C3
 	}
 	else if (up_intersections.size() == 4 && down_intersections.size() == 0)
 	{
-		if(isvec4asc(up_intersections))
+		if(isvec4ordasc(up_intersections))
 		{
 			upres.push_back(myslice(newp, up_intersections[0], up_intersections[1]));
 			upres.push_back(myslice(newp, up_intersections[2], up_intersections[3]));
@@ -279,11 +257,11 @@ bool Cutter<T>::cutbodyheight(const polygon<T> & p, C1 & upres, C2 & downres, C3
 	else if (up_intersections.size() == 2 && down_intersections.size() == 4)
 	{
 		upres.push_back(myslice(newp, up_intersections[0], up_intersections[1]));
-		if(isvec4asc(down_intersections))
+		if(isvec4ordasc(down_intersections))
 		{
 			downres.push_back(myslice(newp, down_intersections[1], down_intersections[2], down_intersections[3], down_intersections[0]));
 
-			if(isvec4ordered({down_intersections[0], up_intersections[0], up_intersections[1], down_intersections[1]}))
+			if(isvec4ordasc(make_array(down_intersections[0], up_intersections[0], up_intersections[1], down_intersections[1])))
 			{
 				midres.push_back(myslice(newp, down_intersections[0], up_intersections[0], up_intersections[1], down_intersections[1]));
 				midres.push_back(myslice(newp, down_intersections[2], down_intersections[3]));
@@ -304,7 +282,7 @@ bool Cutter<T>::cutbodyheight(const polygon<T> & p, C1 & upres, C2 & downres, C3
 	else if (up_intersections.size() == 4 && down_intersections.size() == 2)
 	{
 		downres.push_back(myslice(newp, down_intersections[1], down_intersections[0]));
-		if(isvec4asc(up_intersections))
+		if(isvec4ordasc(up_intersections))
 		{
 			midres.push_back(myslice(newp, down_intersections[0], up_intersections[0], up_intersections[1], up_intersections[2], up_intersections[3], down_intersections[1]));
 			upres.push_back(myslice(newp, up_intersections[0], up_intersections[1]));
@@ -313,7 +291,7 @@ bool Cutter<T>::cutbodyheight(const polygon<T> & p, C1 & upres, C2 & downres, C3
 		else
 		{
 			upres.push_back(myslice(newp, up_intersections[0], up_intersections[3], up_intersections[2], up_intersections[1]));
-			if(isvec4ordered({up_intersections[1],down_intersections[1], down_intersections[0], up_intersections[0]}))
+			if(isvec4ordasc(make_array(up_intersections[1],down_intersections[1], down_intersections[0], up_intersections[0])))
 			{
 				midres.push_back(myslice(newp, down_intersections[0], up_intersections[0], up_intersections[1], down_intersections[1]));
 				midres.push_back(myslice(newp, up_intersections[3], up_intersections[2]));
@@ -327,7 +305,7 @@ bool Cutter<T>::cutbodyheight(const polygon<T> & p, C1 & upres, C2 & downres, C3
 	}
 	else if (up_intersections.size() == 4 && down_intersections.size() == 4)
 	{
-		if(!isvec4asc(up_intersections) && !isvec4asc(down_intersections))
+		if(!isvec4ordasc(up_intersections) && !isvec4ordasc(down_intersections))
 		{
 			upres.push_back(myslice(newp, up_intersections[0], up_intersections[3], up_intersections[2], up_intersections[1]));
 			downres.push_back(myslice(newp, down_intersections[3], down_intersections[2]));
@@ -335,7 +313,7 @@ bool Cutter<T>::cutbodyheight(const polygon<T> & p, C1 & upres, C2 & downres, C3
 			midres.push_back(myslice(newp, down_intersections[0], up_intersections[0], up_intersections[1], down_intersections[1]));
 			midres.push_back(myslice(newp, down_intersections[2], up_intersections[2], up_intersections[3], down_intersections[3]));
 		}
-		else if(isvec4asc(up_intersections) && !isvec4asc(down_intersections))
+		else if(isvec4ordasc(up_intersections) && !isvec4ordasc(down_intersections))
 		{
 			//This should not be possible with our ipothesis
 			downres.push_back(myslice(newp, down_intersections[3], down_intersections[2]));
@@ -344,7 +322,7 @@ bool Cutter<T>::cutbodyheight(const polygon<T> & p, C1 & upres, C2 & downres, C3
 			upres.push_back(myslice(newp, up_intersections[2], up_intersections[3]));
 			midres.push_back(myslice(newp, down_intersections[0], up_intersections[0], up_intersections[1], up_intersections[2], up_intersections[3], down_intersections[3], down_intersections[2], down_intersections[1]));
 		}
-		else if(isvec4asc(up_intersections) && isvec4asc(down_intersections))
+		else if(isvec4ordasc(up_intersections) && isvec4ordasc(down_intersections))
 		{
 			upres.push_back(myslice(newp, up_intersections[0], up_intersections[1]));
 			upres.push_back(myslice(newp, up_intersections[2], up_intersections[3]));
