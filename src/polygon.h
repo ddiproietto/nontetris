@@ -25,6 +25,7 @@
 #include <array>
 #include <iterator>
 #include <cmath>
+#include <algorithm>
 
 template <class T>
 struct point
@@ -224,6 +225,12 @@ public:
 			prev = p;
 		}
 		return doublearea / 2;
+	}
+
+	//This is useful for testing purposes
+	void arrayrotate(size_t pos)
+	{
+		rotate(vertices.begin(), vertices.begin()+normalize_index(pos), vertices.end());
 	}
 
 	#ifndef __DUETTO__
