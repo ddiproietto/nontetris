@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <array>
 
 #include "polygon.h"
 
@@ -80,6 +81,19 @@ static int signdiff(int a, int b)
 		return -1;
 }
 
+/* TODO: these functions could be merged? */
+
+/* This function takes a SORTED circular array and determines if
+ * it is sorted ascendingly
+ *
+ * The arr parameter is a circular array. It can be sorted:
+ * - ascendingly 0123 (or 1230 2301 3012, since it is circular)
+ * - descendingly 3210 (or 2103 1032 0321, since it is circular)
+ * - neither way (1203 0132 ...)
+ * If it is ordered ascendingly the function returns TRUE
+ * if it is ordered descendingly the function returns FALSE
+ * else the function returns a useless value.
+ */
 static int isvec4asc(const std::vector<int> & arr)
 {
 	int tmp = signdiff(arr[0],arr[1]) + signdiff(arr[1],arr[2]) + signdiff(arr[2],arr[3]);
@@ -87,13 +101,15 @@ static int isvec4asc(const std::vector<int> & arr)
 	return (tmp < 0);
 }
 
-static int isvec4ordered(int arr0, int arr1, int arr2, int arr3)
+/* This function takes a circular array and determines if
+ * it is sorted ascendingly
+ *
+ * If arr is sorted ascendingly the function returns TRUE
+ * If arr is sorted descendingly or not sorted at all the function returns FALSE
+ */
+static int isvec4ordered(const std::array<int,4> & arr)
 {
-	/* Due to a bug, in JS the whole thing returned always true, and always worked
-	 * Right now the code is a mess. I have to investigate further */
-	return true;
-
-	int tmp = (arr0>arr1) + (arr1>arr2) + (arr2 > arr3) + (arr3 > arr0);
+	int tmp = (arr[0]>arr[1]) + (arr[1]>arr[2]) + (arr[2] > arr[3]) + (arr[3] > arr[0]);
 
 	if(tmp > 1)
 		return false;
@@ -247,7 +263,7 @@ bool Cutter<T>::cutbodyheight(const polygon<T> & p, C1 & upres, C2 & downres, C3
 		{
 			downres.push_back(myslice(newp, down_intersections[1], down_intersections[2], down_intersections[3], down_intersections[0]));
 
-			if(isvec4ordered(down_intersections[0], up_intersections[0], up_intersections[1], down_intersections[1]))
+			if(isvec4ordered({down_intersections[0], up_intersections[0], up_intersections[1], down_intersections[1]}))
 			{
 				midres.push_back(myslice(newp, down_intersections[0], up_intersections[0], up_intersections[1], down_intersections[1]));
 				midres.push_back(myslice(newp, down_intersections[2], down_intersections[3]));
@@ -277,7 +293,7 @@ bool Cutter<T>::cutbodyheight(const polygon<T> & p, C1 & upres, C2 & downres, C3
 		else
 		{
 			upres.push_back(myslice(newp, up_intersections[0], up_intersections[3], up_intersections[2], up_intersections[1]));
-			if(isvec4ordered(up_intersections[1],down_intersections[1], down_intersections[0], up_intersections[0]))
+			if(isvec4ordered({up_intersections[1],down_intersections[1], down_intersections[0], up_intersections[0]}))
 			{
 				midres.push_back(myslice(newp, down_intersections[0], up_intersections[0], up_intersections[1], down_intersections[1]));
 				midres.push_back(myslice(newp, up_intersections[3], up_intersections[2]));
