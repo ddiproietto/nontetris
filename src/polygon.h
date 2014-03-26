@@ -70,7 +70,7 @@ struct point
 	#if !(defined(__DUETTO__)||defined(EMSCRIPTEN))
 	friend std::ostream & operator<< (std::ostream & os, point<T> obj)
 	{
-		os<<'('<<obj.x<<", "<<obj.y<<')';
+		os<<'['<<obj.x<<", "<<obj.y<<']';
 		return os;
 	}
 	#endif
@@ -229,7 +229,10 @@ public:
 	#ifndef __DUETTO__
 	friend std::ostream & operator<< (std::ostream & os, const polygon<T> & obj)
 	{
-		std::copy(obj.vertices.begin(), obj.vertices.end(), std::ostream_iterator<point<T>>(os, " "));
+		//Print everything but the last element
+		std::copy(obj.begin(), obj.end()-1, std::ostream_iterator<point<T>>(os, ", "));
+		//Print the last element
+		os << obj.back();
 		return os;
 	}
 	#endif /* __DUETTO__ */
