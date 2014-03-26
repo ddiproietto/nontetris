@@ -58,7 +58,7 @@ public:
 			callcollision = true;
 		}
 	}
-} contactlistener;
+} * pcontactlistener;
 
 PhysicHandler::PhysicHandler(float w_width, float w_height, double pstep):world(b2Vec2(0.0F, 15.625F)), w_width(w_width), w_height(w_height), fallingpiece(NULL), stepInterval(pstep), accelerating(false)
 {
@@ -98,7 +98,9 @@ PhysicHandler::PhysicHandler(float w_width, float w_height, double pstep):world(
 	fixDef.density = 32.0F * 32.0F;
 	fixDef.friction = 0.00001;
 	world.CreateBody(&bodyDef)->CreateFixture(&fixDef);
-	world.SetContactListener(&contactlistener);
+
+	pcontactlistener = new PhysicHandlerContactListener;
+	world.SetContactListener(pcontactlistener);
 }
 
 PhysicPiece * PhysicHandler::createpiece(piece<float> pie, float x, float y, float rot, void * userdata)
@@ -164,7 +166,7 @@ void PhysicHandler::pieceaccelerate()
 
 void PhysicHandler::step(std::function<void(float x, float y)> cb)
 {
-	contactlistener.callcollision = false;
+	pcontactlistener->callcollision = false;
 	if(!accelerating)
 	{
 		b2Vec2 v = fallingpiece->GetLinearVelocity();
@@ -176,12 +178,12 @@ void PhysicHandler::step(std::function<void(float x, float y)> cb)
 	}
 	world.Step(stepInterval, 8, 3);
 	accelerating = false;
-	if(contactlistener.callcollision)
+	if(pcontactlistener->callcollision)
 	{
 		b2Vec2 pos = fallingpiece->GetPosition();
 		cb(pos.x, pos.y);
 	}
-	contactlistener.callcollision = false;
+	pcontactlistener->callcollision = false;
 }
 
 #ifndef __DUETTO__
