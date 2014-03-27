@@ -81,7 +81,7 @@ public:
 	PhysicHandler(float width, float height, double pstep = (1.0/60.0));
 	PhysicPiece * createpiece(piece<float>, float, float, float, void *);
 	void destroypiece(PhysicPiece * p);
-	void step(std::function<void(float x, float y)> cb);
+	void step(int level, std::function<void(float x, float y)> cb);
 	void debugprint();
 	void drawbodies(std::function <void (PhysicPiece *)> draw);
 	void piecerotate(float rot);

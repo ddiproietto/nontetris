@@ -169,13 +169,13 @@ void PhysicHandler::pieceaccelerate()
 		fallingpiece->ApplyForceToCenter(b2Vec2(0,0.625),true);
 }
 
-void PhysicHandler::step(std::function<void(float x, float y)> cb)
+void PhysicHandler::step(int level, std::function<void(float x, float y)> cb)
 {
 	contactlistener.callcollision = false;
 	if(!accelerating)
 	{
 		b2Vec2 v = fallingpiece->GetLinearVelocity();
-		if( v.y > 3.125)//TODO: max speed parametric to level
+		if( v.y > 3.125 + level*0.21875)
 		{
 			v.y -= 75 * stepInterval;
 			fallingpiece->SetLinearVelocity(v);

@@ -166,7 +166,7 @@ void GameHandler::step_physic()
 	PhysicHandler &phh = *phphysic;
 	bool checklineandnewpiece = false;
 
-	phh.step([&](float x, float y)
+	phh.step(level, [&](float x, float y)
 	{
 		//The falling piece has landed:
 		//time to generate another piece if the screen is not full
