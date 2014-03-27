@@ -238,8 +238,9 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 
 	GLfloat PMatrix[16];
 
-	//ortho(PMatrix,0,10.25,18,0,-1,1);
-	ortho(PMatrix,-2.05,18.45,18,0,-1,1);
+	//ortho(PMatrix,0,10.25,18,0,-1,1); // Without lateral background
+	//ortho(PMatrix,-2.05,18.45,18,0,-1,1); //With noncutting background
+	ortho(PMatrix,-1.75,18.25,18,0,-1,1); //With cutting background
 	glUniformMatrix4fv(uPMatrixLoc, 1, false, PMatrix);
 
 	//TEXTURE
@@ -250,13 +251,13 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 
 	#ifndef __DUETTO__
 	unsigned char * image;
-	lodepng_decode24_file(&image, &twidth, &theight, DATAPATHPREAMBLE "imgs/newgamebackground.png");
+	lodepng_decode24_file(&image, &twidth, &theight, DATAPATHPREAMBLE "imgs/newgamebackgroundgamea.png");
 
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, twidth, theight, 0, GL_RGB,
 			GL_UNSIGNED_BYTE, image );
 	free(image);
 	#else
-	webGLES->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById("imgs/newgamebackground.png")));
+	webGLES->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById("imgs/newgamebackgroundgamea.png")));
 	#endif
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );

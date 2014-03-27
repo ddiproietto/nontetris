@@ -98,6 +98,7 @@ int webMain() [[client]]
 	);
 	auto texturestoload = make_array(
 		"imgs/newgamebackground.png",
+		"imgs/newgamebackgroundgamea.png",
 		"imgs/font.png",
 		"imgs/pieces/1.png",
 		"imgs/pieces/2.png",
