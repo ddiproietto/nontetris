@@ -83,10 +83,11 @@ public:
 	void destroypiece(PhysicPiece * p);
 	void step(int level, std::function<void(float x, float y)> cb);
 	void debugprint();
-	void drawbodies(std::function <void (PhysicPiece *)> draw);
+	void iteratepieces(std::function <void (PhysicPiece *)> cb);
 	void piecerotate(float rot);
 	void piecemove(float mov);
 	void pieceaccelerate();
 	void getpieces_in_rect(float x0, float y0, float x1, float y1, std::function <void(PhysicPiece *)> cb);
+	void gameover();
 };
 #endif //_PHYSIC_HANDLER_H

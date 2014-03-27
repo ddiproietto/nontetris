@@ -61,6 +61,7 @@ class GameHandler
 	int score;
 	int level;
 	int lines;
+	bool gameover;
 
 public:
 	GameHandler(const GraphicOptions & gopt, const GameOptions & _gameopt, const FileLoader & fl, double physicstep);

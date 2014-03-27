@@ -72,7 +72,8 @@ PhysicHandler::PhysicHandler(float w_width, float w_height, double pstep):world(
 	polShape.SetAsBox(w_width/2, 0.5F);
 	fixDef.shape = &polShape;
 	fixDef.density = 32.0F * 32.0F;
-	world.CreateBody(&bodyDef)->CreateFixture(&fixDef);
+	piecepointer->ptr = world.CreateBody(&bodyDef);
+	piecepointer->ptr->CreateFixture(&fixDef);
 
 	piecepointer = &leftwall;
 	piecepointer->type = PhysicPiece::LEFT;
@@ -149,15 +150,21 @@ void PhysicHandler::destroypiece(PhysicPiece * p)
 
 void PhysicHandler::piecerotate(float rot)
 {
+	if (fallingpiece == NULL)
+		return;
 	if (rot*fallingpiece->GetAngularVelocity() < 3)
 		fallingpiece->ApplyTorque(rot*70*32*32, true);
 }
 void PhysicHandler::piecemove(float mov)
 {
+	if (fallingpiece == NULL)
+		return;
 	fallingpiece->ApplyForceToCenter(b2Vec2(mov*70*32*32,0),true);
 }
 void PhysicHandler::pieceaccelerate()
 {
+	if (fallingpiece == NULL)
+		return;
 	accelerating = true;
 	b2Vec2 v = fallingpiece->GetLinearVelocity();
 	if( v.y > 15.625)
@@ -172,7 +179,7 @@ void PhysicHandler::pieceaccelerate()
 void PhysicHandler::step(int level, std::function<void(float x, float y)> cb)
 {
 	contactlistener.callcollision = false;
-	if(!accelerating)
+	if(!accelerating && fallingpiece != NULL)
 	{
 		b2Vec2 v = fallingpiece->GetLinearVelocity();
 		if( v.y > 3.125 + level*0.21875)
@@ -183,7 +190,7 @@ void PhysicHandler::step(int level, std::function<void(float x, float y)> cb)
 	}
 	world.Step(stepInterval, 8, 3);
 	accelerating = false;
-	if(contactlistener.callcollision)
+	if(contactlistener.callcollision && fallingpiece != NULL)
 	{
 		b2Vec2 pos = fallingpiece->GetPosition();
 		cb(pos.x, pos.y);
@@ -205,14 +212,14 @@ void PhysicHandler::debugprint()
 }
 #endif
 
-void PhysicHandler::drawbodies(std::function <void (PhysicPiece *)> draw)
+void PhysicHandler::iteratepieces(std::function <void (PhysicPiece *)> cb)
 {
 	for (b2Body * body = world.GetBodyList(); body; body = body->GetNext())
 	{
 		PhysicPiece * userdata = (PhysicPiece *) body->GetUserData();
 		if(userdata->type != PhysicPiece::FALLING_PIECE && userdata->type != PhysicPiece::OLD_PIECE)
 			continue;
-		draw(userdata);
+		cb(userdata);
 	}
 
 }
@@ -254,4 +261,13 @@ void PhysicHandler::getpieces_in_rect(float x0, float y0, float x1, float y1, st
 			continue;
 		cb(php);
 	}
+}
+
+void PhysicHandler::gameover()
+{
+	b2Body * groundbody = groundwall.ptr;
+	world.DestroyBody(groundbody);
+	PhysicPiece * userdata = (PhysicPiece *) fallingpiece->GetUserData();
+	userdata->type = PhysicPiece::OLD_PIECE;
+	fallingpiece = NULL;
 }

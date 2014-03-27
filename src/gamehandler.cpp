@@ -39,7 +39,7 @@ namespace
 			);
 }
 
-GameHandler::GameHandler(const GraphicOptions & gopt, const GameOptions & _gameopt, const FileLoader & fl, double physicstep):gameopt(_gameopt),score(0),level(0),lines(0)
+GameHandler::GameHandler(const GraphicOptions & gopt, const GameOptions & _gameopt, const FileLoader & fl, double physicstep):gameopt(_gameopt),score(0),level(0),lines(0),gameover(false)
 {
 	phphysic = new PhysicHandler (gameopt.columns, gameopt.rows, physicstep);
 	phgraphic = new GraphicHandler (gopt, fl);
@@ -164,14 +164,18 @@ float GameHandler::cutlineeventually(float from, float to, float threshold)
 void GameHandler::step_physic()
 {
 	PhysicHandler &phh = *phphysic;
-	bool checklineandnewpiece = false;
+	bool checklineandnewpiece = false, callgameover = false;
 
 	phh.step(level, [&](float x, float y)
 	{
+		if(gameover)
+			return;
 		//The falling piece has landed:
 		//time to generate another piece if the screen is not full
 		if( y > 0 )
 			checklineandnewpiece = true;
+		else
+			callgameover = true;
 	});
 	if (checklineandnewpiece)
 	{
@@ -202,6 +206,31 @@ void GameHandler::step_physic()
 		newrandompiece();
 	}
 
+	if(callgameover)
+	{
+		phh.gameover();
+		gameover = true;
+	}
+	if(gameover)
+	{
+		bool nopiece = true;
+		phh.iteratepieces([&](PhysicPiece * php){
+			nopiece = false;
+			//If piece fallen outside of the screen
+			if (php->getX() > gameopt.rows + 4 * gameopt.rowwidth )
+			{
+				GamePiece * pgp = static_cast<GamePiece*>(php->getUserData());
+				phgraphic->deletepiece(pgp->grp);
+				phphysic->destroypiece(pgp->php);
+				delete pgp;
+			}
+		});
+		if (nopiece)
+		{
+			//END GAME
+		}
+	}
+
 }
 
 void GameHandler::step_graphic()
@@ -210,7 +239,7 @@ void GameHandler::step_graphic()
 	PhysicHandler &phh = *phphysic;
 
 	grh.beginrender();
-	phh.drawbodies([&](PhysicPiece * php){
+	phh.iteratepieces([&](PhysicPiece * php){
 		grh.renderpiece(php->getX(),php->getY(),php->getRot(),static_cast<GamePiece *>(php->getUserData())->grp);
 	});
 	/*
