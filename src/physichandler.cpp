@@ -31,6 +31,7 @@
 #endif
 #include <algorithm>
 #include <set>
+#include <list>
 
 #include "polygon.h"
 
@@ -218,11 +219,26 @@ void PhysicHandler::drawbodies(std::function <void (PhysicPiece *)> draw)
 
 struct MyQueryCallback : public b2QueryCallback
 {
+	//Duetto (0.9.4) has a bug and does not support set
+#ifndef __DUETTO__
 	std::set<b2Body *> bodylist;
+#else
+	std::list<b2Body *> bodylist;
+#endif
 
 	bool ReportFixture(b2Fixture* fixture)
 	{
-		bodylist.insert( fixture->GetBody() );
+		b2Body * body = fixture->GetBody();
+#ifndef __DUETTO__
+		bodylist.insert(body);
+#else
+		//This is particularly stupid, but it's a temporary workaround
+		//until set gets fixed
+		if(find(bodylist.begin(), bodylist.end(), body) == bodylist.end())
+		{
+			bodylist.push_front(body);
+		}
+#endif
 		return true;
 	}
 };
