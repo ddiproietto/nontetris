@@ -370,9 +370,7 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 	glGenerateMipmap( GL_TEXTURE_2D );
-
-	updatescore(150, 0, 1000);
-
+	std::fill(vbo_score_num_vertices.begin(), vbo_score_num_vertices.end(), 0);
 }
 
 template <class vec>

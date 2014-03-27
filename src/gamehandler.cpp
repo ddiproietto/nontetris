@@ -39,11 +39,13 @@ namespace
 			);
 }
 
-GameHandler::GameHandler(const GraphicOptions & gopt, const GameOptions & _gameopt, const FileLoader & fl, double physicstep):gameopt(_gameopt)
+GameHandler::GameHandler(const GraphicOptions & gopt, const GameOptions & _gameopt, const FileLoader & fl, double physicstep):gameopt(_gameopt),score(0),level(0),lines(0)
 {
 	phphysic = new PhysicHandler (gameopt.columns, gameopt.rows, physicstep);
 	phgraphic = new GraphicHandler (gopt, fl);
 	phinput = new InputHandler(phgraphic->toinput());
+
+	phgraphic->updatescore(lines, level, score);
 
 	//Start the game with a new random piece!
 	newrandompiece();
@@ -83,7 +85,8 @@ void GameHandler::newrandompiece()
 	newpiece(p, gameopt.columns/2, -1, 0.0);
 }
 
-void GameHandler::cutlineeventually(float from, float to)
+//Returns the area of the mid part
+float GameHandler::cutlineeventually(float from, float to, float threshold)
 {
 	float x0 = 0;
 	float y0 = from;
@@ -133,7 +136,7 @@ void GameHandler::cutlineeventually(float from, float to)
 		linearea += midp.area();
 	}
 	
-	if (linearea > gameopt.cuttingrowarea)
+	if (linearea > threshold)
 	{
 		for(auto & dp: deletelist)
 		{
@@ -155,6 +158,7 @@ void GameHandler::cutlineeventually(float from, float to)
 			}
 		}
 	}
+	return linearea;
 }
 
 void GameHandler::step_physic()
@@ -171,10 +175,33 @@ void GameHandler::step_physic()
 	});
 	if (checklineandnewpiece)
 	{
+		float totalcuttedarea = 0.0;
+		int cuttedlines = 0;
 		for(float i = 0.0; i < gameopt.rows; i += gameopt.rowwidth)
-			cutlineeventually(i, i + gameopt.rowwidth);
+		{
+			float cuttedarea;
+			cuttedarea = cutlineeventually(i, i + gameopt.rowwidth, gameopt.cuttingrowarea);
+			if (cuttedarea > gameopt.cuttingrowarea)
+			{
+				//Cutting has happened
+				totalcuttedarea = cuttedarea;
+				cuttedlines++;
+			}
+		}
+		if(cuttedlines != 0)
+		{
+			//Update score
+			int scoreadd = ceil(pow((cuttedlines*3),pow((totalcuttedarea/(10*cuttedlines)),10))*20+cuttedlines*cuttedlines*40);
+			score += scoreadd;
+			lines += cuttedlines;
+			level = lines/10;
+
+			phgraphic->updatescore(lines, level, score);
+		}
+
 		newrandompiece();
 	}
+
 }
 
 void GameHandler::step_graphic()

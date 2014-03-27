@@ -53,9 +53,14 @@ class GameHandler
 
 	void newrandompiece();
 	void newpiece(const piece<float> & p, float x, float y, float rot);
-	void cutlineeventually(float from, float to);
+	float cutlineeventually(float from, float to, float threshold);
 
 	GameOptions gameopt;
+
+	//State of the game
+	int score;
+	int level;
+	int lines;
 
 public:
 	GameHandler(const GraphicOptions & gopt, const GameOptions & _gameopt, const FileLoader & fl, double physicstep);
