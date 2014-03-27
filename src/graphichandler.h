@@ -42,7 +42,7 @@
 #include "fileloader.h"
 
 #include <functional>
-#include "NontetrisConfig.h"
+#include <array>
 
 #include "graphictoinput.h"
 
@@ -69,10 +69,13 @@ class GraphicHandler
 	GLint uRTVecLoc;
 	GLint aVertexPositionLoc;
 	GLuint tex_background;
+	GLuint tex_font;
 	GLuint tex[7];
 
 	GLuint pieces_fbo[7];
 	GLuint vbo_background;
+	GLuint vbo_score;
+	std::array<int, 3> vbo_score_num_vertices;
 
 	int width;
 	int height;
@@ -89,6 +92,8 @@ public:
 	void beginrender();
 	void renderpiece(float x, float y, float rot, GraphicPiece * gp);
 	void endrender();
+
+	void updatescore(int number_a, int number_b, int number_c);
 
 	GraphicToInput toinput();
 };

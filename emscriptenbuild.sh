@@ -36,4 +36,4 @@ cmake -DEMSCRIPTEN=1 -DCMAKE_TOOLCHAIN_FILE="$WHEREISEMSCRIPTEN"/cmake/Platform/
 "$WHEREISEMSCRIPTEN"/emmake make
 mv src/nontetris nontetris.bc
 
-"$WHEREISEMSCRIPTEN"/emcc -O3 nontetris.bc srclib/Box2D/Box2D/libBox2D.so -o nontetris-emscripten.js --preload-file shader.vert --preload-file shader.frag --preload-file shaderident.vert --preload-file imgs/pieces/1.png --preload-file imgs/pieces/2.png --preload-file imgs/pieces/3.png --preload-file imgs/pieces/4.png --preload-file imgs/pieces/5.png --preload-file imgs/pieces/6.png --preload-file imgs/pieces/7.png --preload-file imgs/newgamebackground.png
+"$WHEREISEMSCRIPTEN"/emcc -O3 nontetris.bc srclib/Box2D/Box2D/libBox2D.so -o nontetris-emscripten.js --preload-file shader.vert --preload-file shader.frag --preload-file shaderident.vert --preload-file imgs/pieces/1.png --preload-file imgs/pieces/2.png --preload-file imgs/pieces/3.png --preload-file imgs/pieces/4.png --preload-file imgs/pieces/5.png --preload-file imgs/pieces/6.png --preload-file imgs/pieces/7.png --preload-file imgs/newgamebackground.png --preload-file imgs/font.png

@@ -138,8 +138,9 @@ void eye(GLfloat * out)
 #endif
 
 
-GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & fileloader):width(gopt.width), height(gopt.height)
+GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & fileloader):width(gopt.width), height(gopt.height), vbo_score(0)
 {
+	//TODO: this parameter should be taken from GameOption
 	float imgquad = height/18.0;
 	float piecesAA = 2;
 
@@ -353,6 +354,68 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 				 1,  1,  1/rapx, 0};
 	glBufferData(GL_ARRAY_BUFFER, 4*2*2*sizeof(float), vertices2, GL_STATIC_DRAW);
 
+	//FONT
+	glGenTextures(1, &tex_font);
+	glBindTexture( GL_TEXTURE_2D, tex_font);
+
+	#ifndef __DUETTO__
+	lodepng_decode24_file(&image, &twidth, &theight, DATAPATHPREAMBLE "imgs/font.png");
+
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, twidth, theight, 0, GL_RGB,
+			GL_UNSIGNED_BYTE, image );
+	free(image);
+	#else
+	webGLES->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById("imgs/font.png")));
+	#endif
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+	glGenerateMipmap( GL_TEXTURE_2D );
+
+	updatescore(150, 0, 1000);
+
+}
+
+template <class vec>
+static inline int string_to_vbo_vector(const std::string & s, vec & coords, int rightx, int bottomy)
+{
+	int index = 0;
+	for (auto i = s.rbegin(); i != s.rend(); ++i)
+	{
+		const auto & c = *i;
+		//Only numbers are supported
+		int digit = c - '0';
+		if (!(0 <= digit && digit <= 9))
+			continue;
+		coords.insert(coords.end(),{
+			(rightx - index) * (2/20.0F) -1, (17 - bottomy) * (2/18.0F) -1,     (9+(8.0F*digit))/512, 1,
+			(rightx - index) * (2/20.0F) -1, (18 - bottomy) * (2/18.0F) -1,           (9+(8.0F*digit))/512, 0,
+			(rightx -1 - index) * (2/20.0F) -1, (17 - bottomy) * (2/18.0F) -1,  (1+(8.0F*digit))/512, 1,
+			(rightx -1 - index) * (2/20.0F) -1, (18 - bottomy) * (2/18.0F) -1,        (1+(8.0F*digit))/512, 0
+		});
+		++index;
+	}
+	return index;
+}
+
+void GraphicHandler::updatescore(int number_a, int number_b, int number_c)
+{
+	if(glIsBuffer(vbo_score))
+		glDeleteBuffers(1, &vbo_score);
+
+	glGenBuffers(1, &vbo_score);
+
+	std::string string_a = std::to_string(number_a);
+	std::string string_b = std::to_string(number_b);
+	std::string string_c = std::to_string(number_c);
+
+	std::vector<float> coords;
+
+	vbo_score_num_vertices[0] = string_to_vbo_vector(string_a, coords, 18, 10) * 4;
+	vbo_score_num_vertices[1] = string_to_vbo_vector(string_b, coords, 18, 7) * 4;
+	vbo_score_num_vertices[2] = string_to_vbo_vector(string_c, coords, 19, 3) * 4;
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_score);
+	glBufferData(GL_ARRAY_BUFFER, coords.size()*sizeof(float), coords.data(), GL_STATIC_DRAW);
 }
 
 GraphicHandler::~GraphicHandler()
@@ -445,21 +508,32 @@ void GraphicHandler::beginrender()
 
 	//DRAW BACKGROUND
 	glUseProgram(isp);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_background);
 	glEnableVertexAttribArray(aGlobalVertexPositionLoc);
 	glEnableVertexAttribArray(aGlobalTextureCoordLoc);
 
+	// BACKGROUND IMAGE
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_background);
 	glBindTexture(GL_TEXTURE_2D, tex_background);
-
 	glVertexAttribPointer(aGlobalVertexPositionLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)0);
 	glVertexAttribPointer(aGlobalTextureCoordLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)(2*sizeof(GLfloat)));
-
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+	// TEXT
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_score);
+	glBindTexture(GL_TEXTURE_2D, tex_font);
+	glVertexAttribPointer(aGlobalVertexPositionLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)0);
+	glVertexAttribPointer(aGlobalTextureCoordLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)(2*sizeof(GLfloat)));
+	int sum = 0;
+	for (int i: vbo_score_num_vertices)
+	{
+		glDrawArrays(GL_TRIANGLE_STRIP, sum, i);
+		sum += i;
+	}
+
+	//END DRAW BACKGROUND
 
 	glDisableVertexAttribArray(aGlobalVertexPositionLoc);
 	glDisableVertexAttribArray(aGlobalTextureCoordLoc);
-	//END DRAW BACKGROUND
-
 	glUseProgram(sp);
 	glEnableVertexAttribArray(aVertexPositionLoc);
 }
