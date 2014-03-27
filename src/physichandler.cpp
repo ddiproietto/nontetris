@@ -34,32 +34,27 @@
 
 #include "polygon.h"
 
-class PhysicHandlerContactListener : public b2ContactListener
+PhysicHandler::PhysicHandlerContactListener::PhysicHandlerContactListener():callcollision(false)
 {
-public:
-	bool callcollision;
-	PhysicHandlerContactListener():callcollision(false)
+}
+void PhysicHandler::PhysicHandlerContactListener::BeginContact(b2Contact* contact)
+{
+	PhysicPiece * bodyUserDataA = (PhysicPiece *) contact->GetFixtureA()->GetBody()->GetUserData();
+	PhysicPiece * bodyUserDataB = (PhysicPiece *) contact->GetFixtureB()->GetBody()->GetUserData();
+	bool isnA;
+
+	if((isnA=(bodyUserDataA->type != PhysicPiece::FALLING_PIECE)) && bodyUserDataB->type != PhysicPiece::FALLING_PIECE)
+		return;
+
+	if(isnA)
+		std::swap(bodyUserDataA,bodyUserDataB);
+
+	//bodyUserDataA contains FALLING_PIECE
+	if(bodyUserDataB->type == PhysicPiece::GROUND || bodyUserDataB->type == PhysicPiece::OLD_PIECE)
 	{
+		callcollision = true;
 	}
-	void BeginContact(b2Contact* contact)
-	{
-		PhysicPiece * bodyUserDataA = (PhysicPiece *) contact->GetFixtureA()->GetBody()->GetUserData();
-		PhysicPiece * bodyUserDataB = (PhysicPiece *) contact->GetFixtureB()->GetBody()->GetUserData();
-		bool isnA;
-
-		if((isnA=(bodyUserDataA->type != PhysicPiece::FALLING_PIECE)) && bodyUserDataB->type != PhysicPiece::FALLING_PIECE)
-			return;
-
-		if(isnA)
-			std::swap(bodyUserDataA,bodyUserDataB);
-
-		//bodyUserDataA contains FALLING_PIECE
-		if(bodyUserDataB->type == PhysicPiece::GROUND || bodyUserDataB->type == PhysicPiece::OLD_PIECE)
-		{
-			callcollision = true;
-		}
-	}
-} contactlistener;
+}
 
 PhysicHandler::PhysicHandler(float w_width, float w_height, double pstep):world(b2Vec2(0.0F, 15.625F)), w_width(w_width), w_height(w_height), fallingpiece(NULL), stepInterval(pstep), accelerating(false)
 {

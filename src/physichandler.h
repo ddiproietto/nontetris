@@ -27,7 +27,6 @@
 
 
 class PhysicHandler;
-class PhysicHandlerContactListener;
 
 class PhysicPiece
 {
@@ -60,7 +59,6 @@ public:
 		return otherdata;
 	}
 	friend class PhysicHandler;
-	friend class PhysicHandlerContactListener;
 	
 };
 class PhysicHandler
@@ -72,6 +70,13 @@ class PhysicHandler
 	const float stepInterval;
 	bool accelerating;
 	PhysicPiece rightwall, leftwall, groundwall;
+	class PhysicHandlerContactListener : public b2ContactListener
+	{
+	public:
+		bool callcollision;
+		PhysicHandlerContactListener();
+		void BeginContact(b2Contact* contact);
+	} contactlistener;
 public:
 	PhysicHandler(float width, float height, double pstep = (1.0/60.0));
 	PhysicPiece * createpiece(piece<float>, float, float, float, void *);
