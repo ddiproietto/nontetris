@@ -59,8 +59,8 @@ auto tests = make_array(
 
 		testcase({ {-3, 0}, {-2, -1}, {0, 1}, {2, -1}, {3, 0}, {0, 2} }, -0.9, 0.1), // UP 4 ASC DOWN 4 ASC
 		testcase({ {0, -2}, {3, 0}, {2, 1}, {0, -1}, {-2, 1}, {-3, 0} }, -0.9, 0.1), // UP 4 DESC DOWN 4 DESC
-		//This polygon does not conform to our ipothesys, but the cutter should be able to handle it, so we test it
-		testcase({ {0, -1}, {-2, 1}, {-3, 0}, {-2, -1}, {-3, -2}, {-2, -3}, {0, -2}, {2, -3}, {3, -2}, {1, -1}, {3, 0}, {2, 1} }, -2.5, -0.5) // UP 4 ASC DOWN 4 DESC
+
+		testcase(polygon <float> ({ { -1.5,-1}, { 0.5,-1}, { 0.5,0}, { 1.5,0}, { 1.5,1}, { -0.5,1}, { -0.5,0}, { -1.5,0} }).returnrotateangle(-M_PI/4), -0.7, 0.7) // UP 4 ASC DOWN 4 DESC
 		);
 
 using namespace std;
@@ -92,7 +92,7 @@ int main()
 {
 	cout << "[" << endl;
 
-	/* We're in 2014 and the easiest way to avoid generatin trailing commas is to use
+	/* We're in 2014 and the easiest way to avoid generating trailing commas is to use
 	 * these variables. This fills my heart with furious rage */
 	bool firsttest = true;
 	int indextest = 0;
@@ -105,7 +105,7 @@ int main()
 
 		//This rotates the polygon array, to test further the cutter
 		//Change this number to perform additional testing
-		test.p.arrayrotate(7);
+		test.p.arrayrotate(0);
 
 		oldarea = test.p.area();
 

@@ -44,7 +44,7 @@ def drawpolygon(clusters):
 		ymin = min(ymin, point[1])
 
 if len(sys.argv) < 2 or len(sys.argv) > 3:
-	sys.stderr.write("Plot polygons from testcutter\n")
+	sys.stderr.write("Plot polygon results from tests\n")
 	sys.stderr.write("Usage: " + sys.argv[0] + " <filename> [index]\nUse - for standard input. If no index is specified every test case is displayed\n")
 	sys.exit()
 
@@ -71,31 +71,45 @@ for index in testindexes:
 
 	pylab.subplot(2, 2, 1)
 	pylab.xlabel("original")
-	pylab.axhline(test["lineup"])
-	pylab.axhline(test["linedown"])
-
-	ymax = max(ymax, test["lineup"])
-	ymin = min(ymin, test["lineup"])
-	ymax = max(ymax, test["linedown"])
-	ymin = min(ymin, test["linedown"])
+	if "lineup" in test:
+		pylab.axhline(test["lineup"])
+		ymax = max(ymax, test["lineup"])
+		ymin = min(ymin, test["lineup"])
+	if "linedown" in test:
+		pylab.axhline(test["linedown"])
+		ymax = max(ymax, test["linedown"])
+		ymin = min(ymin, test["linedown"])
 
 	drawpolygon(test["orig"])
 	ax = pylab.gca()
 
-	pylab.subplot(2, 2, 2, sharex=ax, sharey=ax)
-	for pol in test["up"]:
-		drawpolygon(pol)
-	pylab.xlabel("up")
+	plotind = 0
+	if "separateplots" in test:
+		for pol in test["separateplots"]:
+			pylab.subplot(2, 2, plotind+2, sharex=ax, sharey=ax)
+			drawpolygon(pol)
+			pylab.plot(pol[0][0], pol[0][1], 'o')
+			pylab.plot(pol[1][0], pol[1][1], 'o')
+			pylab.xlabel("plot{0}".format((plotind + 1)))
+			plotind += 1
 
-	pylab.subplot(2, 2, 3, sharex=ax, sharey=ax)
-	for pol in test["down"]:
-		drawpolygon(pol)
-	pylab.xlabel("down")
+	if "up" in test:
+		pylab.subplot(2, 2, 2, sharex=ax, sharey=ax)
+		for pol in test["up"]:
+			drawpolygon(pol)
+		pylab.xlabel("up")
 
-	pylab.subplot(2, 2, 4, sharex=ax, sharey=ax)
-	for pol in test["mid"]:
-		drawpolygon(pol)
-	pylab.xlabel("mid")
+	if "down" in test:
+		pylab.subplot(2, 2, 3, sharex=ax, sharey=ax)
+		for pol in test["down"]:
+			drawpolygon(pol)
+		pylab.xlabel("down")
+
+	if "mid" in test:
+		pylab.subplot(2, 2, 4, sharex=ax, sharey=ax)
+		for pol in test["mid"]:
+			drawpolygon(pol)
+		pylab.xlabel("mid")
 
 	ax.axis([xmin - 1, xmax + 1, ymax + 1 , ymin -1])
 

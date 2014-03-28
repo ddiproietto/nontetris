@@ -227,6 +227,21 @@ public:
 		return doublearea / 2;
 	}
 
+	void rotateangle(T angle)
+	{
+		for(auto & p: vertices)
+		{
+			p.rotate(angle);
+		}
+	}
+
+	polygon<T> returnrotateangle(T angle)
+	{
+		polygon<T> ret = *this;
+		ret.rotateangle(angle);
+		return ret;
+	}
+
 	//This is useful for testing purposes
 	void arrayrotate(size_t pos)
 	{

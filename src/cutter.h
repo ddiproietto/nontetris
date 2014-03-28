@@ -315,7 +315,6 @@ bool Cutter<T>::cutbodyheight(const polygon<T> & p, C1 & upres, C2 & downres, C3
 		}
 		else if(isvec4ordasc(up_intersections) && !isvec4ordasc(down_intersections))
 		{
-			//This should not be possible with our ipothesis
 			downres.push_back(myslice(newp, down_intersections[3], down_intersections[2]));
 			downres.push_back(myslice(newp, down_intersections[1], down_intersections[0]));
 			upres.push_back(myslice(newp, up_intersections[0], up_intersections[1]));
