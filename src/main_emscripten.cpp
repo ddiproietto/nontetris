@@ -74,6 +74,7 @@ int main(int argc, char * argv[])
 		.columns = 10.25,
 		.rowwidth = 1.0,
 		.cuttingrowarea = 8.0,
+		.updatebarsfreq = 0.2,
 	};
 	pgh = new GameHandler (gopt, gameopt, fileloader, PHYSICSTEP);
 	emscripten_set_main_loop(oneiterationwrapper, 0, 0);

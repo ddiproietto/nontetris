@@ -37,6 +37,10 @@ class PhysicPiece
 	{
 		return type == GROUND || type == LEFT || type == RIGHT;
 	}
+	bool isfalling()
+	{
+		return type == FALLING_PIECE;
+	}
 public:
 	PhysicPiece(b2Body * p = NULL):ptr(p)
 	{}
@@ -89,5 +93,6 @@ public:
 	void pieceaccelerate();
 	void getpieces_in_rect(float x0, float y0, float x1, float y1, std::function <void(PhysicPiece *)> cb);
 	void gameover();
+	void untagfallingpiece();
 };
 #endif //_PHYSIC_HANDLER_H

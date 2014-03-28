@@ -39,14 +39,18 @@ namespace
 			);
 }
 
-GameHandler::GameHandler(const GraphicOptions & gopt, const GameOptions & _gameopt, const FileLoader & fl, double physicstep):gameopt(_gameopt),score(0),level(0),lines(0),gameover(false)
+GameHandler::GameHandler(const GraphicOptions & gopt, const GameOptions & _gameopt, const FileLoader & fl, double physicstep):gameopt(_gameopt),score(0),level(0),lines(0),gameover(false), updatebarscompleteness(1.0)
 {
 	phphysic = new PhysicHandler (gameopt.columns, gameopt.rows, physicstep);
-	phgraphic = new GraphicHandler (gopt, fl);
+	phgraphic = new GraphicHandler (gopt, fl, gameopt.rows, gameopt.rowwidth);
 	phinput = new InputHandler(phgraphic->toinput());
 
 	phgraphic->updatescore(lines, level, score);
 
+	for(float i = 0.0; i < gameopt.rows; i += gameopt.rowwidth)
+	{
+		linecompleteness.push_back(0.0);
+	}
 	//Start the game with a new random piece!
 	newrandompiece();
 }
@@ -172,6 +176,8 @@ void GameHandler::step_physic()
 			return;
 		//The falling piece has landed:
 		//time to generate another piece if the screen is not full
+		phh.untagfallingpiece();
+
 		if( y > 0 )
 			checklineandnewpiece = true;
 		else
@@ -238,7 +244,20 @@ void GameHandler::step_graphic()
 	GraphicHandler &grh = *phgraphic;
 	PhysicHandler &phh = *phphysic;
 
-	grh.beginrender();
+	updatebarscompleteness += gameopt.updatebarsfreq;
+	if (updatebarscompleteness > 1.0)
+	{
+		updatebarscompleteness -= 1.0;
+		linecompleteness.clear();
+		for(float i = 0.0; i < gameopt.rows; i += gameopt.rowwidth)
+		{
+			float cuttedarea;
+			//Big threshold area so it does not cut
+			cuttedarea = cutlineeventually(i, i + gameopt.rowwidth, gameopt.rowwidth*gameopt.columns*2);
+			linecompleteness.push_back(std::min(cuttedarea/gameopt.cuttingrowarea, 1.0));
+		}
+	}
+	grh.beginrender(linecompleteness);
 	phh.iteratepieces([&](PhysicPiece * php){
 		grh.renderpiece(php->getX(),php->getY(),php->getRot(),static_cast<GamePiece *>(php->getUserData())->grp);
 	});

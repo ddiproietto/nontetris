@@ -81,6 +81,7 @@ namespace
 			.columns = 10.25,
 			.rowwidth = 1.0,
 			.cuttingrowarea = 8.0,
+			.updatebarsfreq = 0.2,
 		};
 		pgh = new GameHandler(gopt, gameopt, fileloader, PHYSICSTEP);
 
@@ -94,7 +95,8 @@ int webMain() [[client]]
 	auto filestoload = make_array(
 		"shader.frag",
 		"shader.vert",
-		"shaderident.vert"
+		"shaderident.vert",
+		"shadercomp.frag"
 	);
 	auto texturestoload = make_array(
 		"imgs/newgamebackground.png",

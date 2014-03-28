@@ -138,6 +138,13 @@ PhysicPiece * PhysicHandler::createpiece(piece<float> pie, float x, float y, flo
 	return ret;
 }
 
+void PhysicHandler::untagfallingpiece()
+{
+	if(fallingpiece != NULL)
+		static_cast<PhysicPiece*>(fallingpiece->GetUserData())->type = PhysicPiece::OLD_PIECE;
+	fallingpiece = NULL;
+}
+
 void PhysicHandler::destroypiece(PhysicPiece * p)
 {
 	b2Body* body = p->ptr;
@@ -257,7 +264,7 @@ void PhysicHandler::getpieces_in_rect(float x0, float y0, float x1, float y1, st
 	for(auto &i: myquerycb.bodylist)
 	{
 		PhysicPiece * php = (PhysicPiece *) i->GetUserData();
-		if(php->iswall())
+		if(php->iswall() || php->isfalling())
 			continue;
 		cb(php);
 	}
@@ -267,7 +274,10 @@ void PhysicHandler::gameover()
 {
 	b2Body * groundbody = groundwall.ptr;
 	world.DestroyBody(groundbody);
-	PhysicPiece * userdata = (PhysicPiece *) fallingpiece->GetUserData();
-	userdata->type = PhysicPiece::OLD_PIECE;
+	if(fallingpiece)
+	{
+		PhysicPiece * userdata = (PhysicPiece *) fallingpiece->GetUserData();
+		userdata->type = PhysicPiece::OLD_PIECE;
+	}
 	fallingpiece = NULL;
 }

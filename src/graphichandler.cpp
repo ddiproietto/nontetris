@@ -138,10 +138,9 @@ void eye(GLfloat * out)
 #endif
 
 
-GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & fileloader):width(gopt.width), height(gopt.height), vbo_score(0)
+GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & fileloader, float _rows, float _rowwidth):width(gopt.width), height(gopt.height), vbo_score(0),rows(_rows), rowwidth(_rowwidth)
 {
-	//TODO: this parameter should be taken from GameOption
-	float imgquad = height/18.0;
+	float imgquad = height/rows;
 	float piecesAA = 2;
 
 	#ifndef __DUETTO__
@@ -169,23 +168,30 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 
 	GLuint vs, /* Vertex Shader */
 	       fs, /* Fragment Shader */
-	       ivs;
+	       ivs,
+	       compfs;
+
+
 
 
 	#ifdef __DUETTO__
 		auto * c_vsSource = fileloader.getfilecontent("shader.vert");
-		auto * c_fsSource = client::String(WEBPREAMBLE).concat(fileloader.getfilecontent("shader.frag"));
 		auto * c_ivsSource = fileloader.getfilecontent("shaderident.vert");
+		auto * c_fsSource = client::String(WEBPREAMBLE).concat(fileloader.getfilecontent("shader.frag"));
+		auto * c_compfsSource = client::String(WEBPREAMBLE).concat(fileloader.getfilecontent("shadercomp.frag"));
 	#else
 		std::string vsSource = FileLoader::getfilecontent(DATAPATHPREAMBLE "shader.vert");
 		std::string ivsSource = FileLoader::getfilecontent(DATAPATHPREAMBLE "shaderident.vert");
 		std::string fsSource = FileLoader::getfilecontent(DATAPATHPREAMBLE "shader.frag");
+		std::string compfsSource = FileLoader::getfilecontent(DATAPATHPREAMBLE "shadercomp.frag");
 		#ifdef EMSCRIPTEN
 		fsSource = std::string(WEBPREAMBLE) + fsSource;
+		compfsSource = std::string(WEBPREAMBLE) + compfsSource;
 		#endif
 		const char * c_vsSource = vsSource.c_str();
 		const char * c_fsSource = fsSource.c_str();
 		const char * c_ivsSource = ivsSource.c_str();
+		const char * c_compfsSource = compfsSource.c_str();
 	#endif
 
 	vs = glCreateShader(GL_VERTEX_SHADER);
@@ -204,7 +210,7 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 	glShaderSource(ivs, 1, &c_ivsSource, NULL);
 	#endif
 	glCompileShader(ivs);
-	printLog(vs,"ident vertex shader:");
+	printLog(ivs,"ident vertex shader:");
 
 	fs = glCreateShader(GL_FRAGMENT_SHADER);
 	#ifdef __DUETTO__
@@ -215,17 +221,32 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 	glCompileShader(fs);
 	printLog(fs, "fragment shader:");
 
+	compfs = glCreateShader(GL_FRAGMENT_SHADER);
+	#ifdef __DUETTO__
+	webGLES->shaderSource(webGLESLookupWebGLShader(compfs), *c_compfsSource);
+	#else
+	glShaderSource(compfs, 1, &c_compfsSource, NULL);
+	#endif
+	glCompileShader(compfs);
+	printLog(compfs, "completeness fragment shader:");
+
 	sp = glCreateProgram();
 	glAttachShader(sp, vs);
 	glAttachShader(sp, fs);
 	glLinkProgram(sp);
-	printLog(sp, "linking shader:");
+	printLog(sp, "linking piece shader:");
 
 	isp = glCreateProgram();
 	glAttachShader(isp, ivs);
 	glAttachShader(isp, fs);
 	glLinkProgram(isp);
-	printLog(isp, "linking shader:");
+	printLog(isp, "linking global shader:");
+
+	compsp = glCreateProgram();
+	glAttachShader(compsp, ivs);
+	glAttachShader(compsp, compfs);
+	glLinkProgram(compsp);
+	printLog(compsp, "linking completeness shader:");
 
 	glUseProgram(isp);
 	aGlobalVertexPositionLoc = glGetAttribLocation(isp, "aVertexPosition");
@@ -235,6 +256,13 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 	uPMatrixLoc = glGetUniformLocation(sp, "uPMatrix");
 	uRTVecLoc = glGetUniformLocation(sp, "uRTVec");
 	aVertexPositionLoc = glGetAttribLocation(sp, "aVertexPosition");
+
+	glUseProgram(compsp);
+	aCompVertexPositionLoc = glGetAttribLocation(compsp, "aVertexPosition");
+	aCompTextureCoordLoc = glGetAttribLocation(compsp, "aTextureCoord");
+	uCompLoc = glGetUniformLocation(compsp, "uComp");
+
+	glUseProgram(sp);
 
 	GLfloat PMatrix[16];
 
@@ -372,6 +400,19 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 	glGenerateMipmap( GL_TEXTURE_2D );
 	std::fill(vbo_score_num_vertices.begin(), vbo_score_num_vertices.end(), 0);
+
+	glGenBuffers(1, &vbo_completeness);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_completeness);
+	std::vector<GLfloat> vertices_side;
+	for(float i = 0.0; i < rows; i += rowwidth)
+	{
+		vertices_side.insert(vertices_side.end(),
+			{-1,                1.0F - i * (2.0F/rows),             0, 1,
+			 -1,                1.0F - (i+rowwidth) *(2.0F/rows),   0, 0,
+			 -1 + 6*(2.0F/160), 1.0F - i * (2.0F/rows),             1, 1,
+			 -1 + 6*(2.0F/160), 1.0F - (i+rowwidth) *(2.0F/rows),   1, 0,  });
+	}
+	glBufferData(GL_ARRAY_BUFFER, vertices_side.size()*sizeof(float), vertices_side.data(), GL_STATIC_DRAW);
 }
 
 template <class vec>
@@ -499,7 +540,7 @@ void GraphicHandler::deletepiece(GraphicPiece * pgp)
 	delete pgp;
 }
 
-void GraphicHandler::beginrender()
+void GraphicHandler::beginrender(std::vector<float> linecompleteness)
 {
 	glViewport(0, 0, width, height);
 	glClearColor(1.0, 1.0, 1.0, 1.0);
@@ -529,10 +570,28 @@ void GraphicHandler::beginrender()
 		sum += i;
 	}
 
-	//END DRAW BACKGROUND
-
 	glDisableVertexAttribArray(aGlobalVertexPositionLoc);
 	glDisableVertexAttribArray(aGlobalTextureCoordLoc);
+
+	// LINE COMPLETENESS
+
+	glUseProgram(compsp);
+	glEnableVertexAttribArray(aCompVertexPositionLoc);
+	glEnableVertexAttribArray(aCompTextureCoordLoc);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_completeness);
+	glVertexAttribPointer(aCompVertexPositionLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)0);
+	glVertexAttribPointer(aCompTextureCoordLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)(2*sizeof(GLfloat)));
+	int lineind = 0;
+	for(float i = 0.0; i < rows; i += rowwidth, ++lineind)
+	{
+		glUniform1f(uCompLoc, linecompleteness[i]);
+		glDrawArrays(GL_TRIANGLE_STRIP, lineind*4, 4);
+	}
+	glDisableVertexAttribArray(aCompVertexPositionLoc);
+	glDisableVertexAttribArray(aCompTextureCoordLoc);
+
+	//END DRAW BACKGROUND
+
 	glUseProgram(sp);
 	glEnableVertexAttribArray(aVertexPositionLoc);
 }

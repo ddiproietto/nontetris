@@ -43,6 +43,7 @@
 
 #include <functional>
 #include <array>
+#include <vector>
 
 #include "graphictoinput.h"
 
@@ -65,31 +66,37 @@ class GraphicHandler
 	#if !defined( __DUETTO__) && (GLFW_VERSION_MAJOR == 3)
 	GLFWwindow * glfwwindow;
 	#endif
-	GLint uPMatrixLoc;
-	GLint uRTVecLoc;
-	GLint aVertexPositionLoc;
 	GLuint tex_background;
 	GLuint tex_font;
 	GLuint tex[7];
 
 	GLuint pieces_fbo[7];
 	GLuint vbo_background;
+	GLuint vbo_completeness;
 	GLuint vbo_score;
 	std::array<int, 3> vbo_score_num_vertices;
 
 	int width;
 	int height;
+	float rows;
+	float rowwidth;
 
-	GLuint sp, isp;
+	GLuint sp, isp, compsp;
 	GLint aGlobalVertexPositionLoc;
 	GLint aGlobalTextureCoordLoc;
+	GLint uPMatrixLoc;
+	GLint uRTVecLoc;
+	GLint aVertexPositionLoc;
+	GLint aCompVertexPositionLoc;
+	GLint aCompTextureCoordLoc;
+	GLint uCompLoc;
 
 public:
-	GraphicHandler(const GraphicOptions & gopt, const FileLoader & fileloader);
+	GraphicHandler(const GraphicOptions & gopt, const FileLoader & fileloader, float _rows, float _rowwidth);
 	~GraphicHandler();
 	GraphicPiece * createpiece(piece<float> pol);
 	void deletepiece(GraphicPiece * pgp);
-	void beginrender();
+	void beginrender(std::vector<float> linecompleteness);
 	void renderpiece(float x, float y, float rot, GraphicPiece * gp);
 	void endrender();
 

@@ -26,6 +26,7 @@
 #include "inputhandler.h"
 
 #include <list>
+#include <vector>
 
 struct GameOptions
 {
@@ -33,6 +34,8 @@ struct GameOptions
 	double columns;
 	double rowwidth;
 	double cuttingrowarea;
+
+	float updatebarsfreq;
 };
 
 class GameHandler
@@ -62,6 +65,9 @@ class GameHandler
 	int level;
 	int lines;
 	bool gameover;
+
+	std::vector<float> linecompleteness;
+	float updatebarscompleteness;
 
 public:
 	GameHandler(const GraphicOptions & gopt, const GameOptions & _gameopt, const FileLoader & fl, double physicstep);
