@@ -23,6 +23,8 @@
 
 #include "polygon.h"
 
+#include <limits>
+
 template <class T = float>
 //TODO:return rvalue reference?
 std::vector<polygon<T> > convexer(polygon<T> p)
@@ -152,7 +154,27 @@ std::vector<polygon<T> > convexer(polygon<T> p)
 	}
 	polygonA.removealignedvertices();
 	polygonB.removealignedvertices();
-	//TODO: shift polygonB such that first element also belong to polygonA
+
+	// Now, try to shift polygonB such that first element also belong to polygonA
+	// Since that may not be possible, because of vertices removal,
+	// let's put in the first place the polygonB vertex that has minimal distance
+	// from polygonA
+	// TODO: This is slow (A*B, number of the vertices)
+
+	int mindistB_index;
+	T mindist = std::numeric_limits<T>::infinity();
+	for (int i = 0; i < polygonB.size(); ++i)
+	{
+		auto & pB = polygonB[i];
+		T dist = polygonA.dist(pB);
+		if (dist < mindist)
+		{
+			mindistB_index = i;
+			mindist = dist;
+		}
+	}
+
+	polygonB.arrayrotate(mindistB_index);
 	
 	/*
 	std::cerr<<"NEWPOLYGON:";

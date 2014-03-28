@@ -27,11 +27,19 @@
 #include <cmath>
 #include <algorithm>
 
+#include <limits>
+
 template <class T>
 struct point
 {
 	T x;
 	T y;
+	point()
+	{
+	}
+	point(T _x, T _y):x(_x),y(_y)
+	{
+	}
 	static T crossproduct(point<T> p1, point<T> p2, point<T> p3)
 	{
 		return (p2.y-p1.y)*(p3.x-p2.x) -(p2.x-p1.x)*(p3.y-p2.y);
@@ -68,14 +76,61 @@ struct point
 		auto newp = returntranslate(t_x, t_y);
 		*this = newp;
 	}
+	//dot product
+	T operator*(const point<T> & p)
+	{
+		return p.x*x + p.y*y;
+	}
+	point<T> operator+(const point<T> & p)
+	{
+		point<T> ret = *this;
+		ret.x += p.x;
+		ret.y += p.y;
+		return ret;
+	}
+	point<T> operator-(const point<T> & p)
+	{
+		point<T> ret = *this;
+		ret.x -= p.x;
+		ret.y -= p.y;
+		return ret;
+	}
+	friend point<T> operator * (T scale, const point<T> & obj)
+	{
+		point<T> ret = obj;
+		ret.x *= scale;
+		ret.y *= scale;
+		return ret;
+	}
 	#if !(defined(__DUETTO__)||defined(EMSCRIPTEN))
-	friend std::ostream & operator<< (std::ostream & os, point<T> obj)
+	friend std::ostream & operator<< (std::ostream & os, const point<T> & obj)
 	{
 		os<<'['<<obj.x<<", "<<obj.y<<']';
 		return os;
 	}
 	#endif
 };
+
+
+//computes the minimum distance from the point p
+//to the segment ab
+template <class T>
+T distseg(point<T> a, point<T> b, point<T> p)
+{
+	// coeff*ab = orthogonal projection on the ab line
+	T coeff = ((p-b) * (a-b))/((a-b)*(a-b));
+
+	if ( coeff > 1)
+		return sqrt((p-a)*(p-a));
+	else if (coeff < 0)
+		return sqrt((p-b)*(p-b));
+	else
+	{
+		point<T> p1 = coeff * ( a - b ) + b;
+		point<T> dist = p - p1;
+		return sqrt(dist*dist);
+	}
+}
 
 template <class T = float>
 class polygon
@@ -240,6 +295,23 @@ public:
 		polygon<T> ret = *this;
 		ret.rotateangle(angle);
 		return ret;
+	}
+
+	// Returns the minimum distance from the point p to one of
+	// the edges of the polygon
+	T dist(point<T> p)
+	{
+		auto e1 = vertices.back();
+
+		T mindist = std::numeric_limits<T>::infinity();
+
+		for(auto & e2: vertices)
+		{
+			T tdist = distseg(e1, e2, p);
+			mindist = std::min(mindist, tdist);
+			e1 = e2;
+		}
+		return mindist;
 	}
 
 	//This is useful for testing purposes
