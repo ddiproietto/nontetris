@@ -81,6 +81,8 @@ for index in testindexes:
 		ymin = min(ymin, test["linedown"])
 
 	drawpolygon(test["orig"])
+	pylab.plot(test["orig"][0][0], test["orig"][0][1], 'o')
+	pylab.plot(test["orig"][1][0], test["orig"][1][1], '*')
 	ax = pylab.gca()
 
 	plotind = 0
