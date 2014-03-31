@@ -42,19 +42,19 @@ public:
 	piece(std::initializer_list<point<T>> l, int type):piece(polygon<T>(l),type)
 	{
 	}
-	auto begin() -> decltype(convshapes.begin())
+	auto begin() const -> decltype(convshapes.cbegin())
 	{
-		return convshapes.begin();
+		return convshapes.cbegin();
 	}
-	auto end() -> decltype(convshapes.end())
+	auto end() const -> decltype(convshapes.cend())
 	{
-		return convshapes.end();
+		return convshapes.cend();
 	}
-	auto size() -> decltype(convshapes.size()) const
+	auto size() const -> decltype(convshapes.size())
 	{
 		return convshapes.size();
 	}
-	auto totsize() -> decltype(convshapes.size()) const
+	auto totsize() const -> decltype(convshapes.size())
 	{
 		int s = 0;
 		for (auto i: convshapes)

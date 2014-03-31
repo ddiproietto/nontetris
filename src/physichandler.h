@@ -83,7 +83,7 @@ class PhysicHandler
 	} contactlistener;
 public:
 	PhysicHandler(float width, float height, double pstep = (1.0/60.0));
-	PhysicPiece * createpiece(piece<float>, float, float, float, void *);
+	PhysicPiece * createpiece(const piece<float> &, float, float, float, void *, bool);
 	void destroypiece(PhysicPiece * p);
 	void step(int level, std::function<void(float x, float y)> cb);
 	void debugprint();

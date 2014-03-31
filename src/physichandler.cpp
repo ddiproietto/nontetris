@@ -99,7 +99,7 @@ PhysicHandler::PhysicHandler(float w_width, float w_height, double pstep):world(
 	world.SetContactListener(&contactlistener);
 }
 
-PhysicPiece * PhysicHandler::createpiece(piece<float> pie, float x, float y, float rot, void * userdata)
+PhysicPiece * PhysicHandler::createpiece(const piece<float> & pie, float x, float y, float rot, void * userdata, bool falling)
 {
 	b2BodyDef bodyDef;
 	b2FixtureDef fixDef;
@@ -107,7 +107,7 @@ PhysicPiece * PhysicHandler::createpiece(piece<float> pie, float x, float y, flo
 	PhysicPiece * ret = new PhysicPiece;
 	b2Body * body;
 
-	ret->type = PhysicPiece::FALLING_PIECE;
+	ret->type = falling?PhysicPiece::FALLING_PIECE:PhysicPiece::OLD_PIECE;
 	ret->otherdata = userdata;
 	bodyDef.type = b2_dynamicBody;
 	bodyDef.linearDamping = 0.5;
@@ -117,7 +117,7 @@ PhysicPiece * PhysicHandler::createpiece(piece<float> pie, float x, float y, flo
 	body = world.CreateBody(&bodyDef);
 	ret->ptr = body;
 
-	for (auto pol: pie)
+	for (const auto & pol: pie)
 	{
 		b2Vec2 * vertarr, * curvert;
 		curvert = vertarr = new b2Vec2[pol.size()];
@@ -132,9 +132,12 @@ PhysicPiece * PhysicHandler::createpiece(piece<float> pie, float x, float y, flo
 		body->CreateFixture(&fixDef);
 		delete [] vertarr;
 	}
-	if(fallingpiece != NULL)
-		static_cast<PhysicPiece*>(fallingpiece->GetUserData())->type = PhysicPiece::OLD_PIECE;
-	fallingpiece = body;
+	if (falling)
+	{
+		if (fallingpiece != NULL)
+			static_cast<PhysicPiece*>(fallingpiece->GetUserData())->type = PhysicPiece::OLD_PIECE;
+		fallingpiece = body;
+	}
 	return ret;
 }
 

@@ -55,7 +55,7 @@ class GameHandler
 	InputHandler * phinput;
 
 	void newrandompiece();
-	void newpiece(const piece<float> & p, float x, float y, float rot);
+	void newpiece(const piece<float> & p, float x, float y, float rot, bool falling);
 	float cutlineeventually(float from, float to, float threshold);
 
 	GameOptions gameopt;

@@ -62,11 +62,11 @@ GameHandler::~GameHandler()
 	delete phinput;
 }
 
-void GameHandler::newpiece(const piece<float> & p, float x, float y, float rot)
+void GameHandler::newpiece(const piece<float> & p, float x, float y, float rot, bool falling)
 {
 	//TODO: free this memory at exit
 	auto * gamepiece = new GamePiece(p);
-	gamepiece->php = phphysic->createpiece(p, x, y, rot, gamepiece);
+	gamepiece->php = phphysic->createpiece(p, x, y, rot, gamepiece, falling);
 	gamepiece->grp = phgraphic->createpiece(p);
 }
 
@@ -86,7 +86,7 @@ void GameHandler::newrandompiece()
 #endif
 
 	auto & p = pieces[randpieceindex];
-	newpiece(p, gameopt.columns/2, -1, 0.0);
+	newpiece(p, gameopt.columns/2, -1, 0.0, true);
 }
 
 //Returns the area of the mid part
@@ -158,7 +158,7 @@ float GameHandler::cutlineeventually(float from, float to, float threshold)
 					vertex.translate(-dp.x, -dp.y);
 					vertex.rotate(-dp.rot);
 				}
-				newpiece(piece<float>(pol, dp.originaltype), dp.x, dp.y, dp.rot);
+				newpiece(piece<float>(pol, dp.originaltype), dp.x, dp.y, dp.rot, false);
 			}
 		}
 	}
