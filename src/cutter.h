@@ -30,30 +30,35 @@
 template <typename T>
 class Cutter
 {
-	enum PositionState {UP, MID, DOWN};
+	enum PositionState {UP = 1, MIDUP = (1|2), MID = 2, MIDDOWN = (2|4), DOWN = 4};
 	T up, down;
+	T tolerance;
 
 	PositionState ytoposstate(T y);
 public:
-	Cutter(T _up, T _down);
+	Cutter(T _up, T _down, T tolerance = 0.1);
 	template <typename C1, typename C2, typename C3>
 	bool cutbodyheight(const polygon<T> & p, C1 & upres, C2 & downres, C3 & midres);
 };
 
 template <typename T>
-Cutter<T>::Cutter(T _up, T _down):up(_up),down(_down)
+Cutter<T>::Cutter(T _up, T _down, T _tolerance):up(_up),down(_down),tolerance(_tolerance)
 {
 }
 
 template <typename T>
 typename Cutter<T>::PositionState Cutter<T>::ytoposstate(T y)
 {
-	if (y > down)
+	if (y > down+tolerance)
 		return DOWN;
-	else if (y < up)
-		return UP;
-	else
+	else if (y > down-tolerance)
+		return MIDDOWN;
+	else if (y > up+tolerance)
 		return MID;
+	else if (y > up-tolerance)
+		return MIDUP;
+	else
+		return UP;
 }
 
 template <typename T>
@@ -113,6 +118,20 @@ static int isvec4ordasc(T arr)
 	return notascendingsteps <= 1;
 }
 
+//Removes consecutive duplicates
+// i.e. 1123 -> 23
+void remove_duplicates(std::vector<int> & arr)
+{
+	std::vector<int> newarr;
+	for (unsigned int i = 0; i < arr.size(); ++i)
+	{
+		if(i == arr.size()-1 || arr[i] != arr[i+1])
+			newarr.push_back(arr[i]);
+		else
+			++i;
+	}
+	arr = std::move(newarr);
+}
 
 
 /* Returns true if a part of the polygon is between the lines.
@@ -139,14 +158,18 @@ bool Cutter<T>::cutbodyheight(const polygon<T> & p, C1 & upres, C2 & downres, C3
 
 		actstat = ytoposstate(vertex.y);
 
-		if ((actstat == MID && prevstat == DOWN) ||
-			(actstat == DOWN && prevstat == MID))
+		if ((actstat == MID && prevstat == DOWN)       ||
+			(actstat == DOWN && prevstat == MID)   ||
+			(prevstat == DOWN && actstat == MIDUP) ||
+			(prevstat == MIDUP && actstat == DOWN))
 		{
 			newp.push_back(intersection(prev_vertex, vertex, down));
 			down_intersections.push_back(newp.size()-1);
 		}
-		else if ((actstat == MID && prevstat == UP) ||
-			(actstat == UP && prevstat == MID))
+		else if ((actstat == MID && prevstat == UP)    ||
+			(actstat == UP && prevstat == MID)     ||
+			(prevstat == UP && actstat == MIDDOWN) ||
+			(prevstat == MIDDOWN && actstat == UP))
 		{
 			newp.push_back(intersection(prev_vertex, vertex, up));
 			up_intersections.push_back(newp.size()-1);
@@ -166,6 +189,17 @@ bool Cutter<T>::cutbodyheight(const polygon<T> & p, C1 & upres, C2 & downres, C3
 			down_intersections.push_back(newp.size()-1);
 		}
 
+		else if (prevstat == UP && actstat == MIDUP)
+			up_intersections.push_back(newp.size());
+		else if (prevstat == MIDUP && actstat == UP)
+			up_intersections.push_back(newp.size()-1);
+
+		else if (prevstat == DOWN && actstat == MIDDOWN)
+			down_intersections.push_back(newp.size());
+		else if (prevstat == MIDDOWN && actstat == DOWN)
+			down_intersections.push_back(newp.size()-1);
+
+
 		newp.push_back(vertex);
 
 		prevstat = actstat;
@@ -177,6 +211,10 @@ bool Cutter<T>::cutbodyheight(const polygon<T> & p, C1 & upres, C2 & downres, C3
 		return newp[a].x < newp[b].x;
 	};
 	
+	//If there are consecutive duplicates (a corner case of the refiner) they must be removed
+	remove_duplicates(up_intersections);
+	remove_duplicates(down_intersections);
+
 	/* Sort intersections by the x coordinate */
 	sort(up_intersections.begin(), up_intersections.end(), sortcriterion);
 	sort(down_intersections.begin(), down_intersections.end(), sortcriterion);
@@ -187,12 +225,21 @@ bool Cutter<T>::cutbodyheight(const polygon<T> & p, C1 & upres, C2 & downres, C3
 	{
 		/* No intersections. The polygon must be entirely above, below,
 		 * or in the middle of the lines */
-		if (newp[0].y > down)
+		int polpos = UP | DOWN | MID;
+		for (const auto & point:newp)
+		{
+			polpos &= ytoposstate(point.y);
+			if(polpos == UP || polpos == DOWN || polpos == MID)
+				break;
+		}
+		if (polpos == MIDUP || polpos == MIDDOWN)
+			polpos = MID;
+		if (polpos == DOWN)
 		{
 			downres.push_back(newp);
 			return false;
 		}
-		else if (newp[0].y < up)
+		else if (polpos == UP)
 		{
 			upres.push_back(newp);
 			return false;
@@ -218,11 +265,6 @@ bool Cutter<T>::cutbodyheight(const polygon<T> & p, C1 & upres, C2 & downres, C3
 		upres.push_back(myslice(newp, up_intersections[0], up_intersections[1]));
 		downres.push_back(myslice(newp, down_intersections[1], down_intersections[0]));
 		midres.push_back(myslice(newp, down_intersections[0], up_intersections[0], up_intersections[1], down_intersections[1]));
-		/*
-		std::cout<<newp<<std::endl;
-		std::cout<<"upint:"<<up_intersections[0] << "," <<up_intersections[1]<<std::endl;
-		std::cout<<"downint:"<<down_intersections[0] << "," <<down_intersections[1]<<std::endl;
-		*/
 	}
 	else if (up_intersections.size() == 0 && down_intersections.size() == 4)
 	{

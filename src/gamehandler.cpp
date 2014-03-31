@@ -89,6 +89,14 @@ void GameHandler::newrandompiece()
 	newpiece(p, gameopt.columns/2, -1, 0.0, true);
 }
 
+bool isugly(const polygon <float> & pol)
+{
+	if (pol.size() < 3)
+		return true;
+	//Add other ugly condition
+	return false;
+}
+
 //Returns the area of the mid part
 float GameHandler::cutlineeventually(float from, float to, float threshold)
 {
@@ -158,6 +166,8 @@ float GameHandler::cutlineeventually(float from, float to, float threshold)
 					vertex.translate(-dp.x, -dp.y);
 					vertex.rotate(-dp.rot);
 				}
+				if(isugly(pol))
+					continue;
 				newpiece(piece<float>(pol, dp.originaltype), dp.x, dp.y, dp.rot, false);
 			}
 		}

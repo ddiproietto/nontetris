@@ -60,7 +60,11 @@ auto tests = make_array(
 		testcase({ {-3, 0}, {-2, -1}, {0, 1}, {2, -1}, {3, 0}, {0, 2} }, -0.9, 0.1), // UP 4 ASC DOWN 4 ASC
 		testcase({ {0, -2}, {3, 0}, {2, 1}, {0, -1}, {-2, 1}, {-3, 0} }, -0.9, 0.1), // UP 4 DESC DOWN 4 DESC
 
-		testcase(polygon <float> ({ { -1.5,-1}, { 0.5,-1}, { 0.5,0}, { 1.5,0}, { 1.5,1}, { -0.5,1}, { -0.5,0}, { -1.5,0} }).returnrotateangle(-M_PI/4), -0.7, 0.7) // UP 4 ASC DOWN 4 DESC
+		testcase(polygon <float> ({ { -1.5,-1}, { 0.5,-1}, { 0.5,0}, { 1.5,0}, { 1.5,1}, { -0.5,1}, { -0.5,0}, { -1.5,0} }).returnrotateangle(-M_PI/4), -0.7, 0.7), // UP 4 ASC DOWN 4 DESC
+
+//TEST FOR REFINING
+		testcase({ { -1.5,-1}, { 1.5,-1}, { 1.5,1}, { 0.5,1}, { 0.5,0}, { -1.5,0} }, 0, 1),
+		testcase({ {0, -2}, {1, -1}, {0, 0}, {-1, -1} }, 0, 1)
 		);
 
 using namespace std;
