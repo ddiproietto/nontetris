@@ -171,6 +171,7 @@ float GameHandler::cutlineeventually(float from, float to, float threshold)
 				newpiece(piece<float>(pol, dp.originaltype), dp.x, dp.y, dp.rot, false);
 			}
 		}
+
 	}
 	return linearea;
 }
@@ -217,6 +218,11 @@ void GameHandler::step_physic()
 			level = lines/10;
 
 			phgraphic->updatescore(lines, level, score);
+
+			//Set all piece velocity to 0
+			phh.iteratepieces([&](PhysicPiece * php){
+				php->standstill();
+			});
 		}
 
 		newrandompiece();
