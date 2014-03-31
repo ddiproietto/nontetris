@@ -54,6 +54,10 @@ public:
 	{
 		return convshapes.size();
 	}
+	auto empty() const -> decltype(convshapes.empty())
+	{
+		return convshapes.empty();
+	}
 	auto totsize() const -> decltype(convshapes.size())
 	{
 		int s = 0;

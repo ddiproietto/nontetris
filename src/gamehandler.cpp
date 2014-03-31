@@ -168,7 +168,9 @@ float GameHandler::cutlineeventually(float from, float to, float threshold)
 				}
 				if(isugly(pol))
 					continue;
-				newpiece(piece<float>(pol, dp.originaltype), dp.x, dp.y, dp.rot, false);
+				piece<float> newp (pol, dp.originaltype);
+				if (!newp.empty())
+					newpiece(newp, dp.x, dp.y, dp.rot, false);
 			}
 		}
 
