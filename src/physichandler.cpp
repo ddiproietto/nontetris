@@ -78,9 +78,9 @@ PhysicHandler::PhysicHandler(float w_width, float w_height, double pstep):world(
 	piecepointer = &leftwall;
 	piecepointer->type = PhysicPiece::LEFT;
 	bodyDef.type = b2_staticBody;
-	bodyDef.position.Set(-0.5F, w_height/2);
+	bodyDef.position.Set(-0.5F, 0);
 	bodyDef.userData = piecepointer;
-	polShape.SetAsBox(0.5F, w_height/2);
+	polShape.SetAsBox(0.5F, w_height);
 	fixDef.shape = &polShape;
 	fixDef.density = 32.0F * 32.0F;
 	fixDef.friction = 0.00001;
@@ -89,9 +89,9 @@ PhysicHandler::PhysicHandler(float w_width, float w_height, double pstep):world(
 	piecepointer = &rightwall;
 	piecepointer->type = PhysicPiece::RIGHT;
 	bodyDef.type = b2_staticBody;
-	bodyDef.position.Set(w_width + 0.5F, w_height/2);
+	bodyDef.position.Set(w_width + 0.5F, 0);
 	bodyDef.userData = piecepointer;
-	polShape.SetAsBox(0.5F, w_height/2);
+	polShape.SetAsBox(0.5F, w_height);
 	fixDef.shape = &polShape;
 	fixDef.density = 32.0F * 32.0F;
 	fixDef.friction = 0.00001;
