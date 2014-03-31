@@ -93,7 +93,7 @@ bool isugly(const polygon <float> & pol)
 {
 	if (pol.size() < 3)
 		return true;
-	//Add other ugly condition
+	//Add other ugly conditions
 	return false;
 }
 

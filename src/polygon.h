@@ -168,6 +168,8 @@ public:
 	size_t normalize_index(size_t n) const
 	{
 		size_t s = vertices.size();
+		if (s==0)
+			return n;
 		return (n+s) % s;
 	}
 	point<T> & operator[](size_t n)

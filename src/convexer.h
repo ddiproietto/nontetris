@@ -175,6 +175,13 @@ std::vector<polygon<T> > convexer(polygon<T> p)
 	}
 
 	polygonB.arrayrotate(mindistB_index);
+
+	std::vector<polygon<T>> ret;
+
+	if (polygonA.size() >= 3)
+		ret.push_back(polygonA);
+	if (polygonB.size() >= 3)
+		ret.push_back(polygonB);
 	
 	/*
 	std::cerr<<"NEWPOLYGON:";
@@ -196,7 +203,7 @@ std::vector<polygon<T> > convexer(polygon<T> p)
 	}
 	std::cerr<<std::endl;
 	*/
-	return std::vector<polygon<T>>({polygonA, polygonB});
+	return ret;
 
 }
 #endif //_CONVEXER_H
