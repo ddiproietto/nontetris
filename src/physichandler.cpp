@@ -99,7 +99,7 @@ PhysicHandler::PhysicHandler(float w_width, float w_height, double pstep):world(
 	world.SetContactListener(&contactlistener);
 }
 
-PhysicPiece * PhysicHandler::createpiece(const piece<float> & pie, float x, float y, float rot, void * userdata, bool falling)
+PhysicPiece * PhysicHandler::createpiece(const piece<float> & pie, float x, float y, float rot, void * userdata, bool falling, int level)
 {
 	b2BodyDef bodyDef;
 	b2FixtureDef fixDef;
@@ -137,6 +137,7 @@ PhysicPiece * PhysicHandler::createpiece(const piece<float> & pie, float x, floa
 		if (fallingpiece != NULL)
 			static_cast<PhysicPiece*>(fallingpiece->GetUserData())->type = PhysicPiece::OLD_PIECE;
 		fallingpiece = body;
+		body->SetLinearVelocity(b2Vec2{.x=0, .y=3.125F + level*0.21875F});
 	}
 	return ret;
 }

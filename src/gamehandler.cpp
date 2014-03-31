@@ -66,7 +66,7 @@ void GameHandler::newpiece(const piece<float> & p, float x, float y, float rot, 
 {
 	//TODO: free this memory at exit
 	auto * gamepiece = new GamePiece(p);
-	gamepiece->php = phphysic->createpiece(p, x, y, rot, gamepiece, falling);
+	gamepiece->php = phphysic->createpiece(p, x, y, rot, gamepiece, falling, level);
 	gamepiece->grp = phgraphic->createpiece(p);
 }
 
