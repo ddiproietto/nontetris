@@ -78,7 +78,18 @@ InputHandler::~InputHandler()
 
 void InputHandler::process_input(const std::function<void()> & exit, const std::function<void()> & left, const std::function<void()> & right, const std::function<void()> & down, const std::function<void()> & z, const std::function<void()> & x, const std::function<void()> & enter_press)
 {
+#ifndef __DUETTO__
 	KeyState integrated = act;
+#else
+	KeyState integrated;
+	integrated.k_esc = act.k_esc;
+	integrated.k_down = act.k_down;
+	integrated.k_left = act.k_left;
+	integrated.k_right = act.k_right;
+	integrated.k_z = act.k_z;
+	integrated.k_x = act.k_x;
+	integrated.k_enter = act.k_enter;
+#endif
 
 #if defined(__DUETTO__) || defined(EMSCRIPTEN)
 #define WINDOW_OPENED true
