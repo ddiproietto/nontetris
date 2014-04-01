@@ -140,8 +140,6 @@ float GameHandler::cutlineeventually(float from, float to, float threshold)
 	float x1 = gameopt.columns;
 	float y1 = to;
 
-	Cutter<float> cutter(y0, y1);
-
 	float linearea = 0;
 
 	struct DeletePiece
@@ -154,7 +152,7 @@ float GameHandler::cutlineeventually(float from, float to, float threshold)
 	std::list<DeletePiece> deletelist;
 	std::list<polygon<float>> midremainders;
 
-	phphysic->getpieces_in_rect(x0, y0, x1, y1, [y0, y1, &cutter, &linearea, &deletelist, &midremainders](PhysicPiece * php){
+	phphysic->getpieces_in_rect(x0, y0, x1, y1, [y0, y1, &linearea, &deletelist, &midremainders](PhysicPiece * php){
 		polygon<float> p (static_cast<GamePiece *>(php->getUserData())->p.getshape());
 		struct DeletePiece dp;
 
@@ -165,7 +163,7 @@ float GameHandler::cutlineeventually(float from, float to, float threshold)
 			vertex.translate(php->getX(), php->getY());
 		}
 
-		bool isinbetween = cutter.cutbodyheight(p, dp.remainders, dp.remainders, midremainders);
+		bool isinbetween = cutter(p, dp.remainders, dp.remainders, midremainders, y0, y1, 0.1F);
 
 		if (isinbetween)
 		{

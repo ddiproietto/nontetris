@@ -27,27 +27,10 @@
 
 #include "polygon.h"
 
-template <typename T>
-class Cutter
-{
-	enum PositionState {UP = 1, MIDUP = (1|2), MID = 2, MIDDOWN = (2|4), DOWN = 4};
-	T up, down;
-	T tolerance;
-
-	PositionState ytoposstate(T y);
-public:
-	Cutter(T _up, T _down, T tolerance = 0.1);
-	template <typename C1, typename C2, typename C3>
-	bool cutbodyheight(const polygon<T> & p, C1 & upres, C2 & downres, C3 & midres);
-};
+enum PositionState {UP = 1, MIDUP = (1|2), MID = 2, MIDDOWN = (2|4), DOWN = 4};
 
 template <typename T>
-Cutter<T>::Cutter(T _up, T _down, T _tolerance):up(_up),down(_down),tolerance(_tolerance)
-{
-}
-
-template <typename T>
-typename Cutter<T>::PositionState Cutter<T>::ytoposstate(T y)
+PositionState ytoposstate(T y, T up, T down, T tolerance)
 {
 	if (y > down+tolerance)
 		return DOWN;
@@ -134,10 +117,9 @@ void remove_duplicates(std::vector<int> & arr)
 }
 
 
-/* Returns true if a part of the polygon is between the lines.
- * Otherwise it does not put it in upres or downres */
-template <typename T> template<typename C1, typename C2, typename C3>
-bool Cutter<T>::cutbodyheight(const polygon<T> & p, C1 & upres, C2 & downres, C3 & midres)
+/* Returns true if a part of the polygon is between the lines.*/
+template <typename T, typename C1, typename C2, typename C3>
+bool cutter(const polygon<T> & p, C1 & upres, C2 & downres, C3 & midres, T up, T down, T tolerance = 0.0)
 {
 	PositionState actstat, prevstat;
 	polygon<T> newp;
@@ -146,7 +128,7 @@ bool Cutter<T>::cutbodyheight(const polygon<T> & p, C1 & upres, C2 & downres, C3
 	std::vector<int> up_intersections;
 	std::vector<int> down_intersections;
 
-	prevstat = ytoposstate(pprev_vertex->y);
+	prevstat = ytoposstate(pprev_vertex->y, up, down, tolerance);
 
 	/* Creates a new polygon newp. It has also intersections with up and down
 	 * as vertices. The indexes of the intersections with up and down are stored
@@ -156,7 +138,7 @@ bool Cutter<T>::cutbodyheight(const polygon<T> & p, C1 & upres, C2 & downres, C3
 		const point<T> & prev_vertex = *pprev_vertex;
 
 
-		actstat = ytoposstate(vertex.y);
+		actstat = ytoposstate(vertex.y, up, down, tolerance);
 
 		if ((actstat == MID && prevstat == DOWN)       ||
 			(actstat == DOWN && prevstat == MID)   ||
@@ -228,7 +210,7 @@ bool Cutter<T>::cutbodyheight(const polygon<T> & p, C1 & upres, C2 & downres, C3
 		int polpos = UP | DOWN | MID;
 		for (const auto & point:newp)
 		{
-			polpos &= ytoposstate(point.y);
+			polpos &= ytoposstate(point.y, up, down, tolerance);
 			if(polpos == UP || polpos == DOWN || polpos == MID)
 				break;
 		}

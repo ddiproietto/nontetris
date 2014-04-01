@@ -114,8 +114,7 @@ int main()
 
 		oldarea = test.p.area();
 
-		Cutter<float> cutter(test.up, test.down);
-		cutter.cutbodyheight(test.p, upres, downres, midres);
+		cutter(test.p, upres, downres, midres, test.up, test.down);
 
 		if(firsttest)
 			firsttest = false;
