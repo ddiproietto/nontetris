@@ -39,7 +39,7 @@ namespace
 			);
 }
 
-GameHandler::GameHandler(const GraphicOptions & gopt, const GameOptions & _gameopt, const FileLoader & fl, double physicstep):gameopt(_gameopt),score(0),level(0),lines(0),gameover(false), updatebarscompleteness(1.0)
+GameHandler::GameHandler(const GraphicOptions & gopt, const GameOptions & _gameopt, const FileLoader & fl, double physicstep):gameopt(_gameopt),score(0),level(0),lines(0),gamestate(RUNNING), updatebarscompleteness(1.0)
 {
 	phphysic = new PhysicHandler (gameopt.columns, gameopt.rows, physicstep);
 	phgraphic = new GraphicHandler (gopt, fl, gameopt.rows, gameopt.rowwidth);
@@ -61,6 +61,16 @@ GameHandler::~GameHandler()
 	delete phphysic;
 	delete phgraphic;
 	delete phinput;
+}
+
+void GameHandler::togglepause()
+{
+	if(gamestate == GAMEOVER)
+		return;
+	if(gamestate == RUNNING || gamestate == CUTPAUSED)
+		gamestate = PAUSED;
+	else if (gamestate == PAUSED)
+		gamestate = RUNNING;
 }
 
 GameHandler::GamePiece * GameHandler::newpiece(const piece<float> & p, float x, float y, float rot, PhysicPiece::PhysicPieceType type, float angvel, float gravscale)
@@ -196,12 +206,14 @@ float GameHandler::cutlineeventually(float from, float to, float threshold)
 
 void GameHandler::step_physic()
 {
+	if (gamestate == PAUSED || gamestate == CUTPAUSED)
+		return;
 	PhysicHandler &phh = *phphysic;
 	bool checklineandnewpiece = false, callgameover = false;
 
 	phh.step(level, [&](float x, float y)
 	{
-		if(gameover)
+		if(gamestate == GAMEOVER)
 			return;
 		//The falling piece has landed:
 		//time to generate another piece if the screen is not full
@@ -250,9 +262,9 @@ void GameHandler::step_physic()
 	{
 		phh.gameover();
 		deletepiece(nextpiece);
-		gameover = true;
+		gamestate = GAMEOVER;
 	}
-	if(gameover)
+	if(gamestate == GAMEOVER)
 	{
 		bool nopiece = true;
 		phh.iteratepieces([&](PhysicPiece * php){
@@ -310,34 +322,48 @@ bool GameHandler::step_logic()
 	PhysicHandler &phh = *phphysic;
 	InputHandler &inh = *phinput;
 
-	bool running = true;
+	bool continuerunning = true;
 
 	inh.process_input(
 		[&]()//EXIT
 		{
-			running = false;
+			continuerunning = false;
 		},
 		[&]()//LEFT
 		{
+			if(gamestate != RUNNING)
+				return;
 			phh.piecemove(-1);
 		},
 		[&]()//RIGHT
 		{
+			if(gamestate != RUNNING)
+				return;
 			phh.piecemove(1);
 
 		},
 		[&]()//DOWN
 		{
+			if(gamestate != RUNNING)
+				return;
 			phh.pieceaccelerate();
 		},
 		[&]()//Z
 		{
+			if(gamestate != RUNNING)
+				return;
 			phh.piecerotate(-1);
 		},
 		[&]()//X
 		{
+			if(gamestate != RUNNING)
+				return;
 			phh.piecerotate(1);
+		},
+		[&]()//ENTER PRESS
+		{
+			togglepause();
 		}
 	);
-	return running;
+	return continuerunning;
 }

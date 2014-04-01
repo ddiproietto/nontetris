@@ -46,12 +46,18 @@ class InputHandler
 	bool joystickpresent;
 	JoystickHandler jh;
 
-	static bool k_esc;
-	static bool k_down;
-	static bool k_left;
-	static bool k_right;
-	static bool k_z;
-	static bool k_x;
+	struct KeyState
+	{
+		bool k_esc;
+		bool k_down;
+		bool k_left;
+		bool k_right;
+		bool k_z;
+		bool k_x;
+		bool k_enter;
+	};
+
+	static KeyState act, previntegrated;
 	#if GLFW_VERSION_MAJOR == 3
 	GLFWwindow * glfwwindow;
 	#endif
@@ -70,7 +76,7 @@ class InputHandler
 public:
 	InputHandler(GraphicToInput);
 	~InputHandler();
-	void process_input(const std::function<void()> & exit, const std::function<void()> & left, const std::function<void()> & right, const std::function<void()> & down, const std::function<void()> & z, const std::function<void()> & x);
+	void process_input(const std::function<void()> & exit, const std::function<void()> & left, const std::function<void()> & right, const std::function<void()> & down, const std::function<void()> & z, const std::function<void()> & x, const std::function<void()> & enter_press);
 };
 
 #endif //_INPUT_HANDLER

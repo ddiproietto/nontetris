@@ -6,7 +6,7 @@ public:
 	struct JoystickValues
 	{
 		float axes[2];
-		bool buttons[2];
+		bool buttons[10];
 	};
 	static bool isJoystickPresent();
 	static JoystickValues pollJoystick();

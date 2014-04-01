@@ -41,12 +41,8 @@
 using namespace client;
 #endif
 
-bool InputHandler::k_esc = false;
-bool InputHandler::k_down = false;
-bool InputHandler::k_left = false;
-bool InputHandler::k_right = false;
-bool InputHandler::k_z = false;
-bool InputHandler::k_x = false;
+InputHandler::KeyState InputHandler::act;
+InputHandler::KeyState InputHandler::previntegrated;
 
 InputHandler::InputHandler(GraphicToInput gti)
 {
@@ -80,14 +76,16 @@ InputHandler::~InputHandler()
 #endif
 }
 
-void InputHandler::process_input(const std::function<void()> & exit, const std::function<void()> & left, const std::function<void()> & right, const std::function<void()> & down, const std::function<void()> & z, const std::function<void()> & x)
+void InputHandler::process_input(const std::function<void()> & exit, const std::function<void()> & left, const std::function<void()> & right, const std::function<void()> & down, const std::function<void()> & z, const std::function<void()> & x, const std::function<void()> & enter_press)
 {
-	bool l_k_esc = InputHandler::k_esc;
-	bool l_k_down = InputHandler::k_down;
-	bool l_k_left = InputHandler::k_left;
-	bool l_k_right = InputHandler::k_right;
-	bool l_k_z = InputHandler::k_z;
-	bool l_k_x = InputHandler::k_x;
+	KeyState integrated = act;
+	bool & l_k_esc = integrated.k_esc;
+	bool & l_k_down = integrated.k_down;
+	bool & l_k_left = integrated.k_left;
+	bool & l_k_right = integrated.k_right;
+	bool & l_k_z = integrated.k_z;
+	bool & l_k_x = integrated.k_x;
+	bool & l_k_enter = integrated.k_enter;
 #ifdef __DUETTO__
 #define WINDOW_OPENED true
 #elif (GLFW_VERSION_MAJOR == 3)
@@ -101,6 +99,7 @@ void InputHandler::process_input(const std::function<void()> & exit, const std::
 		auto val = jh.pollJoystick();
 		l_k_z |= val.buttons[0];
 		l_k_x |= val.buttons[1];
+		l_k_enter |= val.buttons[9];
 		l_k_left |= val.axes[0] < -0.25;
 		l_k_right |= val.axes[0] > 0.25;
 		l_k_down |= val.axes[1] < -0.25;
@@ -128,6 +127,12 @@ void InputHandler::process_input(const std::function<void()> & exit, const std::
 	{
 		x();
 	}
+	if(l_k_enter && !previntegrated.k_enter)
+	{
+		//We are only interested in events
+		enter_press();
+	}
+	previntegrated = integrated;
 }
 
 void InputHandler::keyset(int key, bool setto)
@@ -137,6 +142,7 @@ void InputHandler::keyset(int key, bool setto)
 #define NONTETRIS_LEFT 37
 #define NONTETRIS_RIGHT 39
 #define NONTETRIS_DOWN 40
+#define NONTETRIS_ENTER 13
 #else
 #if (GLFW_VERSION_MAJOR == 3)
 #define NONTETRIS_ESC GLFW_KEY_ESCAPE
@@ -146,28 +152,32 @@ void InputHandler::keyset(int key, bool setto)
 #define NONTETRIS_LEFT GLFW_KEY_LEFT
 #define NONTETRIS_RIGHT GLFW_KEY_RIGHT
 #define NONTETRIS_DOWN GLFW_KEY_DOWN
+#define NONTETRIS_ENTER GLFW_KEY_ENTER
 #endif
 	switch (key)
 	{
 	case NONTETRIS_ESC:
-		k_esc = setto;
+		act.k_esc = setto;
 		break;
 	case NONTETRIS_LEFT:
-		k_left = setto;
+		act.k_left = setto;
 		break;
 	case NONTETRIS_RIGHT:
-		k_right = setto;
+		act.k_right = setto;
 		break;
 	case NONTETRIS_DOWN:
-		k_down = setto;
+		act.k_down = setto;
 		break;
 	case 'Z':
 	case 'W':
 	case 'Y':
-		k_z = setto;
+		act.k_z = setto;
 		break;
 	case 'X':
-		k_x = setto;
+		act.k_x = setto;
+		break;
+	case NONTETRIS_ENTER:
+		act.k_enter = setto;
 		break;
 	}
 }

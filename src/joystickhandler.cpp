@@ -31,7 +31,7 @@ bool JoystickHandler::isJoystickPresent()
 
 JoystickHandler::JoystickValues JoystickHandler::pollJoystick()
 {
-	JoystickValues ret = {0.0, 0.0, false, false};
+	JoystickValues ret = {0.0, 0.0, false, false, false, false, false, false, false, false, false, false};
 #ifdef __DUETTO__
 #elif defined(EMSCRIPTEN)
 #elif GLFW_VERSION_MAJOR == 3
@@ -45,12 +45,14 @@ JoystickHandler::JoystickValues JoystickHandler::pollJoystick()
 		ret.buttons[0] = pbuttons[0] == GLFW_PRESS;
 	if(numbuttons >= 2)
 		ret.buttons[1] = pbuttons[1] == GLFW_PRESS;
+	if(numbuttons >= 10)
+		ret.buttons[9] = pbuttons[9] == GLFW_PRESS;
 	if(numaxes >= 1)
 		ret.axes[0] = paxes[0];
 	if(numaxes >= 2)
 		ret.axes[1] = paxes[1];
 #else
-	unsigned char buttons[2];
+	unsigned char buttons[10];
 	glfwGetJoystickButtons(GLFW_JOYSTICK_1, buttons,
 			sizeof(buttons)/sizeof(buttons[0]));
 	glfwGetJoystickPos(GLFW_JOYSTICK_1, ret.axes,
@@ -58,6 +60,7 @@ JoystickHandler::JoystickValues JoystickHandler::pollJoystick()
 
 	ret.buttons[0] = buttons[0] == GLFW_PRESS;
 	ret.buttons[1] = buttons[1] == GLFW_PRESS;
+	ret.buttons[9] = buttons[9] == GLFW_PRESS;
 #endif
 	return ret;
 }

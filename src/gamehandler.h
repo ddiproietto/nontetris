@@ -59,6 +59,7 @@ class GameHandler
 	void randomnextpiece();
 	void deletepiece(GamePiece *);
 	float cutlineeventually(float from, float to, float threshold);
+	void togglepause();
 
 	GameOptions gameopt;
 
@@ -66,7 +67,7 @@ class GameHandler
 	int score;
 	int level;
 	int lines;
-	bool gameover;
+	enum GameState {RUNNING, GAMEOVER, CUTPAUSED, PAUSED} gamestate;
 
 	GamePiece * nextpiece;
 	std::vector<float> linecompleteness;
