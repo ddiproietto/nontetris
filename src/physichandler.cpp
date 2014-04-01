@@ -99,21 +99,27 @@ PhysicHandler::PhysicHandler(float w_width, float w_height, double pstep):world(
 	world.SetContactListener(&contactlistener);
 }
 
-PhysicPiece * PhysicHandler::createpiece(const piece<float> & pie, float x, float y, float rot, void * userdata, bool falling, int level)
+PhysicPiece * PhysicHandler::createpiece(const piece<float> & pie, float x, float y, float rot, void * userdata, PhysicPiece::PhysicPieceType type, int level, float angvel, float gravscale)
 {
+	if (type != PhysicPiece::OLD_PIECE &&
+		type != PhysicPiece::FALLING_PIECE &&
+		type != PhysicPiece::NEXT_PIECE)
+		return NULL;
 	b2BodyDef bodyDef;
 	b2FixtureDef fixDef;
 	b2PolygonShape polShape;
 	PhysicPiece * ret = new PhysicPiece;
 	b2Body * body;
 
-	ret->type = falling?PhysicPiece::FALLING_PIECE:PhysicPiece::OLD_PIECE;
+	ret->type = type;
 	ret->otherdata = userdata;
 	bodyDef.type = b2_dynamicBody;
 	bodyDef.linearDamping = 0.5;
 	bodyDef.position.Set(x, y);
 	bodyDef.angle = rot;
 	bodyDef.userData = ret;
+	bodyDef.angularVelocity = angvel;
+	bodyDef.gravityScale = gravscale;
 	body = world.CreateBody(&bodyDef);
 	ret->ptr = body;
 
@@ -132,10 +138,9 @@ PhysicPiece * PhysicHandler::createpiece(const piece<float> & pie, float x, floa
 		body->CreateFixture(&fixDef);
 		delete [] vertarr;
 	}
-	if (falling)
+	if (type == PhysicPiece::FALLING_PIECE)
 	{
-		if (fallingpiece != NULL)
-			static_cast<PhysicPiece*>(fallingpiece->GetUserData())->type = PhysicPiece::OLD_PIECE;
+		untagfallingpiece();
 		fallingpiece = body;
 		body->SetLinearVelocity(b2Vec2(0.0F, 3.125F + level*0.21875F));
 	}
@@ -229,6 +234,7 @@ void PhysicHandler::iteratepieces(std::function <void (PhysicPiece *)> cb)
 	{
 		PhysicPiece * userdata = (PhysicPiece *) body->GetUserData();
 		if(userdata->type != PhysicPiece::FALLING_PIECE && userdata->type != PhysicPiece::OLD_PIECE)
+		if(!userdata->isfalling() && !userdata->isold() && !userdata->isnext())
 			continue;
 		cb(userdata);
 	}
@@ -265,10 +271,10 @@ void PhysicHandler::getpieces_in_rect(float x0, float y0, float x1, float y1, st
 {
 	MyQueryCallback myquerycb;
 	world.QueryAABB(&myquerycb, b2AABB{.lowerBound=b2Vec2(x0, y0), .upperBound=b2Vec2(x1, y1)});
-	for(auto &i: myquerycb.bodylist)
+	for (auto &i: myquerycb.bodylist)
 	{
 		PhysicPiece * php = (PhysicPiece *) i->GetUserData();
-		if(php->iswall() || php->isfalling())
+		if (!php->isold())
 			continue;
 		cb(php);
 	}

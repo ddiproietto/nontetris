@@ -55,7 +55,9 @@ class GameHandler
 	InputHandler * phinput;
 
 	void newrandompiece();
-	void newpiece(const piece<float> & p, float x, float y, float rot, bool falling);
+	GamePiece * newpiece(const piece<float> & p, float x, float y, float rot, PhysicPiece::PhysicPieceType type, float angvel = 0.0F, float gravscale = 1.0F);
+	void randomnextpiece();
+	void deletepiece(GamePiece *);
 	float cutlineeventually(float from, float to, float threshold);
 
 	GameOptions gameopt;
@@ -66,6 +68,7 @@ class GameHandler
 	int lines;
 	bool gameover;
 
+	GamePiece * nextpiece;
 	std::vector<float> linecompleteness;
 	float updatebarscompleteness;
 

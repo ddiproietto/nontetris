@@ -52,6 +52,7 @@ GameHandler::GameHandler(const GraphicOptions & gopt, const GameOptions & _gameo
 		linecompleteness.push_back(0.0);
 	}
 	//Start the game with a new random piece!
+	randomnextpiece();
 	newrandompiece();
 }
 
@@ -62,15 +63,23 @@ GameHandler::~GameHandler()
 	delete phinput;
 }
 
-void GameHandler::newpiece(const piece<float> & p, float x, float y, float rot, bool falling)
+GameHandler::GamePiece * GameHandler::newpiece(const piece<float> & p, float x, float y, float rot, PhysicPiece::PhysicPieceType type, float angvel, float gravscale)
 {
 	//TODO: free this memory at exit
 	auto * gamepiece = new GamePiece(p);
-	gamepiece->php = phphysic->createpiece(p, x, y, rot, gamepiece, falling, level);
+	gamepiece->php = phphysic->createpiece(p, x, y, rot, gamepiece, type, level, angvel, gravscale);
 	gamepiece->grp = phgraphic->createpiece(p);
+	return gamepiece;
 }
 
-void GameHandler::newrandompiece()
+void GameHandler::deletepiece(GamePiece* pgp)
+{
+	phgraphic->deletepiece(pgp->grp);
+	phphysic->destroypiece(pgp->php);
+	delete pgp;
+}
+
+void GameHandler::randomnextpiece()
 {
 //Different ways of generating random numbers
 #if defined (__DUETTO__)
@@ -86,7 +95,16 @@ void GameHandler::newrandompiece()
 #endif
 
 	auto & p = pieces[randpieceindex];
-	newpiece(p, gameopt.columns/2, -1, 0.0, true);
+	nextpiece = newpiece(p, gameopt.columns + 5.0F, 15.0F, 0.0, PhysicPiece::NEXT_PIECE, 1.0F, 0.0F);
+}
+void GameHandler::newrandompiece()
+{
+//Move nextpiece to falling
+	auto rp = std::move(nextpiece->p);
+	deletepiece(nextpiece);
+	newpiece(rp, gameopt.columns/2, -1, 0.0, PhysicPiece::FALLING_PIECE);
+//Create randomnextpiece
+	randomnextpiece();
 }
 
 bool isugly(const polygon <float> & pol)
@@ -153,9 +171,7 @@ float GameHandler::cutlineeventually(float from, float to, float threshold)
 		for(auto & dp: deletelist)
 		{
 			GamePiece * pgp = dp.pgp;
-			phgraphic->deletepiece(pgp->grp);
-			phphysic->destroypiece(pgp->php);
-			delete pgp;
+			deletepiece(pgp);
 			
 			//Create remainders
 			for(auto & pol: dp.remainders)
@@ -170,7 +186,7 @@ float GameHandler::cutlineeventually(float from, float to, float threshold)
 					continue;
 				piece<float> newp (pol, dp.originaltype);
 				if (!newp.empty())
-					newpiece(newp, dp.x, dp.y, dp.rot, false);
+					newpiece(newp, dp.x, dp.y, dp.rot, PhysicPiece::OLD_PIECE);
 			}
 		}
 
@@ -233,6 +249,7 @@ void GameHandler::step_physic()
 	if(callgameover)
 	{
 		phh.gameover();
+		deletepiece(nextpiece);
 		gameover = true;
 	}
 	if(gameover)
@@ -244,9 +261,7 @@ void GameHandler::step_physic()
 			if (php->getX() > gameopt.rows + 4 * gameopt.rowwidth )
 			{
 				GamePiece * pgp = static_cast<GamePiece*>(php->getUserData());
-				phgraphic->deletepiece(pgp->grp);
-				phphysic->destroypiece(pgp->php);
-				delete pgp;
+				deletepiece(pgp);
 			}
 		});
 		if (nopiece)

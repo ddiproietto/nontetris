@@ -28,10 +28,12 @@
 
 class PhysicHandler;
 
-class PhysicPiece
+struct PhysicPiece
 {
+	enum PhysicPieceType {GROUND, LEFT, RIGHT, FALLING_PIECE, OLD_PIECE, NEXT_PIECE};
+private:
+	PhysicPieceType type;
 	b2Body * ptr;
-	enum PhysicPieceType {GROUND, LEFT, RIGHT, FALLING_PIECE, OLD_PIECE} type;
 	void * otherdata;
 	bool iswall()
 	{
@@ -40,6 +42,14 @@ class PhysicPiece
 	bool isfalling()
 	{
 		return type == FALLING_PIECE;
+	}
+	bool isnext()
+	{
+		return type == NEXT_PIECE;
+	}
+	bool isold()
+	{
+		return type == OLD_PIECE;
 	}
 public:
 	PhysicPiece(b2Body * p = NULL):ptr(p)
@@ -88,7 +98,7 @@ class PhysicHandler
 	} contactlistener;
 public:
 	PhysicHandler(float width, float height, double pstep = (1.0/60.0));
-	PhysicPiece * createpiece(const piece<float> &, float, float, float, void *, bool, int);
+	PhysicPiece * createpiece(const piece<float> &, float, float, float, void *, PhysicPiece::PhysicPieceType, int, float angvel = 0.0f, float gravscale = 1.0F);
 	void destroypiece(PhysicPiece * p);
 	void step(int level, std::function<void(float x, float y)> cb);
 	void debugprint();
