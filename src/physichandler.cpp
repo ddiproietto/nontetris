@@ -280,6 +280,11 @@ void PhysicHandler::getpieces_in_rect(float x0, float y0, float x1, float y1, st
 	}
 }
 
+float PhysicHandler::getStepInterval()
+{
+	return stepInterval;
+}
+
 void PhysicHandler::gameover()
 {
 	b2Body * groundbody = groundwall.ptr;

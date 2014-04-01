@@ -299,6 +299,37 @@ public:
 		return ret;
 	}
 
+	void translate(T x, T y)
+	{
+		for(auto & p: vertices)
+		{
+			p.translate(x, y);
+		}
+	}
+
+	polygon<T> returntranslate(T x, T y)
+	{
+		polygon<T> ret = *this;
+		ret.translate(x, y);
+		return ret;
+	}
+
+	point<T> maxocccentroid() const
+	{
+		T xmax, xmin, ymax, ymin;
+		xmin = ymin = std::numeric_limits<T>::infinity();
+		xmax = ymax = - std::numeric_limits<T>::infinity();
+
+		for (const auto & p: vertices)
+		{
+			xmin = std::min(p.x, xmin);
+			ymin = std::min(p.y, ymin);
+			xmax = std::max(p.x, xmax);
+			ymax = std::max(p.y, ymax);
+		}
+
+		return point<T>(xmin+xmax/2, ymin+ymax/2);
+	}
 	// Returns the minimum distance from the point p to one of
 	// the edges of the polygon
 	T dist(point<T> p)

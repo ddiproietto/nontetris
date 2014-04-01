@@ -72,7 +72,9 @@ class GameHandler
 	std::vector<bool> linesbeingcut;
 	std::vector<bool> linesfalse;
 
-	GamePiece * nextpiece;
+	GraphicPiece * nextpiece_graphic;
+	int nextpiece_type;
+	float nextpiece_rot;
 	std::vector<float> linecompleteness;
 	float updatebarscompleteness;
 

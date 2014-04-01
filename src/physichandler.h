@@ -109,5 +109,6 @@ public:
 	void getpieces_in_rect(float x0, float y0, float x1, float y1, std::function <void(PhysicPiece *)> cb);
 	void gameover();
 	void untagfallingpiece();
+	float getStepInterval();
 };
 #endif //_PHYSIC_HANDLER_H

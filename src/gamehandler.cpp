@@ -21,6 +21,10 @@
 #include "gamehandler.h"
 
 #include <list>
+#include <cmath>
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 #include "myutil.h"
 
@@ -39,7 +43,7 @@ namespace
 			);
 }
 
-GameHandler::GameHandler(const GraphicOptions & gopt, const GameOptions & _gameopt, const FileLoader & fl, double physicstep):gameopt(_gameopt),score(0),level(0),lines(0),gamestate(RUNNING), updatebarscompleteness(1.0)
+GameHandler::GameHandler(const GraphicOptions & gopt, const GameOptions & _gameopt, const FileLoader & fl, double physicstep):gameopt(_gameopt),score(0),level(0),lines(0),gamestate(RUNNING), updatebarscompleteness(1.0), nextpiece_rot(0.0), nextpiece_graphic(NULL)
 {
 	phphysic = new PhysicHandler (gameopt.columns, gameopt.rows, physicstep);
 	phgraphic = new GraphicHandler (gopt, fl, gameopt.rows, gameopt.rowwidth);
@@ -106,15 +110,16 @@ void GameHandler::randomnextpiece()
 	int randpieceindex = dis(gen);
 #endif
 
+	nextpiece_type = randpieceindex;
 	auto & p = pieces[randpieceindex];
-	nextpiece = newpiece(p, gameopt.columns + 5.0F, 15.0F, 0.0, PhysicPiece::NEXT_PIECE, 1.0F, 0.0F);
+	if (nextpiece_graphic)
+		phgraphic->deletepiece(nextpiece_graphic);
+	nextpiece_graphic = phgraphic->createpiece(p);
 }
 void GameHandler::newrandompiece()
 {
 //Move nextpiece to falling
-	auto rp = std::move(nextpiece->p);
-	deletepiece(nextpiece);
-	newpiece(rp, gameopt.columns/2, -1, 0.0, PhysicPiece::FALLING_PIECE);
+	newpiece(pieces[nextpiece_type], gameopt.columns/2, -1, 0.0, PhysicPiece::FALLING_PIECE);
 //Create randomnextpiece
 	randomnextpiece();
 }
@@ -224,6 +229,9 @@ void GameHandler::step_physic()
 	PhysicHandler &phh = *phphysic;
 	bool checklineandnewpiece = false, callgameover = false;
 
+	nextpiece_rot += phh.getStepInterval();
+	nextpiece_rot = fmod(nextpiece_rot, 2*M_PI);
+
 	phh.step(level, [&](float x, float y)
 	{
 		if(gamestate == GAMEOVER)
@@ -280,7 +288,8 @@ void GameHandler::step_physic()
 	if(callgameover)
 	{
 		phh.gameover();
-		deletepiece(nextpiece);
+		phgraphic->deletepiece(nextpiece_graphic);
+		nextpiece_graphic = NULL;
 		gamestate = GAMEOVER;
 	}
 	if(gamestate == GAMEOVER)
@@ -325,6 +334,8 @@ void GameHandler::step_graphic()
 	phh.iteratepieces([&](PhysicPiece * php){
 		grh.renderpiece(php->getX(),php->getY(),php->getRot(),static_cast<GamePiece *>(php->getUserData())->grp);
 	});
+	if (nextpiece_graphic)
+		grh.renderpiece(gameopt.columns + 5.0F, 15.0F, nextpiece_rot, nextpiece_graphic);
 	if (gamestate == CUTPAUSED && (cutpausecontdown%30) < 15 )
 		grh.endrender(linecompleteness, linesbeingcut);
 	else
