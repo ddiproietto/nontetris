@@ -64,7 +64,7 @@ public:
 	}
 	void standstill()
 	{
-		ptr->SetLinearVelocity(b2Vec2{.x=0, .y=0});
+		ptr->SetLinearVelocity(b2Vec2(0, 0));
 		ptr->SetAngularVelocity(0);
 	}
 	friend class PhysicHandler;
