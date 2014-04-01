@@ -188,16 +188,22 @@ bool cutter(const polygon<T> & p, C1 & upres, C2 & downres, C3 & midres, T up, T
 		pprev_vertex = &vertex;
 	}
 
-	auto sortcriterion = [&](const int & a, const int & b)->bool
+	auto normalize_fn = [&](int & a)
 	{
-		return newp[a].x < newp[b].x;
+		a = newp.normalize_index(a);
 	};
-	
+	std::for_each(up_intersections.begin(), up_intersections.end(), normalize_fn);
+	std::for_each(down_intersections.begin(), down_intersections.end(), normalize_fn);
+
 	//If there are consecutive duplicates (a corner case of the refiner) they must be removed
 	remove_duplicates(up_intersections);
 	remove_duplicates(down_intersections);
 
 	/* Sort intersections by the x coordinate */
+	auto sortcriterion = [&](const int & a, const int & b)->bool
+	{
+		return newp[a].x < newp[b].x;
+	};
 	sort(up_intersections.begin(), up_intersections.end(), sortcriterion);
 	sort(down_intersections.begin(), down_intersections.end(), sortcriterion);
 

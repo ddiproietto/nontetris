@@ -65,7 +65,9 @@ auto tests = make_array(
 //TEST FOR REFINING
 		testcase({ { -1.5,-1}, { 1.5,-1}, { 1.5,1}, { 0.5,1}, { 0.5,0}, { -1.5,0} }, 0, 1),
 		testcase({ {0, -2}, {1, -1}, {0, 0}, {-1, -1} }, 0, 1),
-		testcase(polygon <float> ({ { -0.5,-1}, { 1.5,-1}, { 1.5,0}, { 0.5,0}, { 0.5,1}, { -1.5,1}, { -1.5,0}, { -0.5,0} }).returnrotateangle(-M_PI/2 -M_PI/16 -M_PI/32), -0.7, 0.7)
+		testcase(polygon <float> ({ { -0.5,-1}, { 1.5,-1}, { 1.5,0}, { 0.5,0}, { 0.5,1}, { -1.5,1}, { -1.5,0}, { -0.5,0} }).returnrotateangle(-M_PI/2 -M_PI/16 -M_PI/32), -0.7, 0.7),
+		testcase(polygon <float> ({ { -0.5,-1}, { 1.5,-1}, { 1.5,0}, { 0.5,0}, { 0.5,1}, { -1.5,1}, { -1.5,0}, { -0.5,0} }).returnrotateangle(-M_PI/2 + 66*M_PI/128).returntranslate(0, 0.5).returnrotateangle(26*M_PI/128), 0, 1)
+
 		);
 
 using namespace std;
@@ -114,7 +116,7 @@ int main()
 
 		oldarea = test.p.area();
 
-		cutter(test.p, upres, downres, midres, test.up, test.down);
+		cutter(test.p, upres, downres, midres, test.up, test.down, 0.1F);
 
 		if(firsttest)
 			firsttest = false;
