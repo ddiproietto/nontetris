@@ -50,6 +50,8 @@ GameHandler::GameHandler(const GraphicOptions & gopt, const GameOptions & _gameo
 	for(float i = 0.0; i < gameopt.rows; i += gameopt.rowwidth)
 	{
 		linecompleteness.push_back(0.0);
+		linesbeingcut.push_back(false);
+		linesfalse.push_back(false);
 	}
 	//Start the game with a new random piece!
 	randomnextpiece();
@@ -206,8 +208,19 @@ float GameHandler::cutlineeventually(float from, float to, float threshold)
 
 void GameHandler::step_physic()
 {
-	if (gamestate == PAUSED || gamestate == CUTPAUSED)
+	if (gamestate == PAUSED)
 		return;
+	else if (gamestate == CUTPAUSED)
+	{
+		if (--cutpausecontdown)
+			return;
+		else
+		{
+			gamestate = RUNNING;
+			linesbeingcut = linesfalse;
+			newrandompiece();
+		}
+	}
 	PhysicHandler &phh = *phphysic;
 	bool checklineandnewpiece = false, callgameover = false;
 
@@ -237,6 +250,7 @@ void GameHandler::step_physic()
 				//Cutting has happened
 				totalcuttedarea = cuttedarea;
 				cuttedlines++;
+				linesbeingcut[i] = true;
 			}
 		}
 		if(cuttedlines != 0)
@@ -253,6 +267,11 @@ void GameHandler::step_physic()
 			phh.iteratepieces([&](PhysicPiece * php){
 				php->standstill();
 			});
+
+			gamestate = CUTPAUSED;
+			//TODO: make this parametric
+			cutpausecontdown = 60;
+			return;
 		}
 
 		newrandompiece();
@@ -302,19 +321,14 @@ void GameHandler::step_graphic()
 			linecompleteness.push_back(std::min(cuttedarea/gameopt.cuttingrowarea, 1.0));
 		}
 	}
-	grh.beginrender(linecompleteness);
+	grh.beginrender();
 	phh.iteratepieces([&](PhysicPiece * php){
 		grh.renderpiece(php->getX(),php->getY(),php->getRot(),static_cast<GamePiece *>(php->getUserData())->grp);
 	});
-	/*
-	for(auto i : ingamepieces)
-	{
-		auto php = i.php;
-		auto grp = i.grp;
-		grh.renderpiece(php->getX(),php->getY(),php->getRot(),grp);
-	}
-	*/
-	grh.endrender();
+	if (gamestate == CUTPAUSED && (cutpausecontdown%30) < 15 )
+		grh.endrender(linecompleteness, linesbeingcut);
+	else
+		grh.endrender(linecompleteness, linesfalse);
 }
 
 bool GameHandler::step_logic()

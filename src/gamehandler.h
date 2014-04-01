@@ -68,6 +68,9 @@ class GameHandler
 	int level;
 	int lines;
 	enum GameState {RUNNING, GAMEOVER, CUTPAUSED, PAUSED} gamestate;
+	int cutpausecontdown;
+	std::vector<bool> linesbeingcut;
+	std::vector<bool> linesfalse;
 
 	GamePiece * nextpiece;
 	std::vector<float> linecompleteness;

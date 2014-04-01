@@ -75,6 +75,7 @@ class GraphicHandler
 	GLuint vbo_completeness;
 	GLuint vbo_score;
 	std::array<int, 3> vbo_score_num_vertices;
+	GLuint vbo_lines;
 
 	int width;
 	int height;
@@ -96,9 +97,9 @@ public:
 	~GraphicHandler();
 	GraphicPiece * createpiece(piece<float> pol);
 	void deletepiece(GraphicPiece * pgp);
-	void beginrender(std::vector<float> linecompleteness);
+	void beginrender();
 	void renderpiece(float x, float y, float rot, GraphicPiece * gp);
-	void endrender();
+	void endrender(const std::vector<float> & linecompleteness, const std::vector<bool> & linecutblack);
 
 	void updatescore(int number_a, int number_b, int number_c);
 

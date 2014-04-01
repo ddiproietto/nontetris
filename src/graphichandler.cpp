@@ -413,6 +413,19 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 			 -1 + 6*(2.0F/160), 1.0F - (i+rowwidth) *(2.0F/rows),   1, 0,  });
 	}
 	glBufferData(GL_ARRAY_BUFFER, vertices_side.size()*sizeof(float), vertices_side.data(), GL_STATIC_DRAW);
+
+	glGenBuffers(1, &vbo_lines);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_lines);
+	std::vector<GLfloat> vertices_lines;
+	for(float i = 0.0; i < rows; i += rowwidth)
+	{
+		vertices_lines.insert(vertices_lines.end(),
+			{-1 + 14*(2.0F/160), 1.0F - i * (2.0F/rows),             0, 1,
+			 -1 + 14*(2.0F/160), 1.0F - (i+rowwidth) *(2.0F/rows),   0, 0,
+			 -1 + 96*(2.0F/160), 1.0F - i * (2.0F/rows),             1, 1,
+			 -1 + 96*(2.0F/160), 1.0F - (i+rowwidth) *(2.0F/rows),   1, 0,  });
+	}
+	glBufferData(GL_ARRAY_BUFFER, vertices_lines.size()*sizeof(float), vertices_lines.data(), GL_STATIC_DRAW);
 }
 
 template <class vec>
@@ -540,7 +553,7 @@ void GraphicHandler::deletepiece(GraphicPiece * pgp)
 	delete pgp;
 }
 
-void GraphicHandler::beginrender(std::vector<float> linecompleteness)
+void GraphicHandler::beginrender()
 {
 	glViewport(0, 0, width, height);
 	glClearColor(1.0, 1.0, 1.0, 1.0);
@@ -573,23 +586,6 @@ void GraphicHandler::beginrender(std::vector<float> linecompleteness)
 	glDisableVertexAttribArray(aGlobalVertexPositionLoc);
 	glDisableVertexAttribArray(aGlobalTextureCoordLoc);
 
-	// LINE COMPLETENESS
-
-	glUseProgram(compsp);
-	glEnableVertexAttribArray(aCompVertexPositionLoc);
-	glEnableVertexAttribArray(aCompTextureCoordLoc);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_completeness);
-	glVertexAttribPointer(aCompVertexPositionLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)0);
-	glVertexAttribPointer(aCompTextureCoordLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)(2*sizeof(GLfloat)));
-	int lineind = 0;
-	for(float i = 0.0; i < rows; i += rowwidth, ++lineind)
-	{
-		glUniform1f(uCompLoc, linecompleteness[i]);
-		glDrawArrays(GL_TRIANGLE_STRIP, lineind*4, 4);
-	}
-	glDisableVertexAttribArray(aCompVertexPositionLoc);
-	glDisableVertexAttribArray(aCompTextureCoordLoc);
-
 	//END DRAW BACKGROUND
 
 	glUseProgram(sp);
@@ -608,9 +604,42 @@ void GraphicHandler::renderpiece(float x, float y, float rot, GraphicPiece * gp)
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, gp->num);
 }
 
-void GraphicHandler::endrender()
+void GraphicHandler::endrender(const std::vector<float> & linecompleteness, const std::vector<bool> & linecutblack)
 {
 	glDisableVertexAttribArray(aVertexPositionLoc);
+
+	// LINE COMPLETENESS
+
+	glUseProgram(compsp);
+	glEnableVertexAttribArray(aCompVertexPositionLoc);
+	glEnableVertexAttribArray(aCompTextureCoordLoc);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_completeness);
+	glVertexAttribPointer(aCompVertexPositionLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)0);
+	glVertexAttribPointer(aCompTextureCoordLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)(2*sizeof(GLfloat)));
+	int lineind = 0;
+	for(float i = 0.0; i < rows; i += rowwidth, ++lineind)
+	{
+		glUniform1f(uCompLoc, linecompleteness[i]);
+		glDrawArrays(GL_TRIANGLE_STRIP, lineind*4, 4);
+	}
+	// LINE CUT BLACK
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_lines);
+	glVertexAttribPointer(aCompVertexPositionLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)0);
+	glVertexAttribPointer(aCompTextureCoordLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)(2*sizeof(GLfloat)));
+	lineind = 0;
+	for(float i = 0.0; i < rows; i += rowwidth, ++lineind)
+	{
+		if(linecutblack[i])
+		{
+			glUniform1f(uCompLoc, 1.0);
+			glDrawArrays(GL_TRIANGLE_STRIP, lineind*4, 4);
+		}
+	}
+
+
+	glDisableVertexAttribArray(aCompVertexPositionLoc);
+	glDisableVertexAttribArray(aCompTextureCoordLoc);
+
 
 	#ifndef __DUETTO__
 	#if GLFW_VERSION_MAJOR == 3
