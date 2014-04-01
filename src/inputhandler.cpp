@@ -79,14 +79,8 @@ InputHandler::~InputHandler()
 void InputHandler::process_input(const std::function<void()> & exit, const std::function<void()> & left, const std::function<void()> & right, const std::function<void()> & down, const std::function<void()> & z, const std::function<void()> & x, const std::function<void()> & enter_press)
 {
 	KeyState integrated = act;
-	bool & l_k_esc = integrated.k_esc;
-	bool & l_k_down = integrated.k_down;
-	bool & l_k_left = integrated.k_left;
-	bool & l_k_right = integrated.k_right;
-	bool & l_k_z = integrated.k_z;
-	bool & l_k_x = integrated.k_x;
-	bool & l_k_enter = integrated.k_enter;
-#ifdef __DUETTO__
+
+#if defined(__DUETTO__) || defined(EMSCRIPTEN)
 #define WINDOW_OPENED true
 #elif (GLFW_VERSION_MAJOR == 3)
 #define WINDOW_OPENED !glfwWindowShouldClose(glfwwindow)
@@ -97,37 +91,37 @@ void InputHandler::process_input(const std::function<void()> & exit, const std::
 	if(joystickpresent)
 	{
 		auto val = jh.pollJoystick();
-		l_k_z |= val.buttons[0];
-		l_k_x |= val.buttons[1];
-		l_k_enter |= val.buttons[9];
-		l_k_left |= val.axes[0] < -0.25;
-		l_k_right |= val.axes[0] > 0.25;
-		l_k_down |= val.axes[1] < -0.25;
+		integrated.k_z |= val.buttons[0];
+		integrated.k_x |= val.buttons[1];
+		integrated.k_enter |= val.buttons[9];
+		integrated.k_left |= val.axes[0] < -0.25;
+		integrated.k_right |= val.axes[0] > 0.25;
+		integrated.k_down |= val.axes[1] < -0.25;
 	}
 
-	if(l_k_esc || ! WINDOW_OPENED)
+	if(integrated.k_esc || ! WINDOW_OPENED)
 		exit();
-	if(l_k_down)
+	if(integrated.k_down)
 	{
 		down();
 	}
-	if(l_k_left)
+	if(integrated.k_left)
 	{
 		left();
 	}
-	if(l_k_right)
+	if(integrated.k_right)
 	{
 		right();
 	}
-	if(l_k_z)
+	if(integrated.k_z)
 	{
 		z();
 	}
-	if(l_k_x)
+	if(integrated.k_x)
 	{
 		x();
 	}
-	if(l_k_enter && !previntegrated.k_enter)
+	if(integrated.k_enter && !previntegrated.k_enter)
 	{
 		//We are only interested in events
 		enter_press();
