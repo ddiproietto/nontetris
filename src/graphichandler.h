@@ -56,9 +56,7 @@ struct GraphicOptions
 
 struct GraphicPiece
 {
-	GLuint VBOid;
-	GLuint num;
-	int tex;
+	GLuint tex;
 };
 
 class GraphicHandler
@@ -68,30 +66,40 @@ class GraphicHandler
 	#endif
 	GLuint tex_background;
 	GLuint tex_font;
-	GLuint tex[7];
+	GLuint tex_small[7];
 
-	GLuint pieces_fbo[7];
+	GLuint piece_fbo;
+
 	GLuint vbo_background;
 	GLuint vbo_completeness;
 	GLuint vbo_score;
 	std::array<int, 3> vbo_score_num_vertices;
 	GLuint vbo_lines;
+	GLuint vbo_piece;
 
 	int width;
 	int height;
 	float rows;
 	float rowwidth;
 
-	GLuint sp, isp, compsp;
+	GLuint isp, compsp;
+
 	GLint aGlobalVertexPositionLoc;
 	GLint aGlobalTextureCoordLoc;
-	GLint uPMatrixLoc;
-	GLint uRTVecLoc;
-	GLint aVertexPositionLoc;
+	GLint uGlobalPMatrixLoc;
+	GLint uGlobalRTVecLoc;
+
 	GLint aCompVertexPositionLoc;
 	GLint aCompTextureCoordLoc;
+	GLint uCompPMatrixLoc;
+	GLint uCompRTVecLoc;
 	GLint uCompLoc;
 	GLint uCompColorLoc;
+
+	GLfloat PMatrix_eye[16];
+	GLfloat PMatrix_half[16];
+	GLfloat PMatrix_pieces[16];
+	GLfloat RTVec_eye[4];
 
 public:
 	GraphicHandler(const GraphicOptions & gopt, const FileLoader & fileloader, float _rows, float _rowwidth);

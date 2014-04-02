@@ -95,7 +95,6 @@ int webMain() [[client]]
 	auto filestoload = make_array(
 		"shader.frag",
 		"shader.vert",
-		"shaderident.vert",
 		"shadercomp.frag"
 	);
 	auto texturestoload = make_array(

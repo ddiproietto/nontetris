@@ -85,49 +85,6 @@ void printLog(GLuint obj, const std::string & str)
 		std::cout << str <<infoLog << std::endl;
 #endif
 }
-void ortho(GLfloat * out, double left, double right, double bottom, double top, double near, double far)
-{
-	//COPIED FROM javascript gl-matrix
-	double lr = 1 / (left - right),
-	       bt = 1 / (bottom - top),
-	       nf = 1 / (near - far);
-	out[0] = -2 * lr;
-	out[1] = 0;
-	out[2] = 0;
-	out[3] = 0;
-	out[4] = 0;
-	out[5] = -2 * bt;
-	out[6] = 0;
-	out[7] = 0;
-	out[8] = 0;
-	out[9] = 0;
-	out[10] = 2 * nf;
-	out[11] = 0;
-	out[12] = (left + right) * lr;
-	out[13] = (top + bottom) * bt;
-	out[14] = (far + near) * nf;
-	out[15] = 1;
-}
-
-void eye(GLfloat * out)
-{
-	out[0] = 1;
-	out[1] = 0;
-	out[2] = 0;
-	out[3] = 0;
-	out[4] = 0;
-	out[5] = 1;
-	out[6] = 0;
-	out[7] = 0;
-	out[8] = 0;
-	out[9] = 0;
-	out[10] = 1;
-	out[11] = 0;
-	out[12] = 0;
-	out[13] = 0;
-	out[14] = 0;
-	out[15] = 1;
-}
 
 #define WEBPREAMBLE "precision mediump float;\n"
 
@@ -168,11 +125,8 @@ GLuint filetoshader(const FileLoader & fl, GLenum shadertype, const std::string 
 }
 
 
-GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & fileloader, float _rows, float _rowwidth):width(gopt.width), height(gopt.height), vbo_score(0),rows(_rows), rowwidth(_rowwidth)
+GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & fileloader, float _rows, float _rowwidth):width(gopt.width), height(gopt.height), vbo_score(0),rows(_rows), rowwidth(_rowwidth), RTVec_eye{0.0F}, PMatrix_eye{0.0F}, PMatrix_half{0.0F}, PMatrix_pieces{0.0F}
 {
-	float imgquad = height/rows;
-	float piecesAA = 2;
-
 	#ifndef __DUETTO__
 	glfwInit();
 	#if GLFW_VERSION_MAJOR == 3
@@ -195,27 +149,22 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 	#endif
 
 	glDisable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
 
-	GLuint vs     = filetoshader(fileloader, GL_VERTEX_SHADER, "shader.vert"), /* Vertex Shader for pieces */
-	       ivs    = filetoshader(fileloader, GL_VERTEX_SHADER, "shaderident.vert"), /* Vertex Shader for everything else */
+
+	GLuint vs     = filetoshader(fileloader, GL_VERTEX_SHADER, "shader.vert"), /* Vertex Shader */
 	       fs     = filetoshader(fileloader, GL_FRAGMENT_SHADER, "shader.frag"), /* Fragment Shader with textures */
 	       compfs = filetoshader(fileloader, GL_FRAGMENT_SHADER, "shadercomp.frag"); /* Fragment Shader for bars (no textures) */
-;
-
-	sp = glCreateProgram();
-	glAttachShader(sp, vs);
-	glAttachShader(sp, fs);
-	glLinkProgram(sp);
-	printLog(sp, "linking piece shader:");
 
 	isp = glCreateProgram();
-	glAttachShader(isp, ivs);
+	glAttachShader(isp, vs);
 	glAttachShader(isp, fs);
 	glLinkProgram(isp);
 	printLog(isp, "linking global shader:");
 
 	compsp = glCreateProgram();
-	glAttachShader(compsp, ivs);
+	glAttachShader(compsp, vs);
 	glAttachShader(compsp, compfs);
 	glLinkProgram(compsp);
 	printLog(compsp, "linking completeness shader:");
@@ -223,29 +172,18 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 	glUseProgram(isp);
 	aGlobalVertexPositionLoc = glGetAttribLocation(isp, "aVertexPosition");
 	aGlobalTextureCoordLoc = glGetAttribLocation(isp, "aTextureCoord");
-
-	glUseProgram(sp);
-	uPMatrixLoc = glGetUniformLocation(sp, "uPMatrix");
-	uRTVecLoc = glGetUniformLocation(sp, "uRTVec");
-	aVertexPositionLoc = glGetAttribLocation(sp, "aVertexPosition");
+	uGlobalPMatrixLoc = glGetUniformLocation(isp, "uPMatrix");
+	uGlobalRTVecLoc = glGetUniformLocation(isp, "uRTVec");
 
 	glUseProgram(compsp);
 	aCompVertexPositionLoc = glGetAttribLocation(compsp, "aVertexPosition");
 	aCompTextureCoordLoc = glGetAttribLocation(compsp, "aTextureCoord");
 	uCompLoc = glGetUniformLocation(compsp, "uComp");
 	uCompColorLoc = glGetUniformLocation(compsp, "uColor");
-
-	glUseProgram(sp);
-
-	GLfloat PMatrix[16];
-
-	//ortho(PMatrix,0,10.25,18,0,-1,1); // Without lateral background
-	//ortho(PMatrix,-2.05,18.45,18,0,-1,1); //With noncutting background
-	ortho(PMatrix,-1.75,18.25,18,0,-1,1); //With cutting background
-	glUniformMatrix4fv(uPMatrixLoc, 1, false, PMatrix);
+	uCompPMatrixLoc = glGetUniformLocation(compsp, "uPMatrix");
+	uCompRTVecLoc = glGetUniformLocation(compsp, "uRTVec");
 
 	//TEXTURE
-
 	glGenTextures(1, &tex_background);
 	glBindTexture( GL_TEXTURE_2D, tex_background);
 	unsigned int twidth, theight;
@@ -264,10 +202,6 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 	glGenerateMipmap( GL_TEXTURE_2D );
 
-	glUseProgram(isp);
-
-	GLuint tex_small[7];
-	glGenTextures(7, tex);
 	glGenTextures(7, tex_small);
 
 	GLuint vbo_ident;
@@ -308,43 +242,8 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 		webGLES->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById(*idname)));
 		#endif
 
-		glBindTexture(GL_TEXTURE_2D, tex[i]);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-
-		int piecefbosize = findsmallestpot(piecesAA*4*imgquad);
-
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, piecefbosize, piecefbosize, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-		glGenerateMipmap(GL_TEXTURE_2D);
-
-		glGenFramebuffers(1, &(pieces_fbo[i]));
-		glBindFramebuffer(GL_FRAMEBUFFER, pieces_fbo[i]);
-		
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex[i], 0);
-		glViewport(0, 0, piecefbosize, piecefbosize);
-		glClearColor(0.0, 0.0, 0.0, 1.0);
-		glClear( GL_COLOR_BUFFER_BIT );
-
-		glEnableVertexAttribArray(aGlobalVertexPositionLoc);
-		glEnableVertexAttribArray(aGlobalTextureCoordLoc);
-
-		glBindTexture(GL_TEXTURE_2D, tex_small[i]);
-
-		glBindBuffer(GL_ARRAY_BUFFER, vbo_ident);
-		glVertexAttribPointer(aGlobalVertexPositionLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)0);
-		glVertexAttribPointer(aGlobalTextureCoordLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)(2*sizeof(GLfloat)));
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-		glDisableVertexAttribArray(aGlobalVertexPositionLoc);
-		glDisableVertexAttribArray(aGlobalTextureCoordLoc);
-		
-		glBindTexture(GL_TEXTURE_2D, tex[i]);
-		glGenerateMipmap(GL_TEXTURE_2D);
-
 
 	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	//glDeleteTextures(7, tex_small); //I should delete textures, but it doesn't work on duetto
 
 	glGenBuffers(1, &vbo_background);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_background);
@@ -399,6 +298,40 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 			 -1 + 96*(2.0F/160), 1.0F - (i+rowwidth) *(2.0F/rows),   1, 0,  });
 	}
 	glBufferData(GL_ARRAY_BUFFER, vertices_lines.size()*sizeof(float), vertices_lines.data(), GL_STATIC_DRAW);
+
+	glGenBuffers(1, &vbo_piece);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_piece);
+	std::vector<GLfloat> vertices_piece;
+	vertices_piece.insert(vertices_piece.end(),
+		{ -2.0F, -2.0F, 0, 0,
+		  -2.0F,  2.0F, 0, 1,
+		   2.0F, -2.0F, 1, 0,
+		   2.0F,  2.0F, 1, 1});
+	glBufferData(GL_ARRAY_BUFFER, vertices_piece.size()*sizeof(float), vertices_piece.data(), GL_STATIC_DRAW);
+
+	RTVec_eye[1] = 1.0F;
+
+	float left = -1.75F, right = 18.25F, top = 0.0F, bottom = 18.0F, far = -1.0F, near = 1.0F;
+	PMatrix_pieces[0] = -2 / (left - right);
+	PMatrix_pieces[5] = -2 / (bottom - top);
+	PMatrix_pieces[10] = 2 / (near - far);
+	PMatrix_pieces[12] = (left + right) / (left - right);
+	PMatrix_pieces[13] = (bottom + top) / (bottom - top);
+	PMatrix_pieces[14] = (near + far) / (near - far);
+	PMatrix_pieces[15] = 1;
+
+	PMatrix_eye[0] = PMatrix_eye[5] = PMatrix_eye[10] = PMatrix_eye[15] = 1.0F;
+
+	PMatrix_half[0] = PMatrix_half[5] = PMatrix_half[10] = 0.5F;
+	PMatrix_half[15] = 1.0F;
+
+	glUseProgram(compsp);
+
+	glUniformMatrix4fv(uCompPMatrixLoc, 1, false, PMatrix_eye);
+	glUniform4fv(uCompRTVecLoc, 1, RTVec_eye);
+
+	glGenFramebuffers(1, &piece_fbo);
+
 }
 
 template <class vec>
@@ -473,7 +406,7 @@ GraphicPiece * GraphicHandler::createpiece(piece<float> pie)
 {
 	GraphicPiece * pgp = new GraphicPiece;
 	GLuint VBOid;
-	size_t size = (pie.totsize()+(pie.size()-1))*2;
+	size_t size = (pie.totsize()+(pie.size()-1))*4;
 	std::vector<GLfloat> vertices;
 	vertices.reserve(size);
 	bool firstshape = true;
@@ -487,9 +420,13 @@ GraphicPiece * GraphicHandler::createpiece(piece<float> pie)
 		{
 			vertices.push_back(pol[0].x);
 			vertices.push_back(pol[0].y);
+			vertices.push_back((pol[0].x-2.0)/4);
+			vertices.push_back((pol[0].y-2.0)/4);
 		}
 		vertices.push_back(pol[0].x);
 		vertices.push_back(pol[0].y);
+		vertices.push_back((pol[0].x-2.0)/4);
+		vertices.push_back((pol[0].y-2.0)/4);
 		//std::cerr<<0<<std::endl;
 
 		for ( unsigned int i = 1; i <= pol.size()/2; ++i)
@@ -498,6 +435,8 @@ GraphicPiece * GraphicHandler::createpiece(piece<float> pie)
 
 			vertices.push_back(vert.x);
 			vertices.push_back(vert.y);
+			vertices.push_back((vert.x-2.0)/4);
+			vertices.push_back((vert.y-2.0)/4);
 			//std::cerr<<i<<std::endl;
 			if(i < (pol.size()+1)/2)
 			{
@@ -505,6 +444,8 @@ GraphicPiece * GraphicHandler::createpiece(piece<float> pie)
 				//std::cerr<<pol.size()-i<<std::endl;
 				vertices.push_back(vert.x);
 				vertices.push_back(vert.y);
+				vertices.push_back((vert.x-2.0)/4);
+				vertices.push_back((vert.y-2.0)/4);
 			}
 		}
 	}
@@ -513,16 +454,58 @@ GraphicPiece * GraphicHandler::createpiece(piece<float> pie)
 	glBindBuffer(GL_ARRAY_BUFFER, VBOid);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(float), vertices.data(), GL_STATIC_DRAW);
 
-	pgp->VBOid = VBOid;
-	pgp->num = static_cast<int>(size/2);
-	pgp->tex = tex[pie.getType()];
+	GLuint piecetex;
+
+	glUseProgram(isp);
+	glUniform4fv(uGlobalRTVecLoc, 1, RTVec_eye);
+	glUniformMatrix4fv(uGlobalPMatrixLoc, 1, false, PMatrix_half);
+
+	glEnableVertexAttribArray(aGlobalVertexPositionLoc);
+	glEnableVertexAttribArray(aGlobalTextureCoordLoc);
+	glGenTextures(1, &piecetex);
+	glBindTexture(GL_TEXTURE_2D, piecetex);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	float imgquad = height/rows;
+	float piecesAA = 4;
+	int piecefbosize = findsmallestpot(piecesAA*4*imgquad);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, piecefbosize, piecefbosize, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, piece_fbo);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, piecetex, 0);
+	glViewport(0, 0, piecefbosize, piecefbosize);
+	glClearColor(0.0, 0.0, 0.0, 0.0);
+	glClear( GL_COLOR_BUFFER_BIT );
+
+	glBindTexture(GL_TEXTURE_2D, tex_small[pie.getType()]);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBOid);
+
+	glVertexAttribPointer(aGlobalVertexPositionLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)0);
+	glVertexAttribPointer(aGlobalTextureCoordLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)(2*sizeof(GLfloat)));
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, vertices.size()/4);
+
+	glBindTexture(GL_TEXTURE_2D, piecetex);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glDisableVertexAttribArray(aGlobalVertexPositionLoc);
+	glDisableVertexAttribArray(aGlobalTextureCoordLoc);
+
+	glDeleteBuffers(1, &VBOid);
+	pgp->tex = piecetex;
 	//std::cerr<<"NUM:"<<gp.num<<std::endl;
 	return pgp;
 }
 
 void GraphicHandler::deletepiece(GraphicPiece * pgp)
 {
-	glDeleteBuffers(1,&(pgp->VBOid));
+	glDeleteTextures(1,&(pgp->tex));
 	delete pgp;
 }
 
@@ -534,6 +517,9 @@ void GraphicHandler::beginrender()
 
 	//DRAW BACKGROUND
 	glUseProgram(isp);
+	glUniform4fv(uGlobalRTVecLoc, 1, RTVec_eye);
+	glUniformMatrix4fv(uGlobalPMatrixLoc, 1, false, PMatrix_eye);
+
 	glEnableVertexAttribArray(aGlobalVertexPositionLoc);
 	glEnableVertexAttribArray(aGlobalTextureCoordLoc);
 
@@ -556,34 +542,33 @@ void GraphicHandler::beginrender()
 		sum += i;
 	}
 
-	glDisableVertexAttribArray(aGlobalVertexPositionLoc);
-	glDisableVertexAttribArray(aGlobalTextureCoordLoc);
-
 	//END DRAW BACKGROUND
-
-	glUseProgram(sp);
-	glEnableVertexAttribArray(aVertexPositionLoc);
+	glUniformMatrix4fv(uGlobalPMatrixLoc, 1, false, PMatrix_pieces);
 }
+
 
 void GraphicHandler::renderpiece(float x, float y, float rot, GraphicPiece * gp)
 {
 	GLfloat RTVec[4] = {(GLfloat)sin(rot), (GLfloat)cos(rot), x, y};
-	glUniform4fv(uRTVecLoc, 1, RTVec);
+	glUniform4fv(uGlobalRTVecLoc, 1, RTVec);
 
-	glBindTexture( GL_TEXTURE_2D, gp->tex);
-	glBindBuffer(GL_ARRAY_BUFFER, gp->VBOid);
+	glBindTexture(GL_TEXTURE_2D, gp->tex);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_piece);
 
-	glVertexAttribPointer(aVertexPositionLoc, 2, GL_FLOAT, false, 0, 0);
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, gp->num);
+	glVertexAttribPointer(aGlobalVertexPositionLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)0);
+	glVertexAttribPointer(aGlobalTextureCoordLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)(2*sizeof(GLfloat)));
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
 void GraphicHandler::endrender(const std::vector<float> & linecompleteness, const std::vector<bool> & linecutblack)
 {
-	glDisableVertexAttribArray(aVertexPositionLoc);
+	glDisableVertexAttribArray(aGlobalVertexPositionLoc);
+	glDisableVertexAttribArray(aGlobalTextureCoordLoc);
 
 	// LINE COMPLETENESS
 
 	glUseProgram(compsp);
+
 	glEnableVertexAttribArray(aCompVertexPositionLoc);
 	glEnableVertexAttribArray(aCompTextureCoordLoc);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_completeness);
@@ -616,10 +601,8 @@ void GraphicHandler::endrender(const std::vector<float> & linecompleteness, cons
 		}
 	}
 
-
 	glDisableVertexAttribArray(aCompVertexPositionLoc);
 	glDisableVertexAttribArray(aCompTextureCoordLoc);
-
 
 	#ifndef __DUETTO__
 	#if GLFW_VERSION_MAJOR == 3
