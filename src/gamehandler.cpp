@@ -385,7 +385,7 @@ void GameHandler::step_graphic()
 	});
 	if (nextpiece_graphic)
 		grh.renderpiece(gameopt.columns + 5.0F, 15.0F, nextpiece_rot, nextpiece_graphic);
-	if (gamestate == CUTPAUSED && (cutpausecontdown%30) < 15 )
+	if ((gamestate == CUTPAUSED || gamestate == CUTPAUSED_PAUSED) && (cutpausecontdown%30) < 15 )
 		grh.endrender(linecompleteness, linesbeingcut);
 	else
 		grh.endrender(linecompleteness, linesfalse);
