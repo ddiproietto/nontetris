@@ -54,6 +54,7 @@ GameHandler::GameHandler(const GraphicOptions & gopt, const GameOptions & _gameo
 	for(float i = 0.0; i < gameopt.rows; i += gameopt.rowwidth)
 	{
 		linecompleteness.push_back(0.0);
+		linearea.push_back(0.0);
 		linesbeingcut.push_back(false);
 		linesfalse.push_back(false);
 	}
@@ -73,10 +74,14 @@ void GameHandler::togglepause()
 {
 	if(gamestate == GAMEOVER)
 		return;
-	if(gamestate == RUNNING || gamestate == CUTPAUSED)
+	if(gamestate == RUNNING)
 		gamestate = PAUSED;
 	else if (gamestate == PAUSED)
 		gamestate = RUNNING;
+	else if (gamestate == CUTPAUSED)
+		gamestate = CUTPAUSED_PAUSED;
+	else if (gamestate == CUTPAUSED_PAUSED)
+		gamestate = CUTPAUSED;
 }
 
 GameHandler::GamePiece * GameHandler::newpiece(const piece<float> & p, float x, float y, float rot, PhysicPiece::PhysicPieceType type, float angvel, float gravscale)
@@ -132,15 +137,12 @@ bool isugly(const polygon <float> & pol)
 	return false;
 }
 
-//Returns the area of the mid part
-float GameHandler::cutlineeventually(float from, float to, float threshold)
+void GameHandler::cutline(float from, float to)
 {
 	float x0 = 0;
 	float y0 = from;
 	float x1 = gameopt.columns;
 	float y1 = to;
-
-	float linearea = 0;
 
 	struct DeletePiece
 	{
@@ -150,20 +152,28 @@ float GameHandler::cutlineeventually(float from, float to, float threshold)
 		float x,y,rot;
 	};
 	std::list<DeletePiece> deletelist;
-	std::list<polygon<float>> midremainders;
 
-	phphysic->getpieces_in_rect(x0, y0, x1, y1, [y0, y1, &linearea, &deletelist, &midremainders](PhysicPiece * php){
+	phphysic->getpieces_in_rect(x0, y0, x1, y1, [y0, y1, &deletelist](PhysicPiece * php){
 		polygon<float> p (static_cast<GamePiece *>(php->getUserData())->p.getshape());
 		struct DeletePiece dp;
 
-		//Transform the piece coordinates from local to global
+		// Transform the piece coordinates from local to global
 		for (auto & vertex: p)
 		{
 			vertex.rotate(php->getRot());
 			vertex.translate(php->getX(), php->getY());
 		}
 
-		bool isinbetween = cutter(p, dp.remainders, dp.remainders, midremainders, y0, y1, 0.1F);
+		struct
+		{
+			void push_back(const polygon<float> & p)
+			{
+
+			}
+		} dummycontainer;
+
+		// Here cutter uses the tolerance
+		bool isinbetween = cutter(p, dp.remainders, dp.remainders, dummycontainer, y0, y1, 0.1F);
 
 		if (isinbetween)
 		{
@@ -176,42 +186,82 @@ float GameHandler::cutlineeventually(float from, float to, float threshold)
 		}
 	});
 
-	for (const auto & midp: midremainders)
+	for (auto & dp: deletelist)
 	{
-		linearea += midp.area();
-	}
-	
-	if (linearea > threshold)
-	{
-		for(auto & dp: deletelist)
+		GamePiece * pgp = dp.pgp;
+		deletepiece(pgp);
+
+		//Create remainders
+		for(auto & pol: dp.remainders)
 		{
-			GamePiece * pgp = dp.pgp;
-			deletepiece(pgp);
-			
-			//Create remainders
-			for(auto & pol: dp.remainders)
+			//Transform the piece coordinates from global to local again
+			for (auto & vertex: pol)
 			{
-				//Transform the piece coordinates from global to local again
-				for (auto & vertex: pol)
-				{
-					vertex.translate(-dp.x, -dp.y);
-					vertex.rotate(-dp.rot);
-				}
-				if(isugly(pol))
-					continue;
-				piece<float> newp (pol, dp.originaltype);
-				if (!newp.empty())
-					newpiece(newp, dp.x, dp.y, dp.rot, PhysicPiece::OLD_PIECE);
+				vertex.translate(-dp.x, -dp.y);
+				vertex.rotate(-dp.rot);
 			}
+			if (isugly(pol))
+				continue;
+			piece<float> newp (pol, dp.originaltype);
+			if (!newp.empty())
+				newpiece(newp, dp.x, dp.y, dp.rot, PhysicPiece::OLD_PIECE);
+		}
+	}
+}
+
+//Returns the area of the mid part
+float GameHandler::computelinearea(float from, float to)
+{
+	float x0 = 0;
+	float y0 = from;
+	float x1 = gameopt.columns;
+	float y1 = to;
+	float retarea = 0.0F;
+
+	std::list<polygon<float>> midremainders;
+
+	phphysic->getpieces_in_rect(x0, y0, x1, y1, [y0, y1, &midremainders](PhysicPiece * php){
+		polygon<float> p (static_cast<GamePiece *>(php->getUserData())->p.getshape());
+
+		// Transform the piece coordinates from local to global
+		for (auto & vertex: p)
+		{
+			vertex.rotate(php->getRot());
+			vertex.translate(php->getX(), php->getY());
 		}
 
+		struct
+		{
+			void push_back(const polygon<float> & p)
+			{
+
+			}
+		} dummycontainer;
+
+		// Uses the cutter with no tolerance
+		// I'm not interested here in up & down remainders
+		bool isinbetween = cutter(p, dummycontainer, dummycontainer, midremainders, y0, y1, 0.0F);
+	});
+
+	for (const auto & midp: midremainders)
+	{
+		retarea += midp.area();
 	}
-	return linearea;
+
+	return retarea;
+}
+void GameHandler::updatelinearea()
+{
+	for(float i = 0.0; i < gameopt.rows; i += gameopt.rowwidth)
+	{
+		linearea[i] = computelinearea(i, i + gameopt.rowwidth);
+		linecompleteness[i] = std::min(linearea[i]/gameopt.cuttingrowarea, 1.0);
+	}
 }
 
 void GameHandler::step_physic()
 {
-	if (gamestate == PAUSED)
+	if (gamestate == PAUSED || gamestate == CUTPAUSED_PAUSED)
 		return;
 	else if (gamestate == CUTPAUSED)
 	{
@@ -220,6 +270,13 @@ void GameHandler::step_physic()
 		else
 		{
 			gamestate = RUNNING;
+			// Effectively cut lines at the end of the cutpause
+			for(float i = 0.0; i < gameopt.rows; i += gameopt.rowwidth)
+			{
+				if(linesbeingcut[i])
+					cutline(i, i + gameopt.rowwidth);
+			}
+
 			linesbeingcut = linesfalse;
 			newrandompiece();
 		}
@@ -247,21 +304,20 @@ void GameHandler::step_physic()
 	{
 		float totalcuttedarea = 0.0;
 		int cuttedlines = 0;
+		updatelinearea();
 		for(float i = 0.0; i < gameopt.rows; i += gameopt.rowwidth)
 		{
-			float cuttedarea;
-			cuttedarea = cutlineeventually(i, i + gameopt.rowwidth, gameopt.cuttingrowarea);
-			if (cuttedarea > gameopt.cuttingrowarea)
+			if (linearea[i] > gameopt.cuttingrowarea)
 			{
-				//Cutting has happened
-				totalcuttedarea = cuttedarea;
+				// Cutting should happened
+				totalcuttedarea = linearea[i];
 				cuttedlines++;
 				linesbeingcut[i] = true;
 			}
 		}
 		if(cuttedlines != 0)
 		{
-			//Update score
+			// Update score
 			int scoreadd = ceil(pow((cuttedlines*3),pow((totalcuttedarea/(10*cuttedlines)),10))*20+cuttedlines*cuttedlines*40);
 			score += scoreadd;
 			lines += cuttedlines;
@@ -269,7 +325,7 @@ void GameHandler::step_physic()
 
 			phgraphic->updatescore(lines, level, score);
 
-			//Set all piece velocity to 0
+			// Set all pieces velocity to 0
 			phh.iteratepieces([&](PhysicPiece * php){
 				php->standstill();
 			});
@@ -277,6 +333,8 @@ void GameHandler::step_physic()
 			gamestate = CUTPAUSED;
 			//TODO: make this parametric
 			cutpausecontdown = 60;
+
+			// Return!! Avoid creating newpiece
 			return;
 		}
 
@@ -319,14 +377,7 @@ void GameHandler::step_graphic()
 	if (updatebarscompleteness > 1.0)
 	{
 		updatebarscompleteness -= 1.0;
-		linecompleteness.clear();
-		for(float i = 0.0; i < gameopt.rows; i += gameopt.rowwidth)
-		{
-			float cuttedarea;
-			//Big threshold area so it does not cut
-			cuttedarea = cutlineeventually(i, i + gameopt.rowwidth, gameopt.rowwidth*gameopt.columns*2);
-			linecompleteness.push_back(std::min(cuttedarea/gameopt.cuttingrowarea, 1.0));
-		}
+		updatelinearea();
 	}
 	grh.beginrender();
 	phh.iteratepieces([&](PhysicPiece * php){

@@ -1,5 +1,4 @@
 texture piece caching (good for AA)
-do not draw piece outside game box
 
 cutting: WIP
 
@@ -18,4 +17,3 @@ keep two different games(cutting, no cutting): different logic, row size, backgr
 achievements
 
 line completion too slow on browsers
-remove pieces from line after pause

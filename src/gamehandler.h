@@ -58,8 +58,10 @@ class GameHandler
 	GamePiece * newpiece(const piece<float> & p, float x, float y, float rot, PhysicPiece::PhysicPieceType type, float angvel = 0.0F, float gravscale = 1.0F);
 	void randomnextpiece();
 	void deletepiece(GamePiece *);
-	float cutlineeventually(float from, float to, float threshold);
+	void cutline(float from, float to);
+	float computelinearea(float from, float to);
 	void togglepause();
+	void updatelinearea();
 
 	GameOptions gameopt;
 
@@ -67,7 +69,7 @@ class GameHandler
 	int score;
 	int level;
 	int lines;
-	enum GameState {RUNNING, GAMEOVER, CUTPAUSED, PAUSED} gamestate;
+	enum GameState {RUNNING, GAMEOVER, CUTPAUSED, PAUSED, CUTPAUSED_PAUSED} gamestate;
 	int cutpausecontdown;
 	std::vector<bool> linesbeingcut;
 	std::vector<bool> linesfalse;
@@ -75,6 +77,7 @@ class GameHandler
 	GraphicPiece * nextpiece_graphic;
 	int nextpiece_type;
 	float nextpiece_rot;
+	std::vector<float> linearea;
 	std::vector<float> linecompleteness;
 	float updatebarscompleteness;
 

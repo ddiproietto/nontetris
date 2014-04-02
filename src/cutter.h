@@ -101,8 +101,8 @@ static int isvec4ordasc(T arr)
 	return notascendingsteps <= 1;
 }
 
-//Removes consecutive duplicates
-// i.e. 1123 -> 23
+/* Removes consecutive duplicates
+ * i.e. 1123 -> 23 */
 void remove_duplicates(std::vector<int> & arr)
 {
 	std::vector<int> newarr;
@@ -188,16 +188,23 @@ bool cutter(const polygon<T> & p, C1 & upres, C2 & downres, C3 & midres, T up, T
 		pprev_vertex = &vertex;
 	}
 
-	auto normalize_fn = [&](int & a)
+	if (tolerance != 0.0)
 	{
-		a = newp.normalize_index(a);
-	};
-	std::for_each(up_intersections.begin(), up_intersections.end(), normalize_fn);
-	std::for_each(down_intersections.begin(), down_intersections.end(), normalize_fn);
+		/* If the refiner is enabled there might be a corner case:
+		 * an intersection vector can be 1135. We have to remove consecutive
+		 * duplicates(-> 35). In order to do so we must first transform the 
+		 * intersection indexes to be in the range [0, intersections.size()-1]
+		 * to allow comparison */
+		auto normalize_fn = [&](int & a)
+		{
+			a = newp.normalize_index(a);
+		};
+		std::for_each(up_intersections.begin(), up_intersections.end(), normalize_fn);
+		std::for_each(down_intersections.begin(), down_intersections.end(), normalize_fn);
 
-	//If there are consecutive duplicates (a corner case of the refiner) they must be removed
-	remove_duplicates(up_intersections);
-	remove_duplicates(down_intersections);
+		remove_duplicates(up_intersections);
+		remove_duplicates(down_intersections);
+	}
 
 	/* Sort intersections by the x coordinate */
 	auto sortcriterion = [&](const int & a, const int & b)->bool
