@@ -233,6 +233,7 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 	aCompVertexPositionLoc = glGetAttribLocation(compsp, "aVertexPosition");
 	aCompTextureCoordLoc = glGetAttribLocation(compsp, "aTextureCoord");
 	uCompLoc = glGetUniformLocation(compsp, "uComp");
+	uCompColorLoc = glGetUniformLocation(compsp, "uColor");
 
 	glUseProgram(sp);
 
@@ -592,18 +593,25 @@ void GraphicHandler::endrender(const std::vector<float> & linecompleteness, cons
 	for(float i = 0.0; i < rows; i += rowwidth, ++lineind)
 	{
 		glUniform1f(uCompLoc, linecompleteness[i]);
+		float colbase;
+		colbase = 1.0 - (0.8*linecompleteness[i]);
+		if (linecompleteness[i]>=1.0)
+			colbase -= 0.2;
+		glUniform3f(uCompColorLoc, colbase, colbase, colbase);
 		glDrawArrays(GL_TRIANGLE_STRIP, lineind*4, 4);
 	}
+
 	// LINE CUT BLACK
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_lines);
 	glVertexAttribPointer(aCompVertexPositionLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)0);
 	glVertexAttribPointer(aCompTextureCoordLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)(2*sizeof(GLfloat)));
+	glUniform3f(uCompColorLoc, 205.0F/255.0F, 175.0F/255.0F, 145.0F/255.0F);
+	glUniform1f(uCompLoc, 1.0);
 	lineind = 0;
 	for(float i = 0.0; i < rows; i += rowwidth, ++lineind)
 	{
 		if(linecutblack[i])
 		{
-			glUniform1f(uCompLoc, 1.0);
 			glDrawArrays(GL_TRIANGLE_STRIP, lineind*4, 4);
 		}
 	}

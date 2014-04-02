@@ -91,6 +91,7 @@ class GraphicHandler
 	GLint aCompVertexPositionLoc;
 	GLint aCompTextureCoordLoc;
 	GLint uCompLoc;
+	GLint uCompColorLoc;
 
 public:
 	GraphicHandler(const GraphicOptions & gopt, const FileLoader & fileloader, float _rows, float _rowwidth);
