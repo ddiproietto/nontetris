@@ -131,11 +131,41 @@ void eye(GLfloat * out)
 
 #define WEBPREAMBLE "precision mediump float;\n"
 
-#if defined(EMSCRIPTEN) || defined(__MINGW32__)
+#if defined(EMSCRIPTEN) || defined(__MINGW32__) || defined(__DUETTO__)
 #define DATAPATHPREAMBLE ""
 #else
 #define DATAPATHPREAMBLE "../"
 #endif
+
+GLuint filetoshader(const FileLoader & fl, GLenum shadertype, const std::string & filename)
+{
+	GLuint shader;
+
+	std::string completefilename = std::string(DATAPATHPREAMBLE) + filename;
+#ifdef __DUETTO__
+	auto * c_ShaderSource = fl.getfilecontent(completefilename);
+	if(shadertype == GL_FRAGMENT_SHADER)
+			c_ShaderSource = client::String(WEBPREAMBLE).concat(c_ShaderSource);
+#else
+	std::string ShaderSource = FileLoader::getfilecontent(completefilename);
+#ifdef EMSCRIPTEN
+	if(shadertype == GL_FRAGMENT_SHADER)
+		ShaderSource = std::string(WEBPREAMBLE) + ShaderSource;
+#endif
+	const char * c_ShaderSource = ShaderSource.c_str();
+#endif
+
+	shader = glCreateShader(shadertype);
+	#ifdef __DUETTO__
+	webGLES->shaderSource(webGLESLookupWebGLShader(shader), *c_ShaderSource);
+	#else
+	glShaderSource(shader, 1, &c_ShaderSource, NULL);
+	#endif
+	glCompileShader(shader);
+	printLog(shader, filename);
+
+	return shader;
+}
 
 
 GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & fileloader, float _rows, float _rowwidth):width(gopt.width), height(gopt.height), vbo_score(0),rows(_rows), rowwidth(_rowwidth)
@@ -166,69 +196,11 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 
 	glDisable(GL_DEPTH_TEST);
 
-	GLuint vs, /* Vertex Shader */
-	       fs, /* Fragment Shader */
-	       ivs,
-	       compfs;
-
-
-
-
-	#ifdef __DUETTO__
-		auto * c_vsSource = fileloader.getfilecontent("shader.vert");
-		auto * c_ivsSource = fileloader.getfilecontent("shaderident.vert");
-		auto * c_fsSource = client::String(WEBPREAMBLE).concat(fileloader.getfilecontent("shader.frag"));
-		auto * c_compfsSource = client::String(WEBPREAMBLE).concat(fileloader.getfilecontent("shadercomp.frag"));
-	#else
-		std::string vsSource = FileLoader::getfilecontent(DATAPATHPREAMBLE "shader.vert");
-		std::string ivsSource = FileLoader::getfilecontent(DATAPATHPREAMBLE "shaderident.vert");
-		std::string fsSource = FileLoader::getfilecontent(DATAPATHPREAMBLE "shader.frag");
-		std::string compfsSource = FileLoader::getfilecontent(DATAPATHPREAMBLE "shadercomp.frag");
-		#ifdef EMSCRIPTEN
-		fsSource = std::string(WEBPREAMBLE) + fsSource;
-		compfsSource = std::string(WEBPREAMBLE) + compfsSource;
-		#endif
-		const char * c_vsSource = vsSource.c_str();
-		const char * c_fsSource = fsSource.c_str();
-		const char * c_ivsSource = ivsSource.c_str();
-		const char * c_compfsSource = compfsSource.c_str();
-	#endif
-
-	vs = glCreateShader(GL_VERTEX_SHADER);
-	#ifdef __DUETTO__
-	webGLES->shaderSource(webGLESLookupWebGLShader(vs), *c_vsSource);
-	#else
-	glShaderSource(vs, 1, &c_vsSource, NULL);
-	#endif
-	glCompileShader(vs);
-	printLog(vs,"vertex shader:");
-
-	ivs = glCreateShader(GL_VERTEX_SHADER);
-	#ifdef __DUETTO__
-	webGLES->shaderSource(webGLESLookupWebGLShader(ivs), *c_ivsSource);
-	#else
-	glShaderSource(ivs, 1, &c_ivsSource, NULL);
-	#endif
-	glCompileShader(ivs);
-	printLog(ivs,"ident vertex shader:");
-
-	fs = glCreateShader(GL_FRAGMENT_SHADER);
-	#ifdef __DUETTO__
-	webGLES->shaderSource(webGLESLookupWebGLShader(fs), *c_fsSource);
-	#else
-	glShaderSource(fs, 1, &c_fsSource, NULL);
-	#endif
-	glCompileShader(fs);
-	printLog(fs, "fragment shader:");
-
-	compfs = glCreateShader(GL_FRAGMENT_SHADER);
-	#ifdef __DUETTO__
-	webGLES->shaderSource(webGLESLookupWebGLShader(compfs), *c_compfsSource);
-	#else
-	glShaderSource(compfs, 1, &c_compfsSource, NULL);
-	#endif
-	glCompileShader(compfs);
-	printLog(compfs, "completeness fragment shader:");
+	GLuint vs     = filetoshader(fileloader, GL_VERTEX_SHADER, "shader.vert"), /* Vertex Shader for pieces */
+	       ivs    = filetoshader(fileloader, GL_VERTEX_SHADER, "shaderident.vert"), /* Vertex Shader for everything else */
+	       fs     = filetoshader(fileloader, GL_FRAGMENT_SHADER, "shader.frag"), /* Fragment Shader with textures */
+	       compfs = filetoshader(fileloader, GL_FRAGMENT_SHADER, "shadercomp.frag"); /* Fragment Shader for bars (no textures) */
+;
 
 	sp = glCreateProgram();
 	glAttachShader(sp, vs);
