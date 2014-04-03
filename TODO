@@ -6,7 +6,7 @@ cutting: WIP
 
 			nontetris: /home/daniele/proj/cnontetris/srclib/Box2D/Box2D/Collision/Shapes/b2PolygonShape.cpp:126: void b2PolygonShape::Set(const b2Vec2*, int32): Assertion `3 <= count && count <= 8' failed.
 			nontetris: /home/daniele/proj/cnontetris/srclib/Box2D/Box2D/Collision/Shapes/b2PolygonShape.cpp:119: b2Vec2 ComputeCentroid(const b2Vec2*, int32): Assertion `area > 1.19209289550781250000e-7F' failed.
-			nontetris: /home/daniele/proj/cnontetris/srclib/Box2D/Box2D/Collision/Shapes/b2PolygonShape.cpp:213: void b2PolygonShape::Set(const b2Vec2*, int32): Assertion `edge.LengthSquared() > 1.19209289550781250000e-7F * 1.19209289550781250000e-7F' failed.
+			#nontetris: /home/daniele/proj/cnontetris/srclib/Box2D/Box2D/Collision/Shapes/b2PolygonShape.cpp:213: void b2PolygonShape::Set(const b2Vec2*, int32): Assertion `edge.LengthSquared() > 1.19209289550781250000e-7F * 1.19209289550781250000e-7F' failed.
 			nontetris: /home/daniele/proj/cnontetris/srclib/Box2D/Box2D/Dynamics/b2Body.cpp:341: void b2Body::ResetMassData(): Assertion `m_I > 0.0f' failed.
 
 achievements

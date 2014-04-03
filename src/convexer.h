@@ -166,7 +166,7 @@ std::vector<polygon<T> > convexer(polygon<T> p)
 	// from polygonA
 	// TODO: This is slow (A*B, number of the vertices)
 
-	int mindistB_index;
+	int mindistB_index = 0;
 	T mindistB = std::numeric_limits<T>::infinity();
 	for (int i = 0; i < polygonB.size(); ++i)
 	{
@@ -180,7 +180,7 @@ std::vector<polygon<T> > convexer(polygon<T> p)
 	}
 
 	// Also evaluates the minimum distance from each element of A to B
-	int mindistA_index;
+	int mindistA_index = 0;
 	T mindistA = std::numeric_limits<T>::infinity();
 	for (int i = 0; i < polygonA.size(); ++i)
 	{
