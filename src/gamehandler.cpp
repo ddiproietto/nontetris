@@ -363,7 +363,7 @@ void GameHandler::step_physic()
 		phh.iteratepieces([&](PhysicPiece * php){
 			nopiece = false;
 			//If piece fallen outside of the screen
-			if (php->getX() > gameopt.rows + 4 * gameopt.rowwidth )
+			if (php->getY() > gameopt.rows + 4 * gameopt.rowwidth )
 			{
 				GamePiece * pgp = static_cast<GamePiece*>(php->getUserData());
 				deletepiece(pgp);

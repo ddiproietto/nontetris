@@ -400,6 +400,8 @@ GraphicHandler::~GraphicHandler()
 	#ifndef __DUETTO__
 	#if GLFW_VERSION_MAJOR == 3
 	glfwDestroyWindow(glfwwindow);
+	#else
+	glfwCloseWindow();
 	#endif
 	glfwTerminate();
 	#endif
