@@ -37,7 +37,6 @@ extern "C" {
 
 namespace
 {
-	const double PHYSICSTEP = 1.0/60.0;
 	bool running = true;
 	int timerHandler;
 
@@ -69,24 +68,28 @@ namespace
 	void allloaded(const FileLoader & fl)
 	{
 
-		GraphicOptions gopt =
+		const GameOptions gameopt =
 		{
+			.gametype = GameOptions::CUTTING,
+
+			.rows     = 18.0,
+			.columns  = 10.25,
+			.rowwidth = 1.0,
+
+			.cuttingrowarea = 8.0,
+			.updatebarsfreq = 0.2,
+
+			.physicstep = 1.0/60.0,
+
 			.width      = 600,
 			.height     = 540,
 			.fullscreen = false,
+			.piecesAA   = 4,
 		};
-		GameOptions gameopt =
-		{
-			.rows = 18,
-			.columns = 10.25,
-			.rowwidth = 1.0,
-			.cuttingrowarea = 8.0,
-			.updatebarsfreq = 0.2,
-		};
-		pgh = new GameHandler(gopt, gameopt, fileloader, PHYSICSTEP);
+		pgh = new GameHandler(gameopt, fileloader);
 
 		oneiterationwrappergraphic();
-		timerHandler = client::setInterval(client::Callback(oneiterationwrapperlogic), PHYSICSTEP*1000);
+		timerHandler = client::setInterval(client::Callback(oneiterationwrapperlogic), gameopt.physicstep*1000);
 	}
 }
 

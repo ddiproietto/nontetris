@@ -57,7 +57,7 @@ void PhysicHandler::PhysicHandlerContactListener::BeginContact(b2Contact* contac
 	}
 }
 
-PhysicHandler::PhysicHandler(float w_width, float w_height, double pstep):world(b2Vec2(0.0F, 15.625F)), w_width(w_width), w_height(w_height), fallingpiece(NULL), stepInterval(pstep), accelerating(false)
+PhysicHandler::PhysicHandler(GameOptions _gameopt):gameopt(_gameopt),  world(b2Vec2(0.0F, 15.625F)), fallingpiece(NULL), accelerating(false)
 {
 	b2BodyDef bodyDef;
 	b2FixtureDef fixDef;
@@ -67,9 +67,9 @@ PhysicHandler::PhysicHandler(float w_width, float w_height, double pstep):world(
 	piecepointer = &groundwall;
 	piecepointer->type = PhysicPiece::GROUND;
 	bodyDef.type = b2_staticBody;
-	bodyDef.position.Set(w_width/2, w_height +0.5F);
+	bodyDef.position.Set(gameopt.columns/2, gameopt.rows +0.5F);
 	bodyDef.userData = piecepointer;
-	polShape.SetAsBox(w_width/2, 0.5F);
+	polShape.SetAsBox(gameopt.columns/2, 0.5F);
 	fixDef.shape = &polShape;
 	fixDef.density = 32.0F * 32.0F;
 	piecepointer->ptr = world.CreateBody(&bodyDef);
@@ -80,7 +80,7 @@ PhysicHandler::PhysicHandler(float w_width, float w_height, double pstep):world(
 	bodyDef.type = b2_staticBody;
 	bodyDef.position.Set(-0.5F, 0);
 	bodyDef.userData = piecepointer;
-	polShape.SetAsBox(0.5F, w_height);
+	polShape.SetAsBox(0.5F, gameopt.rows);
 	fixDef.shape = &polShape;
 	fixDef.density = 32.0F * 32.0F;
 	fixDef.friction = 0.00001;
@@ -89,9 +89,9 @@ PhysicHandler::PhysicHandler(float w_width, float w_height, double pstep):world(
 	piecepointer = &rightwall;
 	piecepointer->type = PhysicPiece::RIGHT;
 	bodyDef.type = b2_staticBody;
-	bodyDef.position.Set(w_width + 0.5F, 0);
+	bodyDef.position.Set(gameopt.columns + 0.5F, 0);
 	bodyDef.userData = piecepointer;
-	polShape.SetAsBox(0.5F, w_height);
+	polShape.SetAsBox(0.5F, gameopt.rows);
 	fixDef.shape = &polShape;
 	fixDef.density = 32.0F * 32.0F;
 	fixDef.friction = 0.00001;
@@ -200,11 +200,11 @@ void PhysicHandler::step(int level, std::function<void(float x, float y)> cb)
 		b2Vec2 v = fallingpiece->GetLinearVelocity();
 		if( v.y > 3.125 + level*0.21875)
 		{
-			v.y -= 75 * stepInterval;
+			v.y -= 75 * gameopt.physicstep;
 			fallingpiece->SetLinearVelocity(v);
 		}
 	}
-	world.Step(stepInterval, 8, 3);
+	world.Step(gameopt.physicstep, 8, 3);
 	accelerating = false;
 	if(contactlistener.callcollision && fallingpiece != NULL)
 	{
@@ -278,11 +278,6 @@ void PhysicHandler::getpieces_in_rect(float x0, float y0, float x1, float y1, st
 			continue;
 		cb(php);
 	}
-}
-
-float PhysicHandler::getStepInterval()
-{
-	return stepInterval;
 }
 
 void PhysicHandler::gameover()

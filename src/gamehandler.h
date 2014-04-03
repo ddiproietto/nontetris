@@ -25,18 +25,9 @@
 #include "physichandler.h"
 #include "inputhandler.h"
 
-#include <list>
+#include "gameoptions.h"
+
 #include <vector>
-
-struct GameOptions
-{
-	double rows;
-	double columns;
-	double rowwidth;
-	double cuttingrowarea;
-
-	float updatebarsfreq;
-};
 
 class GameHandler
 {
@@ -63,12 +54,12 @@ class GameHandler
 	void togglepause();
 	void updatelinearea();
 
-	GameOptions gameopt;
+	const GameOptions gameopt;
 
 	//State of the game
 	int score;
 	int level;
-	int lines;
+	int linesortiles;
 	enum GameState {RUNNING, GAMEOVER, CUTPAUSED, PAUSED, CUTPAUSED_PAUSED} gamestate;
 	int cutpausecontdown;
 	std::vector<bool> linesbeingcut;
@@ -82,7 +73,7 @@ class GameHandler
 	float updatebarscompleteness;
 
 public:
-	GameHandler(const GraphicOptions & gopt, const GameOptions & _gameopt, const FileLoader & fl, double physicstep);
+	GameHandler(const GameOptions & _gameopt, const FileLoader & fl);
 	void step_physic();
 	void step_graphic();
 	bool step_logic();

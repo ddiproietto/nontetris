@@ -25,6 +25,7 @@
 #include "Box2D/Box2D.h"
 #include "piece.h"
 
+#include "gameoptions.h"
 
 class PhysicHandler;
 
@@ -82,11 +83,9 @@ public:
 };
 class PhysicHandler
 {
+	const GameOptions gameopt;
 	b2World world;
-	float32 w_width;
-	float32 w_height;
 	b2Body * fallingpiece;
-	const float stepInterval;
 	bool accelerating;
 	PhysicPiece rightwall, leftwall, groundwall;
 	class PhysicHandlerContactListener : public b2ContactListener
@@ -97,7 +96,7 @@ class PhysicHandler
 		void BeginContact(b2Contact* contact);
 	} contactlistener;
 public:
-	PhysicHandler(float width, float height, double pstep = (1.0/60.0));
+	PhysicHandler(GameOptions _gameopt);
 	PhysicPiece * createpiece(const piece<float> &, float, float, float, void *, PhysicPiece::PhysicPieceType, int, float angvel = 0.0f, float gravscale = 1.0F);
 	void destroypiece(PhysicPiece * p);
 	void step(int level, std::function<void(float x, float y)> cb);
@@ -109,6 +108,5 @@ public:
 	void getpieces_in_rect(float x0, float y0, float x1, float y1, std::function <void(PhysicPiece *)> cb);
 	void gameover();
 	void untagfallingpiece();
-	float getStepInterval();
 };
 #endif //_PHYSIC_HANDLER_H

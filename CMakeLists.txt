@@ -72,7 +72,7 @@ if(NOT DEFINED DUETTO)
 
 	file(COPY src/shader.frag DESTINATION ${PROJECT_BINARY_DIR})
 	file(COPY src/shader.vert DESTINATION ${PROJECT_BINARY_DIR})
-	file(COPY src/shaderident.vert DESTINATION ${PROJECT_BINARY_DIR})
+	file(COPY src/shadercomp.frag DESTINATION ${PROJECT_BINARY_DIR})
 
 	file(COPY imgs/pieces DESTINATION ${PROJECT_BINARY_DIR}/imgs)
 	file(COPY imgs DESTINATION ${PROJECT_BINARY_DIR})

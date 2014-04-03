@@ -43,13 +43,13 @@ namespace
 			);
 }
 
-GameHandler::GameHandler(const GraphicOptions & gopt, const GameOptions & _gameopt, const FileLoader & fl, double physicstep):gameopt(_gameopt),score(0),level(0),lines(0),gamestate(RUNNING), updatebarscompleteness(1.0), nextpiece_rot(0.0), nextpiece_graphic(NULL)
+GameHandler::GameHandler(const GameOptions & _gameopt, const FileLoader & fl):gameopt(_gameopt),score(0),level(0),linesortiles(0),gamestate(RUNNING), updatebarscompleteness(1.0), nextpiece_rot(0.0), nextpiece_graphic(NULL)
 {
-	phphysic = new PhysicHandler (gameopt.columns, gameopt.rows, physicstep);
-	phgraphic = new GraphicHandler (gopt, fl, gameopt.rows, gameopt.rowwidth);
+	phphysic = new PhysicHandler (gameopt);
+	phgraphic = new GraphicHandler (gameopt, fl);
 	phinput = new InputHandler(phgraphic->toinput());
 
-	phgraphic->updatescore(lines, level, score);
+	phgraphic->updatescore(linesortiles, level, score);
 
 	for(float i = 0.0; i < gameopt.rows; i += gameopt.rowwidth)
 	{
@@ -284,15 +284,15 @@ void GameHandler::step_physic()
 	PhysicHandler &phh = *phphysic;
 	bool checklineandnewpiece = false, callgameover = false;
 
-	nextpiece_rot += phh.getStepInterval();
+	nextpiece_rot += gameopt.physicstep;
 	nextpiece_rot = fmod(nextpiece_rot, 2*M_PI);
 
 	phh.step(level, [&](float x, float y)
 	{
 		if(gamestate == GAMEOVER)
 			return;
-		//The falling piece has landed:
-		//time to generate another piece if the screen is not full
+		// The falling piece has landed:
+		// time to generate another piece if the screen is not full
 		phh.untagfallingpiece();
 
 		if( y > 0 )
@@ -300,7 +300,7 @@ void GameHandler::step_physic()
 		else
 			callgameover = true;
 	});
-	if (checklineandnewpiece)
+	if (checklineandnewpiece && gameopt.gametype == GameOptions::CUTTING)
 	{
 		float totalcuttedarea = 0.0;
 		int cuttedlines = 0;
@@ -320,10 +320,10 @@ void GameHandler::step_physic()
 			// Update score
 			int scoreadd = ceil(pow((cuttedlines*3),pow((totalcuttedarea/(10*cuttedlines)),10))*20+cuttedlines*cuttedlines*40);
 			score += scoreadd;
-			lines += cuttedlines;
-			level = lines/10;
+			linesortiles += cuttedlines;
+			level = linesortiles/10;
 
-			phgraphic->updatescore(lines, level, score);
+			phgraphic->updatescore(linesortiles, level, score);
 
 			// Set all pieces velocity to 0
 			phh.iteratepieces([&](PhysicPiece * php){
@@ -338,6 +338,15 @@ void GameHandler::step_physic()
 			return;
 		}
 
+		newrandompiece();
+	}
+	else if (checklineandnewpiece && gameopt.gametype == GameOptions::STACK)
+	{
+		score += 100;
+		linesortiles += 1;
+		level = 0;
+
+		phgraphic->updatescore(linesortiles, level, score);
 		newrandompiece();
 	}
 
@@ -373,11 +382,14 @@ void GameHandler::step_graphic()
 	GraphicHandler &grh = *phgraphic;
 	PhysicHandler &phh = *phphysic;
 
-	updatebarscompleteness += gameopt.updatebarsfreq;
-	if (updatebarscompleteness > 1.0)
+	if (gameopt.gametype == GameOptions::CUTTING)
 	{
-		updatebarscompleteness -= 1.0;
-		updatelinearea();
+		updatebarscompleteness += gameopt.updatebarsfreq;
+		if (updatebarscompleteness > 1.0)
+		{
+			updatebarscompleteness -= 1.0;
+			updatelinearea();
+		}
 	}
 	grh.beginrender();
 	phh.iteratepieces([&](PhysicPiece * php){

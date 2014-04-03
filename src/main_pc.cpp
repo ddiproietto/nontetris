@@ -41,29 +41,28 @@
 
 using namespace std;
 
-namespace
-{
-	const double PHYSICSTEP = 1.0/60.0;
-}
-
 int main(int argc, char * argv[])
 {
-	GraphicOptions gopt =
+	const GameOptions gameopt =
 	{
+		.gametype = GameOptions::CUTTING,
+
+		.rows     = 18.0,
+		.columns  = 10.25,
+		.rowwidth = 1.0,
+
+		.cuttingrowarea = 8.0,
+		.updatebarsfreq = 0.2,
+
+		.physicstep = 1.0/60.0,
+
 		.width      = 600,
 		.height     = 540,
 		.fullscreen = false,
-	};
-	GameOptions gameopt =
-	{
-		.rows = 18,
-		.columns = 10.25,
-		.rowwidth = 1.0,
-		.cuttingrowarea = 8.0,
-		.updatebarsfreq = 0.2,
+		.piecesAA   = 4,
 	};
 	FileLoader fl;
-	GameHandler gh(gopt, gameopt, fl, PHYSICSTEP);
+	GameHandler gh(gameopt, fl);
 
 	bool running = true;
 	auto next = std::chrono::steady_clock::now();
@@ -75,12 +74,12 @@ int main(int argc, char * argv[])
 		{
 			gh.step_physic();
 			running = gh.step_logic();
-			next+=(std::chrono::nanoseconds(static_cast<int>(1000000000*PHYSICSTEP)));
+			next+=(std::chrono::nanoseconds(static_cast<int>(1000000000*gameopt.physicstep)));
 		}
 #else
 		gh.step_physic();
 		running = gh.step_logic();
-		next+=(std::chrono::nanoseconds(static_cast<int>(1000000000*PHYSICSTEP)));
+		next+=(std::chrono::nanoseconds(static_cast<int>(1000000000*gameopt.physicstep)));
 #endif
 		gh.step_graphic();
 

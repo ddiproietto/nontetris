@@ -124,18 +124,17 @@ GLuint filetoshader(const FileLoader & fl, GLenum shadertype, const std::string 
 	return shader;
 }
 
-
-GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & fileloader, float _rows, float _rowwidth):width(gopt.width), height(gopt.height), vbo_score(0),rows(_rows), rowwidth(_rowwidth), RTVec_eye{0.0F}, PMatrix_eye{0.0F}, PMatrix_half{0.0F}, PMatrix_pieces{0.0F}
+GraphicHandler::GraphicHandler(const GameOptions & _gameopt, const FileLoader & fileloader):gameopt(_gameopt), vbo_score(0), RTVec_eye{0.0F}, PMatrix_eye{0.0F}, PMatrix_half{0.0F}, PMatrix_pieces{0.0F}
 {
 	#ifndef __DUETTO__
 	glfwInit();
 	#if GLFW_VERSION_MAJOR == 3
 	glfwWindowHint(GLFW_SAMPLES, 8);
-	glfwwindow = glfwCreateWindow(width, height, "nontetris", gopt.fullscreen?glfwGetPrimaryMonitor():NULL, NULL);
+	glfwwindow = glfwCreateWindow(gameopt.width, gameopt.height, "nontetris", gameopt.fullscreen?glfwGetPrimaryMonitor():NULL, NULL);
 	glfwMakeContextCurrent(glfwwindow);
 	#else
 	glfwOpenWindowHint(GLFW_FSAA_SAMPLES, 8);
-	glfwOpenWindow(width, height, 5, 6, 5, 8, 0, 0, gopt.fullscreen?GLFW_FULLSCREEN:GLFW_WINDOW );
+	glfwOpenWindow(gameopt.width, gameopt.height, 5, 6, 5, 8, 0, 0, gameopt.fullscreen?GLFW_FULLSCREEN:GLFW_WINDOW );
 	glfwSetWindowTitle("nontetris");
 	#endif
 		#ifndef EMSCRIPTEN
@@ -154,8 +153,7 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 
 
 	GLuint vs     = filetoshader(fileloader, GL_VERTEX_SHADER, "shader.vert"), /* Vertex Shader */
-	       fs     = filetoshader(fileloader, GL_FRAGMENT_SHADER, "shader.frag"), /* Fragment Shader with textures */
-	       compfs = filetoshader(fileloader, GL_FRAGMENT_SHADER, "shadercomp.frag"); /* Fragment Shader for bars (no textures) */
+	       fs     = filetoshader(fileloader, GL_FRAGMENT_SHADER, "shader.frag"); /* Fragment Shader with textures */
 
 	isp = glCreateProgram();
 	glAttachShader(isp, vs);
@@ -163,40 +161,51 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 	glLinkProgram(isp);
 	printLog(isp, "linking global shader:");
 
-	compsp = glCreateProgram();
-	glAttachShader(compsp, vs);
-	glAttachShader(compsp, compfs);
-	glLinkProgram(compsp);
-	printLog(compsp, "linking completeness shader:");
-
 	glUseProgram(isp);
 	aGlobalVertexPositionLoc = glGetAttribLocation(isp, "aVertexPosition");
 	aGlobalTextureCoordLoc = glGetAttribLocation(isp, "aTextureCoord");
 	uGlobalPMatrixLoc = glGetUniformLocation(isp, "uPMatrix");
 	uGlobalRTVecLoc = glGetUniformLocation(isp, "uRTVec");
 
-	glUseProgram(compsp);
-	aCompVertexPositionLoc = glGetAttribLocation(compsp, "aVertexPosition");
-	aCompTextureCoordLoc = glGetAttribLocation(compsp, "aTextureCoord");
-	uCompLoc = glGetUniformLocation(compsp, "uComp");
-	uCompColorLoc = glGetUniformLocation(compsp, "uColor");
-	uCompPMatrixLoc = glGetUniformLocation(compsp, "uPMatrix");
-	uCompRTVecLoc = glGetUniformLocation(compsp, "uRTVec");
+
+	if (gameopt.gametype == GameOptions::CUTTING)
+	{
+		GLuint compfs = filetoshader(fileloader, GL_FRAGMENT_SHADER, "shadercomp.frag"); /* Fragment Shader for bars (no textures) */
+		compsp = glCreateProgram();
+		glAttachShader(compsp, vs);
+		glAttachShader(compsp, compfs);
+		glLinkProgram(compsp);
+		printLog(compsp, "linking completeness shader:");
+
+		glUseProgram(compsp);
+		aCompVertexPositionLoc = glGetAttribLocation(compsp, "aVertexPosition");
+		aCompTextureCoordLoc = glGetAttribLocation(compsp, "aTextureCoord");
+		uCompLoc = glGetUniformLocation(compsp, "uComp");
+		uCompColorLoc = glGetUniformLocation(compsp, "uColor");
+		uCompPMatrixLoc = glGetUniformLocation(compsp, "uPMatrix");
+		uCompRTVecLoc = glGetUniformLocation(compsp, "uRTVec");
+	}
 
 	//TEXTURE
 	glGenTextures(1, &tex_background);
 	glBindTexture( GL_TEXTURE_2D, tex_background);
 	unsigned int twidth, theight;
 
+	const char * backgroundfilename;
+	if (gameopt.gametype == GameOptions::CUTTING)
+		backgroundfilename = DATAPATHPREAMBLE "imgs/newgamebackgroundgamea.png";
+	else if (gameopt.gametype == GameOptions::STACK)
+		backgroundfilename = DATAPATHPREAMBLE "imgs/newgamebackground.png";
+
 	#ifndef __DUETTO__
 	unsigned char * image;
-	lodepng_decode24_file(&image, &twidth, &theight, DATAPATHPREAMBLE "imgs/newgamebackgroundgamea.png");
+	lodepng_decode24_file(&image, &twidth, &theight, backgroundfilename);
 
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, twidth, theight, 0, GL_RGB,
 			GL_UNSIGNED_BYTE, image );
 	free(image);
 	#else
-	webGLES->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById("imgs/newgamebackgroundgamea.png")));
+	webGLES->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById(backgroundfilename)));
 	#endif
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
@@ -273,31 +282,34 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 	glGenerateMipmap( GL_TEXTURE_2D );
 	std::fill(vbo_score_num_vertices.begin(), vbo_score_num_vertices.end(), 0);
 
-	glGenBuffers(1, &vbo_completeness);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_completeness);
-	std::vector<GLfloat> vertices_side;
-	for(float i = 0.0; i < rows; i += rowwidth)
+	if (gameopt.gametype == GameOptions::CUTTING)
 	{
-		vertices_side.insert(vertices_side.end(),
-			{-1,                1.0F - i * (2.0F/rows),             0, 1,
-			 -1,                1.0F - (i+rowwidth) *(2.0F/rows),   0, 0,
-			 -1 + 6*(2.0F/160), 1.0F - i * (2.0F/rows),             1, 1,
-			 -1 + 6*(2.0F/160), 1.0F - (i+rowwidth) *(2.0F/rows),   1, 0,  });
-	}
-	glBufferData(GL_ARRAY_BUFFER, vertices_side.size()*sizeof(float), vertices_side.data(), GL_STATIC_DRAW);
+		glGenBuffers(1, &vbo_completeness);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_completeness);
+		std::vector<GLfloat> vertices_side;
+		for(float i = 0.0; i < gameopt.rows; i += gameopt.rowwidth)
+		{
+			vertices_side.insert(vertices_side.end(),
+				{-1,                1.0F - i * (2.0F/gameopt.rows),             0, 1,
+				 -1,                1.0F - (i+gameopt.rowwidth) *(2.0F/gameopt.rows),   0, 0,
+				 -1 + 6*(2.0F/160), 1.0F - i * (2.0F/gameopt.rows),             1, 1,
+				 -1 + 6*(2.0F/160), 1.0F - (i+gameopt.rowwidth) *(2.0F/gameopt.rows),   1, 0,  });
+		}
+		glBufferData(GL_ARRAY_BUFFER, vertices_side.size()*sizeof(float), vertices_side.data(), GL_STATIC_DRAW);
 
-	glGenBuffers(1, &vbo_lines);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_lines);
-	std::vector<GLfloat> vertices_lines;
-	for(float i = 0.0; i < rows; i += rowwidth)
-	{
-		vertices_lines.insert(vertices_lines.end(),
-			{-1 + 14*(2.0F/160), 1.0F - i * (2.0F/rows),             0, 1,
-			 -1 + 14*(2.0F/160), 1.0F - (i+rowwidth) *(2.0F/rows),   0, 0,
-			 -1 + 96*(2.0F/160), 1.0F - i * (2.0F/rows),             1, 1,
-			 -1 + 96*(2.0F/160), 1.0F - (i+rowwidth) *(2.0F/rows),   1, 0,  });
+		glGenBuffers(1, &vbo_lines);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_lines);
+		std::vector<GLfloat> vertices_lines;
+		for(float i = 0.0; i < gameopt.rows; i += gameopt.rowwidth)
+		{
+			vertices_lines.insert(vertices_lines.end(),
+				{-1 + 14*(2.0F/160), 1.0F - i * (2.0F/gameopt.rows),             0, 1,
+				 -1 + 14*(2.0F/160), 1.0F - (i+gameopt.rowwidth) *(2.0F/gameopt.rows),   0, 0,
+				 -1 + 96*(2.0F/160), 1.0F - i * (2.0F/gameopt.rows),             1, 1,
+				 -1 + 96*(2.0F/160), 1.0F - (i+gameopt.rowwidth) *(2.0F/gameopt.rows),   1, 0,  });
+		}
+		glBufferData(GL_ARRAY_BUFFER, vertices_lines.size()*sizeof(float), vertices_lines.data(), GL_STATIC_DRAW);
 	}
-	glBufferData(GL_ARRAY_BUFFER, vertices_lines.size()*sizeof(float), vertices_lines.data(), GL_STATIC_DRAW);
 
 	glGenBuffers(1, &vbo_piece);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_piece);
@@ -311,7 +323,11 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 
 	RTVec_eye[1] = 1.0F;
 
-	float left = -1.75F, right = 18.25F, top = 0.0F, bottom = 18.0F, far = -1.0F, near = 1.0F;
+	float left, right, top = 0.0F, bottom = 18.0F, far = -1.0F, near = 1.0F;
+	if (gameopt.gametype == GameOptions::CUTTING)
+		left = -1.75F, right = 18.25F;
+	else if (gameopt.gametype == GameOptions::STACK)
+		left = -2.0F, right = 18.0F;
 	PMatrix_pieces[0] = -2 / (left - right);
 	PMatrix_pieces[5] = -2 / (bottom - top);
 	PMatrix_pieces[10] = 2 / (near - far);
@@ -325,13 +341,15 @@ GraphicHandler::GraphicHandler(const GraphicOptions & gopt, const FileLoader & f
 	PMatrix_half[0] = PMatrix_half[5] = PMatrix_half[10] = 0.5F;
 	PMatrix_half[15] = 1.0F;
 
-	glUseProgram(compsp);
+	if (gameopt.gametype == GameOptions::CUTTING)
+	{
+		glUseProgram(compsp);
 
-	glUniformMatrix4fv(uCompPMatrixLoc, 1, false, PMatrix_eye);
-	glUniform4fv(uCompRTVecLoc, 1, RTVec_eye);
+		glUniformMatrix4fv(uCompPMatrixLoc, 1, false, PMatrix_eye);
+		glUniform4fv(uCompRTVecLoc, 1, RTVec_eye);
+	}
 
 	glGenFramebuffers(1, &piece_fbo);
-
 }
 
 template <class vec>
@@ -450,15 +468,15 @@ GraphicPiece * GraphicHandler::createpiece(piece<float> pie)
 		}
 	}
 
+	glUseProgram(isp);
+	glUniform4fv(uGlobalRTVecLoc, 1, RTVec_eye);
+	glUniformMatrix4fv(uGlobalPMatrixLoc, 1, false, PMatrix_half);
+
 	glGenBuffers(1, &VBOid);
 	glBindBuffer(GL_ARRAY_BUFFER, VBOid);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(float), vertices.data(), GL_STATIC_DRAW);
 
 	GLuint piecetex;
-
-	glUseProgram(isp);
-	glUniform4fv(uGlobalRTVecLoc, 1, RTVec_eye);
-	glUniformMatrix4fv(uGlobalPMatrixLoc, 1, false, PMatrix_half);
 
 	glEnableVertexAttribArray(aGlobalVertexPositionLoc);
 	glEnableVertexAttribArray(aGlobalTextureCoordLoc);
@@ -469,9 +487,8 @@ GraphicPiece * GraphicHandler::createpiece(piece<float> pie)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	float imgquad = height/rows;
-	float piecesAA = 4;
-	int piecefbosize = findsmallestpot(piecesAA*4*imgquad);
+	float imgquad = gameopt.height/gameopt.rows;
+	int piecefbosize = findsmallestpot(gameopt.piecesAA*4*imgquad);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, piecefbosize, piecefbosize, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glGenerateMipmap(GL_TEXTURE_2D);
@@ -511,7 +528,7 @@ void GraphicHandler::deletepiece(GraphicPiece * pgp)
 
 void GraphicHandler::beginrender()
 {
-	glViewport(0, 0, width, height);
+	glViewport(0, 0, gameopt.width, gameopt.height);
 	glClearColor(1.0, 1.0, 1.0, 1.0);
 	glClear( GL_COLOR_BUFFER_BIT );
 
@@ -565,44 +582,47 @@ void GraphicHandler::endrender(const std::vector<float> & linecompleteness, cons
 	glDisableVertexAttribArray(aGlobalVertexPositionLoc);
 	glDisableVertexAttribArray(aGlobalTextureCoordLoc);
 
-	// LINE COMPLETENESS
-
-	glUseProgram(compsp);
-
-	glEnableVertexAttribArray(aCompVertexPositionLoc);
-	glEnableVertexAttribArray(aCompTextureCoordLoc);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_completeness);
-	glVertexAttribPointer(aCompVertexPositionLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)0);
-	glVertexAttribPointer(aCompTextureCoordLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)(2*sizeof(GLfloat)));
-	int lineind = 0;
-	for(float i = 0.0; i < rows; i += rowwidth, ++lineind)
+	if (gameopt.gametype== GameOptions::CUTTING)
 	{
-		glUniform1f(uCompLoc, linecompleteness[i]);
-		float colbase;
-		colbase = 1.0 - (0.8*linecompleteness[i]);
-		if (linecompleteness[i]>=1.0)
-			colbase -= 0.2;
-		glUniform3f(uCompColorLoc, colbase, colbase, colbase);
-		glDrawArrays(GL_TRIANGLE_STRIP, lineind*4, 4);
-	}
+		// LINE COMPLETENESS
 
-	// LINE CUT BLACK
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_lines);
-	glVertexAttribPointer(aCompVertexPositionLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)0);
-	glVertexAttribPointer(aCompTextureCoordLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)(2*sizeof(GLfloat)));
-	glUniform3f(uCompColorLoc, 205.0F/255.0F, 175.0F/255.0F, 145.0F/255.0F);
-	glUniform1f(uCompLoc, 1.0);
-	lineind = 0;
-	for(float i = 0.0; i < rows; i += rowwidth, ++lineind)
-	{
-		if(linecutblack[i])
+		glUseProgram(compsp);
+
+		glEnableVertexAttribArray(aCompVertexPositionLoc);
+		glEnableVertexAttribArray(aCompTextureCoordLoc);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_completeness);
+		glVertexAttribPointer(aCompVertexPositionLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)0);
+		glVertexAttribPointer(aCompTextureCoordLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)(2*sizeof(GLfloat)));
+		int lineind = 0;
+		for(float i = 0.0; i < gameopt.rows; i += gameopt.rowwidth, ++lineind)
 		{
+			glUniform1f(uCompLoc, linecompleteness[i]);
+			float colbase;
+			colbase = 1.0 - (0.8*linecompleteness[i]);
+			if (linecompleteness[i]>=1.0)
+				colbase -= 0.2;
+			glUniform3f(uCompColorLoc, colbase, colbase, colbase);
 			glDrawArrays(GL_TRIANGLE_STRIP, lineind*4, 4);
 		}
-	}
 
-	glDisableVertexAttribArray(aCompVertexPositionLoc);
-	glDisableVertexAttribArray(aCompTextureCoordLoc);
+		// LINE CUT BLACK
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_lines);
+		glVertexAttribPointer(aCompVertexPositionLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)0);
+		glVertexAttribPointer(aCompTextureCoordLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)(2*sizeof(GLfloat)));
+		glUniform3f(uCompColorLoc, 205.0F/255.0F, 175.0F/255.0F, 145.0F/255.0F);
+		glUniform1f(uCompLoc, 1.0);
+		lineind = 0;
+		for(float i = 0.0; i < gameopt.rows; i += gameopt.rowwidth, ++lineind)
+		{
+			if(linecutblack[i])
+			{
+				glDrawArrays(GL_TRIANGLE_STRIP, lineind*4, 4);
+			}
+		}
+
+		glDisableVertexAttribArray(aCompVertexPositionLoc);
+		glDisableVertexAttribArray(aCompTextureCoordLoc);
+	}
 
 	#ifndef __DUETTO__
 	#if GLFW_VERSION_MAJOR == 3

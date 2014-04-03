@@ -62,21 +62,25 @@ namespace
 
 int main(int argc, char * argv[])
 {
-	GraphicOptions gopt =
+	const GameOptions gameopt =
 	{
+		.gametype = GameOptions::CUTTING,
+
+		.rows     = 18.0,
+		.columns  = 10.25,
+		.rowwidth = 1.0,
+
+		.cuttingrowarea = 8.0,
+		.updatebarsfreq = 0.2,
+
+		.physicstep = 1.0/60.0,
+
 		.width      = 600,
 		.height     = 540,
 		.fullscreen = false,
+		.piecesAA   = 4,
 	};
-	GameOptions gameopt =
-	{
-		.rows = 18,
-		.columns = 10.25,
-		.rowwidth = 1.0,
-		.cuttingrowarea = 8.0,
-		.updatebarsfreq = 0.2,
-	};
-	pgh = new GameHandler (gopt, gameopt, fileloader, PHYSICSTEP);
+	pgh = new GameHandler (gameopt, fileloader);
 	emscripten_set_main_loop(oneiterationwrapper, 0, 0);
 
 	return EXIT_SUCCESS;

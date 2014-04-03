@@ -47,12 +47,7 @@
 
 #include "graphictoinput.h"
 
-struct GraphicOptions
-{
-	int width;
-	int height;
-	bool fullscreen;
-};
+#include "gameoptions.h"
 
 struct GraphicPiece
 {
@@ -77,10 +72,7 @@ class GraphicHandler
 	GLuint vbo_lines;
 	GLuint vbo_piece;
 
-	int width;
-	int height;
-	float rows;
-	float rowwidth;
+	const GameOptions gameopt;
 
 	GLuint isp, compsp;
 
@@ -102,7 +94,7 @@ class GraphicHandler
 	GLfloat RTVec_eye[4];
 
 public:
-	GraphicHandler(const GraphicOptions & gopt, const FileLoader & fileloader, float _rows, float _rowwidth);
+	GraphicHandler(const GameOptions & gameopt, const FileLoader & fileloader);
 	~GraphicHandler();
 	GraphicPiece * createpiece(piece<float> pol);
 	void deletepiece(GraphicPiece * pgp);
