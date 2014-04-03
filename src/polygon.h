@@ -271,6 +271,23 @@ public:
 		
 	}
 
+	void removetoonearvertices()
+	{
+		size_t s = vertices.size();
+		for(int i = 0; i < s; ++i)
+		{
+			point<T> segment = vertices[i] - vertices[normalize_index(i-1)];
+			T distsquared = segment*segment;
+
+			if (distsquared < 1.19209289550781250000e-7F) // DISTANCE TOO SMALL (e.g. for box2d)
+			{
+				vertices.erase(vertices.begin()+normalize_index(i));
+				i--;
+				s--;
+			}
+		}
+	}
+
 	T area() const
 	{
 		T doublearea = 0.0;

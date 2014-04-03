@@ -66,7 +66,8 @@ auto tests = make_array(
 		testcase({ { -1.5,-1}, { 1.5,-1}, { 1.5,1}, { 0.5,1}, { 0.5,0}, { -1.5,0} }, 0, 1),
 		testcase({ {0, -2}, {1, -1}, {0, 0}, {-1, -1} }, 0, 1),
 		testcase(polygon <float> ({ { -0.5,-1}, { 1.5,-1}, { 1.5,0}, { 0.5,0}, { 0.5,1}, { -1.5,1}, { -1.5,0}, { -0.5,0} }).returnrotateangle(-M_PI/2 -M_PI/16 -M_PI/32), -0.7, 0.7),
-		testcase(polygon <float> ({ { -0.5,-1}, { 1.5,-1}, { 1.5,0}, { 0.5,0}, { 0.5,1}, { -1.5,1}, { -1.5,0}, { -0.5,0} }).returnrotateangle(-M_PI/2 + 66*M_PI/128).returntranslate(0, 0.5).returnrotateangle(26*M_PI/128), 0, 1)
+		testcase(polygon <float> ({ { -0.5,-1}, { 1.5,-1}, { 1.5,0}, { 0.5,0}, { 0.5,1}, { -1.5,1}, { -1.5,0}, { -0.5,0} }).returnrotateangle(-M_PI/2 + 66*M_PI/128).returntranslate(0, 0.5).returnrotateangle(26*M_PI/128), 0, 1),
+		testcase(polygon <float> ({ { -1.5,-1}, { 0.5,-1}, { 0.5,0}, { 1.5,0}, { 1.5,1}, { -0.5,1}, { -0.5,0}, { -1.5,0} }).returnrotateangle(-2.06140161).returntranslate(6.84805489, 13.3825932), 12, 13)
 
 		);
 

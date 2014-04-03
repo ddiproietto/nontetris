@@ -155,6 +155,11 @@ std::vector<polygon<T> > convexer(polygon<T> p)
 	polygonA.removealignedvertices();
 	polygonB.removealignedvertices();
 
+	// The convexer can create a point. But this point maybe too near to
+	// another one. This should be avoided because it drives box2d crazy
+	polygonA.removetoonearvertices();
+	polygonB.removetoonearvertices();
+
 	// Now, try to shift polygonB such that first element also belong to polygonA
 	// Since that may not be possible, because of vertices removal,
 	// let's put in the first place the polygonB vertex that has minimal distance
