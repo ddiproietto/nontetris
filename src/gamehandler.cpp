@@ -43,15 +43,20 @@ namespace
 			);
 }
 
-GameHandler::GameHandler(const GameOptions & _gameopt, const FileLoader & fl):gameopt(_gameopt),score(0),level(0),linesortiles(0),gamestate(RUNNING), updatebarscompleteness(1.0), nextpiece_rot(0.0), nextpiece_graphic(NULL)
+GameHandler::GameHandler(const GameOptions & _gameopt, const FileLoader & fl):gameopt(_gameopt),score(0),level(0),linesortiles(0),gamestate(RUNNING), updatebarscompleteness(1.0), nextpiece_rot(0.0)
 {
 	phphysic = new PhysicHandler (gameopt);
 	phgraphic = new GraphicHandler (gameopt, fl);
 	phinput = new InputHandler(phgraphic->toinput());
 
+	for (const auto & p: pieces)
+	{
+		graphicpieces_uncutted.emplace_back(phgraphic->createpiece(p));
+	}
+
 	phgraphic->updatescore(linesortiles, level, score);
 
-	for(float i = 0.0; i < gameopt.rows; i += gameopt.rowwidth)
+	for (float i = 0.0; i < gameopt.rows; i += gameopt.rowwidth)
 	{
 		linecompleteness.push_back(0.0);
 		linearea.push_back(0.0);
@@ -84,18 +89,28 @@ void GameHandler::togglepause()
 		gamestate = CUTPAUSED;
 }
 
-GameHandler::GamePiece * GameHandler::newpiece(const piece<float> & p, float x, float y, float rot, PhysicPiece::PhysicPieceType type, float angvel, float gravscale)
+GameHandler::GamePiece * GameHandler::newpiece(const piece<float> & p, float x, float y, float rot, PhysicPiece::PhysicPieceType type, GraphicPiece * sharedgp = NULL)
 {
 	//TODO: free this memory at exit
 	auto * gamepiece = new GamePiece(p);
-	gamepiece->php = phphysic->createpiece(p, x, y, rot, gamepiece, type, level, angvel, gravscale);
-	gamepiece->grp = phgraphic->createpiece(p);
+	gamepiece->php = phphysic->createpiece(p, x, y, rot, gamepiece, type, level);
+	if (sharedgp)
+	{
+		gamepiece->graphicshared = true;
+		gamepiece->grp = sharedgp;
+	}
+	else
+	{
+		gamepiece->graphicshared = false;
+		gamepiece->grp = phgraphic->createpiece(p);
+	}
 	return gamepiece;
 }
 
 void GameHandler::deletepiece(GamePiece* pgp)
 {
-	phgraphic->deletepiece(pgp->grp);
+	if (!pgp->graphicshared)
+		phgraphic->deletepiece(pgp->grp);
 	phphysic->destroypiece(pgp->php);
 	delete pgp;
 }
@@ -117,14 +132,12 @@ void GameHandler::randomnextpiece()
 
 	nextpiece_type = randpieceindex;
 	auto & p = pieces[randpieceindex];
-	if (nextpiece_graphic)
-		phgraphic->deletepiece(nextpiece_graphic);
-	nextpiece_graphic = phgraphic->createpiece(p);
 }
+
 void GameHandler::newrandompiece()
 {
 //Move nextpiece to falling
-	newpiece(pieces[nextpiece_type], gameopt.columns/2, -1, 0.0, PhysicPiece::FALLING_PIECE);
+	newpiece(pieces[nextpiece_type], gameopt.columns/2, -1, 0.0, PhysicPiece::FALLING_PIECE, graphicpieces_uncutted[nextpiece_type].get());
 //Create randomnextpiece
 	randomnextpiece();
 }
@@ -353,8 +366,6 @@ void GameHandler::step_physic()
 	if(callgameover)
 	{
 		phh.gameover();
-		phgraphic->deletepiece(nextpiece_graphic);
-		nextpiece_graphic = NULL;
 		gamestate = GAMEOVER;
 	}
 	if(gamestate == GAMEOVER)
@@ -395,8 +406,8 @@ void GameHandler::step_graphic()
 	phh.iteratepieces([&](PhysicPiece * php){
 		grh.renderpiece(php->getX(),php->getY(),php->getRot(),static_cast<GamePiece *>(php->getUserData())->grp);
 	});
-	if (nextpiece_graphic)
-		grh.renderpiece(gameopt.columns + 5.0F, 15.0F, nextpiece_rot, nextpiece_graphic);
+	if (gamestate != GAMEOVER)
+		grh.renderpiece(gameopt.columns + 5.0F, 15.0F, nextpiece_rot, graphicpieces_uncutted[nextpiece_type].get());
 	if ((gamestate == CUTPAUSED || gamestate == CUTPAUSED_PAUSED) && (cutpausecontdown%30) > 15 )
 		grh.endrender(linecompleteness, linesbeingcut);
 	else

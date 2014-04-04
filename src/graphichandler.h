@@ -96,7 +96,7 @@ class GraphicHandler
 public:
 	GraphicHandler(const GameOptions & gameopt, const FileLoader & fileloader);
 	~GraphicHandler();
-	GraphicPiece * createpiece(piece<float> pol);
+	GraphicPiece * createpiece(const piece<float> & pol);
 	void deletepiece(GraphicPiece * pgp);
 	void beginrender();
 	void renderpiece(float x, float y, float rot, GraphicPiece * gp);

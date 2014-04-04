@@ -28,6 +28,7 @@
 #include "gameoptions.h"
 
 #include <vector>
+#include <memory>
 
 class GameHandler
 {
@@ -36,7 +37,8 @@ class GameHandler
 		PhysicPiece * php;
 		GraphicPiece * grp;
 		piece<float> p;
-		GamePiece(const piece<float> &p):p(p)
+		bool graphicshared;
+		GamePiece(const piece<float> &_p, bool _graphicshared = false):p(_p), graphicshared(_graphicshared)
 		{
 		}
 	};
@@ -46,7 +48,7 @@ class GameHandler
 	InputHandler * phinput;
 
 	void newrandompiece();
-	GamePiece * newpiece(const piece<float> & p, float x, float y, float rot, PhysicPiece::PhysicPieceType type, float angvel = 0.0F, float gravscale = 1.0F);
+	GamePiece * newpiece(const piece<float> & p, float x, float y, float rot, PhysicPiece::PhysicPieceType type, GraphicPiece * sharedgp);
 	void randomnextpiece();
 	void deletepiece(GamePiece *);
 	void cutline(float from, float to);
@@ -65,7 +67,9 @@ class GameHandler
 	std::vector<bool> linesbeingcut;
 	std::vector<bool> linesfalse;
 
-	GraphicPiece * nextpiece_graphic;
+	//This is a cache and is used only to avoid recreating the same textures
+	std::vector<std::unique_ptr<GraphicPiece>> graphicpieces_uncutted;
+
 	int nextpiece_type;
 	float nextpiece_rot;
 	std::vector<float> linearea;

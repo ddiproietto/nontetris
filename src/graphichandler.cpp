@@ -422,7 +422,7 @@ GraphicToInput GraphicHandler::toinput()
 // If the piece is made of two convex polygons we simply put twice the first vertex of the second polygon,
 // thus creating a degenerate triangle. This works properly if:
 // - the first vertex of the second polygon lies on a side of the first polygon.
-GraphicPiece * GraphicHandler::createpiece(piece<float> pie)
+GraphicPiece * GraphicHandler::createpiece(const piece<float> & pie)
 {
 	GraphicPiece * pgp = new GraphicPiece;
 	GLuint VBOid;
@@ -430,7 +430,7 @@ GraphicPiece * GraphicHandler::createpiece(piece<float> pie)
 	std::vector<GLfloat> vertices;
 	vertices.reserve(size);
 	bool firstshape = true;
-	for ( auto pol: pie )
+	for (const auto & pol: pie )
 	{
 		if ( firstshape )
 		{
