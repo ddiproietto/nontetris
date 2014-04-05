@@ -31,7 +31,7 @@ bool JoystickHandler::isJoystickPresent()
 
 JoystickHandler::JoystickValues JoystickHandler::pollJoystick()
 {
-	JoystickValues ret = {0.0, 0.0, false, false, false, false, false, false, false, false, false, false};
+	JoystickValues ret = {{0.0, 0.0}, {false, false, false, false, false, false, false, false, false, false}};
 #ifdef __DUETTO__
 #elif defined(EMSCRIPTEN)
 #elif GLFW_VERSION_MAJOR == 3

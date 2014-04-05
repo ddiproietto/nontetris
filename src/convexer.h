@@ -79,8 +79,8 @@ std::vector<polygon<T> > convexer(polygon<T> p)
 			T np1 = point<T>::crossproduct(p[i-1], p[i], p[i+1+num]);
 			T np2 = point<T>::crossproduct(p[i+1+num],p[i], p[i+1]);
 			
-			bool thisok1 = np1 < 0;
-			bool thisok2 = np2 < 0;
+			thisok1 = np1 < 0;
+			thisok2 = np2 < 0;
 
 			if((oldok1 && !thisok1) || (oldok2 && !thisok2))
 			{
@@ -102,8 +102,10 @@ std::vector<polygon<T> > convexer(polygon<T> p)
 				float c1x = x0 + mu1*(x1-x0),
 				      c1y = y0 + mu1*(y1-y0);
 
+				/*
 				point<T> newpoint({c1x,c1y});
-				//std::cerr<<newpoint<<std::endl;
+				std::cerr<<newpoint<<std::endl;
+				*/
 				
 				p.insert(insert_before_index, point<T>({c1x,c1y}));
 				cutpoints_indexes.push_back(insert_before_index);
@@ -125,9 +127,10 @@ std::vector<polygon<T> > convexer(polygon<T> p)
 		s = p.size();
 	}
 	else
-		;
+	{
 		//TODO:signal error
 		//cerr << "Convexer error: concavity_points > 2" <<std::endl;
+	}
 	/*
 	std::cerr<<"CUTPOINTS:";
 	for(auto pt: cutpoints_indexes)

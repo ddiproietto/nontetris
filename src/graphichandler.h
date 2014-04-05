@@ -56,6 +56,8 @@ struct GraphicPiece
 
 class GraphicHandler
 {
+	const GameOptions gameopt;
+
 	#if !defined( __DUETTO__) && (GLFW_VERSION_MAJOR == 3)
 	GLFWwindow * glfwwindow;
 	#endif
@@ -71,8 +73,6 @@ class GraphicHandler
 	std::array<int, 3> vbo_score_num_vertices;
 	GLuint vbo_lines;
 	GLuint vbo_piece;
-
-	const GameOptions gameopt;
 
 	GLuint isp, compsp;
 

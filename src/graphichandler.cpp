@@ -171,7 +171,7 @@ GLuint filetotexture(const std::string & filename, bool generatemipmap, Args... 
 	return rettex;
 }
 
-GraphicHandler::GraphicHandler(const GameOptions & _gameopt, const FileLoader & fileloader):gameopt(_gameopt), vbo_score(0), RTVec_eye{0.0F}, PMatrix_eye{0.0F}, PMatrix_half{0.0F}, PMatrix_pieces{0.0F}
+GraphicHandler::GraphicHandler(const GameOptions & _gameopt, const FileLoader & fileloader):gameopt(_gameopt), vbo_score(0), PMatrix_eye{0.0F}, PMatrix_half{0.0F}, PMatrix_pieces{0.0F}, RTVec_eye{0.0F}
 {
 	// WINDOWING INITIALIZATION
 	#ifndef __DUETTO__
@@ -237,7 +237,7 @@ GraphicHandler::GraphicHandler(const GameOptions & _gameopt, const FileLoader & 
 	}
 
 	// TEXTURES LOADING
-	const char * backgroundfilename;
+	const char * backgroundfilename = NULL;
 	if (gameopt.gametype == GameOptions::CUTTING)
 		backgroundfilename = DATAPATHPREAMBLE "imgs/newgamebackgroundgamea.png";
 	else if (gameopt.gametype == GameOptions::STACK)
@@ -313,7 +313,7 @@ GraphicHandler::GraphicHandler(const GameOptions & _gameopt, const FileLoader & 
 	// PROJECTION MATRICES INITIALIZATION
 	RTVec_eye[1] = 1.0F;
 
-	float left, right, top = 0.0F, bottom = 18.0F, far = -1.0F, near = 1.0F;
+	float left = -1.75F, right = 18.25F, top = 0.0F, bottom = 18.0F, far = -1.0F, near = 1.0F;
 	if (gameopt.gametype == GameOptions::CUTTING)
 		left = -1.75F, right = 18.25F;
 	else if (gameopt.gametype == GameOptions::STACK)

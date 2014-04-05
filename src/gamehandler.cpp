@@ -43,7 +43,7 @@ namespace
 			);
 }
 
-GameHandler::GameHandler(const GameOptions & _gameopt, const FileLoader & fl):gameopt(_gameopt),score(0),level(0),linesortiles(0),gamestate(RUNNING), updatebarscompleteness(1.0), nextpiece_rot(0.0)
+GameHandler::GameHandler(const GameOptions & _gameopt, const FileLoader & fl):gameopt(_gameopt),score(0),level(0),linesortiles(0),gamestate(RUNNING), nextpiece_rot(0.0), updatebarscompleteness(1.0)
 {
 	phphysic = new PhysicHandler (gameopt);
 	phgraphic = new GraphicHandler (gameopt, fl);
@@ -131,7 +131,6 @@ void GameHandler::randomnextpiece()
 #endif
 
 	nextpiece_type = randpieceindex;
-	auto & p = pieces[randpieceindex];
 }
 
 void GameHandler::newrandompiece()
@@ -181,7 +180,7 @@ void GameHandler::cutline(float from, float to)
 		{
 			void push_back(const polygon<float> & p)
 			{
-
+				(void) p;
 			}
 		} dummycontainer;
 
@@ -247,13 +246,13 @@ float GameHandler::computelinearea(float from, float to)
 		{
 			void push_back(const polygon<float> & p)
 			{
-
+				(void) p;
 			}
 		} dummycontainer;
 
 		// Uses the cutter with no tolerance
 		// I'm not interested here in up & down remainders
-		bool isinbetween = cutter(p, dummycontainer, dummycontainer, midremainders, y0, y1, 0.0F);
+		cutter(p, dummycontainer, dummycontainer, midremainders, y0, y1, 0.0F);
 	});
 
 	for (const auto & midp: midremainders)
