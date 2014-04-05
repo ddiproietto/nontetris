@@ -124,8 +124,56 @@ GLuint filetoshader(const FileLoader & fl, GLenum shadertype, const std::string 
 	return shader;
 }
 
+void settexparameter(GLenum pname, GLfloat param)
+{
+	glTexParameterf (GL_TEXTURE_2D, pname, param);
+}
+void settexparameter(GLenum pname, GLint param)
+{
+	glTexParameteri (GL_TEXTURE_2D, pname, param);
+}
+
+template<typename... Args>
+void settexparameters()
+{
+
+}
+
+template<typename T, typename... Args>
+void settexparameters(GLenum pname, T param, Args... texparameters)
+{
+	settexparameter (pname, param);
+	settexparameters (texparameters...);
+}
+
+template<typename... Args>
+GLuint filetotexture(const std::string & filename, bool generatemipmap, Args... texparameters)
+{
+	GLuint rettex;
+	glGenTextures(1, &rettex);
+	glBindTexture( GL_TEXTURE_2D, rettex);
+	unsigned int twidth, theight;
+
+	#ifndef __DUETTO__
+	unsigned char * image;
+	lodepng_decode24_file(&image, &twidth, &theight, filename.c_str());
+
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, twidth, theight, 0, GL_RGB,
+			GL_UNSIGNED_BYTE, image );
+	free(image);
+	#else
+	webGLES->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById(filename.c_str())));
+	#endif
+	settexparameters(texparameters...);
+
+	if (generatemipmap)
+		glGenerateMipmap (GL_TEXTURE_2D);
+	return rettex;
+}
+
 GraphicHandler::GraphicHandler(const GameOptions & _gameopt, const FileLoader & fileloader):gameopt(_gameopt), vbo_score(0), RTVec_eye{0.0F}, PMatrix_eye{0.0F}, PMatrix_half{0.0F}, PMatrix_pieces{0.0F}
 {
+	// WINDOWING INITIALIZATION
 	#ifndef __DUETTO__
 	glfwInit();
 	#if GLFW_VERSION_MAJOR == 3
@@ -147,11 +195,13 @@ GraphicHandler::GraphicHandler(const GameOptions & _gameopt, const FileLoader & 
 	webGLESInit("glcanvas");
 	#endif
 
+	// GL FEATURES
 	glDisable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_BLEND);
 
 
+	// SHADER COMPILATION
 	GLuint vs     = filetoshader(fileloader, GL_VERTEX_SHADER, "shader.vert"), /* Vertex Shader */
 	       fs     = filetoshader(fileloader, GL_FRAGMENT_SHADER, "shader.frag"); /* Fragment Shader with textures */
 
@@ -186,51 +236,17 @@ GraphicHandler::GraphicHandler(const GameOptions & _gameopt, const FileLoader & 
 		uCompRTVecLoc = glGetUniformLocation(compsp, "uRTVec");
 	}
 
-	//TEXTURE
-	glGenTextures(1, &tex_background);
-	glBindTexture( GL_TEXTURE_2D, tex_background);
-	unsigned int twidth, theight;
-
+	// TEXTURES LOADING
 	const char * backgroundfilename;
 	if (gameopt.gametype == GameOptions::CUTTING)
 		backgroundfilename = DATAPATHPREAMBLE "imgs/newgamebackgroundgamea.png";
 	else if (gameopt.gametype == GameOptions::STACK)
 		backgroundfilename = DATAPATHPREAMBLE "imgs/newgamebackground.png";
 
-	#ifndef __DUETTO__
-	unsigned char * image;
-	lodepng_decode24_file(&image, &twidth, &theight, backgroundfilename);
-
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, twidth, theight, 0, GL_RGB,
-			GL_UNSIGNED_BYTE, image );
-	free(image);
-	#else
-	webGLES->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById(backgroundfilename)));
-	#endif
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-	glGenerateMipmap( GL_TEXTURE_2D );
-
-	glGenTextures(7, tex_small);
-
-	GLuint vbo_ident;
-	glGenBuffers(1, &vbo_ident);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_ident);
-
-	GLfloat vert_ident [] = {
-		-1, -1, 0, 0,
-		-1, 1, 0, 1,
-		1, -1, 1, 0,
-		1, 1, 1, 1
-	};
-	glBufferData(GL_ARRAY_BUFFER, 4*2*2*sizeof(float), vert_ident, GL_STATIC_DRAW);
+	tex_background = filetotexture(backgroundfilename, true, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	for (int i = 0; i < 7; i++)
 	{
-		glBindTexture( GL_TEXTURE_2D, tex_small[i]);
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-		#ifndef __DUETTO__
 		#ifdef __MINGW32__
 		//Mingw still doesn't have std::to_string
 		char ctmp = '0'+(i+1);
@@ -239,21 +255,12 @@ GraphicHandler::GraphicHandler(const GameOptions & _gameopt, const FileLoader & 
 		std::string path = std::string(DATAPATHPREAMBLE "imgs/pieces/")+std::to_string(i+1)+std::string(".png");
 		#endif
 
-		lodepng_decode24_file(&image, &twidth, &theight, path.c_str());
-
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, twidth, theight, 0, GL_RGB,
-				GL_UNSIGNED_BYTE, image );
-		free(image);
-		#else
-		client::String prefixname("imgs/pieces/");
-		client::String * pname = prefixname.concat(i+1);
-		client::String * idname = pname->concat(".png");
-		webGLES->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById(*idname)));
-		#endif
-
-
+		tex_small[i] = filetotexture(path, false, GL_TEXTURE_MIN_FILTER, GL_LINEAR, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	}
 
+	tex_font = filetotexture(DATAPATHPREAMBLE "imgs/font.png", true, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	// VBO INITIALIZATION
 	glGenBuffers(1, &vbo_background);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_background);
 	float rapx = 256.0/160.0;
@@ -264,23 +271,15 @@ GraphicHandler::GraphicHandler(const GameOptions & _gameopt, const FileLoader & 
 				 1,  1,  1/rapx, 0};
 	glBufferData(GL_ARRAY_BUFFER, 4*2*2*sizeof(float), vertices2, GL_STATIC_DRAW);
 
-	//FONT
-	glGenTextures(1, &tex_font);
-	glBindTexture( GL_TEXTURE_2D, tex_font);
-
-	#ifndef __DUETTO__
-	lodepng_decode24_file(&image, &twidth, &theight, DATAPATHPREAMBLE "imgs/font.png");
-
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, twidth, theight, 0, GL_RGB,
-			GL_UNSIGNED_BYTE, image );
-	free(image);
-	#else
-	webGLES->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById("imgs/font.png")));
-	#endif
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-	glGenerateMipmap( GL_TEXTURE_2D );
-	std::fill(vbo_score_num_vertices.begin(), vbo_score_num_vertices.end(), 0);
+	glGenBuffers(1, &vbo_piece);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_piece);
+	std::vector<GLfloat> vertices_piece;
+	vertices_piece.insert(vertices_piece.end(),
+		{ -2.0F, -2.0F, 0, 0,
+		  -2.0F,  2.0F, 0, 1,
+		   2.0F, -2.0F, 1, 0,
+		   2.0F,  2.0F, 1, 1});
+	glBufferData(GL_ARRAY_BUFFER, vertices_piece.size()*sizeof(float), vertices_piece.data(), GL_STATIC_DRAW);
 
 	if (gameopt.gametype == GameOptions::CUTTING)
 	{
@@ -311,16 +310,7 @@ GraphicHandler::GraphicHandler(const GameOptions & _gameopt, const FileLoader & 
 		glBufferData(GL_ARRAY_BUFFER, vertices_lines.size()*sizeof(float), vertices_lines.data(), GL_STATIC_DRAW);
 	}
 
-	glGenBuffers(1, &vbo_piece);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_piece);
-	std::vector<GLfloat> vertices_piece;
-	vertices_piece.insert(vertices_piece.end(),
-		{ -2.0F, -2.0F, 0, 0,
-		  -2.0F,  2.0F, 0, 1,
-		   2.0F, -2.0F, 1, 0,
-		   2.0F,  2.0F, 1, 1});
-	glBufferData(GL_ARRAY_BUFFER, vertices_piece.size()*sizeof(float), vertices_piece.data(), GL_STATIC_DRAW);
-
+	// PROJECTION MATRICES INITIALIZATION
 	RTVec_eye[1] = 1.0F;
 
 	float left, right, top = 0.0F, bottom = 18.0F, far = -1.0F, near = 1.0F;
@@ -349,6 +339,10 @@ GraphicHandler::GraphicHandler(const GameOptions & _gameopt, const FileLoader & 
 		glUniform4fv(uCompRTVecLoc, 1, RTVec_eye);
 	}
 
+	// TEXT INITIALIZATION
+	std::fill(vbo_score_num_vertices.begin(), vbo_score_num_vertices.end(), 0);
+
+	// PIECE FBO INITIALIZATION
 	glGenFramebuffers(1, &piece_fbo);
 }
 
