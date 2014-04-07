@@ -90,8 +90,10 @@ for index in testindexes:
 		for pol in test["separateplots"]:
 			pylab.subplot(2, 2, plotind+2, sharex=ax, sharey=ax)
 			drawpolygon(pol)
-			pylab.plot(pol[0][0], pol[0][1], 'o')
-			pylab.plot(pol[1][0], pol[1][1], '*')
+			if len(pol) >= 1:
+				pylab.plot(pol[0][0], pol[0][1], 'o')
+			if len(pol) >= 2:
+				pylab.plot(pol[1][0], pol[1][1], '*')
 			pylab.xlabel("plot{0}".format((plotind + 1)))
 			plotind += 1
 

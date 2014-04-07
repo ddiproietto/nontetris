@@ -40,13 +40,9 @@ struct point
 	point(T _x, T _y):x(_x),y(_y)
 	{
 	}
-	static T crossproduct(point<T> p1, point<T> p2, point<T> p3)
+	static T crossproduct(point<T> vec1, point<T> vec2)
 	{
-		return (p2.y-p1.y)*(p3.x-p2.x) -(p2.x-p1.x)*(p3.y-p2.y);
-	}
-	static T multmod(point<T> p1, point<T> p2, point<T> p3)
-	{
-		return sqrt(((p2.y-p1.y)*(p2.y-p1.y)+(p2.x-p1.x)*(p2.x-p1.x))*((p3.y-p2.y)*(p3.y-p2.y)+(p3.x-p2.x)*(p3.x-p2.x)));
+		return (vec1.x)*(vec2.y) - (vec1.y)*(vec2.x) ;
 	}
 	point<T> returnrotate(T angle) const
 	{
@@ -218,7 +214,7 @@ public:
 		size_t s = vertices.size();
 		for(int i = 0; i < s; ++i)
 		{
-			T p = point<T>::crossproduct(vertices[i], vertices[(i+1)%s], vertices[(i+2)%s]);
+			T p = point<T>::crossproduct(vertices[i]-vertices[(i+1)%s], vertices[(i+2)%s]-vertices[(i+1)%s]);
 			if (p > 0)
 				return false;
 
@@ -254,19 +250,28 @@ public:
 
 	void removealignedvertices()
 	{
+		constexpr T thetathreshold = 173.0*M_PI/180.0;
+
+		constexpr T costhetathreshold = cos(thetathreshold);
+
 		size_t s = vertices.size();
-		for(int i = 0; i < s; ++i)
+		for (int i = 0; i < s; ++i)
 		{
-			T pv = point<T>::crossproduct(vertices[i], vertices[(i+1)%s], vertices[(i+2)%s]);
-			T abyb = point<T>::multmod(vertices[i], vertices[(i+1)%s], vertices[(i+2)%s]);
-			if(!(pv/abyb > 0.1 || pv/abyb <-0.1)) //DISCARD POINT IF >173 DEGREES
+			point<T> segA = vertices[i] - vertices[(i+1)%s];
+			point<T> segB = vertices[(i+2)%s] - vertices[(i+1)%s];
+
+			T ps = segA*segB;
+
+			T denom = fabs(sqrt(segA*segA)*sqrt(segB*segB));
+
+			T costheta = ps/denom;
+
+			if (costheta < costhetathreshold)
 			{
 				vertices.erase(vertices.begin()+normalize_index(i+1));
 				i--;
 				s--;
 			}
-
-
 		}
 		
 	}

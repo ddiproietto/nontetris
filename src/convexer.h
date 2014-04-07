@@ -37,13 +37,17 @@ std::vector<polygon<T> > convexer(polygon<T> p)
 	}
 	std::cerr<<std::endl;
 	*/
+	p.removealignedvertices();
+
 	size_t s = p.size();
 	std::vector <size_t> concavity_points_indexes;
 	std::vector <size_t> cutpoints_indexes;
+
+
 	//Find concavity points
 	for(int i = 0; i < s; ++i)
 	{
-		T pr = point<T>::crossproduct(p[i], p[i+1], p[i+2]);
+		T pr = point<T>::crossproduct(p[i] - p[i+1], p[i+2] - p[i+1]);
 		if (pr > 0)
 		{
 			concavity_points_indexes.push_back((i+1)%s);
@@ -76,8 +80,8 @@ std::vector<polygon<T> > convexer(polygon<T> p)
 
 		for (num = 1; num < s; num++)
 		{
-			T np1 = point<T>::crossproduct(p[i-1], p[i], p[i+1+num]);
-			T np2 = point<T>::crossproduct(p[i+1+num],p[i], p[i+1]);
+			T np1 = point<T>::crossproduct(p[i-1] - p[i], p[i+1+num] - p[i]);
+			T np2 = point<T>::crossproduct(p[i+1+num] - p[i], p[i+1] - p[i]);
 			
 			thisok1 = np1 < 0;
 			thisok2 = np2 < 0;
@@ -129,7 +133,8 @@ std::vector<polygon<T> > convexer(polygon<T> p)
 	else
 	{
 		//TODO:signal error
-		//cerr << "Convexer error: concavity_points > 2" <<std::endl;
+		//std::cerr << "concavity_points > 2!! "<< concavity_points_indexes.size() << std::endl;
+		return std::vector<polygon<T>>();
 	}
 	/*
 	std::cerr<<"CUTPOINTS:";
