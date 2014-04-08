@@ -70,28 +70,28 @@ int main(int argc, char * argv[])
 	{
 #ifdef MULTIPLE_PHYSICS_STEPS
 		auto now = std::chrono::steady_clock::now();
-		while(now > next && running)
+		while (now > next && running)
 		{
 			gh.step_physic();
 			running = gh.step_logic();
-			next+=(std::chrono::nanoseconds(static_cast<int>(1000000000*gameopt.physicstep)));
+			next += (std::chrono::nanoseconds(static_cast<int>(1000000000*gameopt.physicstep)));
 		}
 #else
 		gh.step_physic();
 		running = gh.step_logic();
-		next+=(std::chrono::nanoseconds(static_cast<int>(1000000000*gameopt.physicstep)));
+		next += (std::chrono::nanoseconds(static_cast<int>(1000000000*gameopt.physicstep)));
 #endif
 		gh.step_graphic();
 
-		#ifdef __MINGW32__
+#ifdef __MINGW32__
 		//Mingw doesn't have std::this_thread
 		auto diff = next - std::chrono::steady_clock::now();
 		int millitosleep = std::chrono::duration_cast<std::chrono::milliseconds>(diff).count();
-		if(millitosleep > 0)
+		if (millitosleep > 0)
 			Sleep(millitosleep);
-		#else
+#else
 		std::this_thread::sleep_until(next);
-		#endif
+#endif
 	}
 	return EXIT_SUCCESS;
 }

@@ -113,11 +113,11 @@ GLuint filetoshader(const FileLoader & fl, GLenum shadertype, const std::string 
 #endif
 
 	shader = glCreateShader(shadertype);
-	#ifdef __DUETTO__
+#ifdef __DUETTO__
 	webGLES->shaderSource(webGLESLookupWebGLShader(shader), *c_ShaderSource);
-	#else
+#else
 	glShaderSource(shader, 1, &c_ShaderSource, NULL);
-	#endif
+#endif
 	glCompileShader(shader);
 	printLog(shader, filename);
 
@@ -154,16 +154,16 @@ GLuint filetotexture(const std::string & filename, bool generatemipmap, Args... 
 	glBindTexture( GL_TEXTURE_2D, rettex);
 	unsigned int twidth, theight;
 
-	#ifndef __DUETTO__
+#ifndef __DUETTO__
 	unsigned char * image;
 	lodepng_decode24_file(&image, &twidth, &theight, filename.c_str());
 
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, twidth, theight, 0, GL_RGB,
 			GL_UNSIGNED_BYTE, image );
 	free(image);
-	#else
+#else
 	webGLES->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById(filename.c_str())));
-	#endif
+#endif
 	settexparameters(texparameters...);
 
 	if (generatemipmap)
@@ -174,26 +174,26 @@ GLuint filetotexture(const std::string & filename, bool generatemipmap, Args... 
 GraphicHandler::GraphicHandler(const GameOptions & _gameopt, const FileLoader & fileloader):gameopt(_gameopt), vbo_score(0), PMatrix_eye{0.0F}, PMatrix_half{0.0F}, PMatrix_pieces{0.0F}, RTVec_eye{0.0F}
 {
 	// WINDOWING INITIALIZATION
-	#ifndef __DUETTO__
+#ifndef __DUETTO__
 	glfwInit();
-	#if GLFW_VERSION_MAJOR == 3
+#if GLFW_VERSION_MAJOR == 3
 	glfwWindowHint(GLFW_SAMPLES, 8);
 	glfwwindow = glfwCreateWindow(gameopt.width, gameopt.height, "nontetris", gameopt.fullscreen?glfwGetPrimaryMonitor():NULL, NULL);
 	glfwMakeContextCurrent(glfwwindow);
-	#else
+#else
 	glfwOpenWindowHint(GLFW_FSAA_SAMPLES, 8);
 	glfwOpenWindow(gameopt.width, gameopt.height, 5, 6, 5, 8, 0, 0, gameopt.fullscreen?GLFW_FULLSCREEN:GLFW_WINDOW );
 	glfwSetWindowTitle("nontetris");
-	#endif
-		#ifndef EMSCRIPTEN
-		glewExperimental = GL_TRUE;
-		if(glewInit() != GLEW_OK)
-			std::cerr<<"GLEW fail"<<std::endl;
-		glEnableClientState(GL_VERTEX_ARRAY);
-		#endif //defined(__EMSCRIPTEN__)
-	#else //defined(__DUETTO__)
+#endif
+#ifndef EMSCRIPTEN
+	glewExperimental = GL_TRUE;
+	if(glewInit() != GLEW_OK)
+		std::cerr<<"GLEW fail"<<std::endl;
+	glEnableClientState(GL_VERTEX_ARRAY);
+#endif //defined(__EMSCRIPTEN__)
+#else //defined(__DUETTO__)
 	webGLESInit("glcanvas");
-	#endif
+#endif
 
 	// GL FEATURES
 	glDisable(GL_DEPTH_TEST);
@@ -247,13 +247,7 @@ GraphicHandler::GraphicHandler(const GameOptions & _gameopt, const FileLoader & 
 
 	for (int i = 0; i < 7; i++)
 	{
-		#ifdef __MINGW32__
-		//Mingw still doesn't have std::to_string
-		char ctmp = '0'+(i+1);
-		std::string path = std::string(DATAPATHPREAMBLE "imgs/pieces/")+ctmp+std::string(".png");
-		#else
 		std::string path = std::string(DATAPATHPREAMBLE "imgs/pieces/")+std::to_string(i+1)+std::string(".png");
-		#endif
 
 		tex_small[i] = filetotexture(path, false, GL_TEXTURE_MIN_FILTER, GL_LINEAR, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	}
@@ -391,23 +385,23 @@ void GraphicHandler::updatescore(int number_a, int number_b, int number_c)
 
 GraphicHandler::~GraphicHandler()
 {
-	#ifndef __DUETTO__
-	#if GLFW_VERSION_MAJOR == 3
+#ifndef __DUETTO__
+#if GLFW_VERSION_MAJOR == 3
 	glfwDestroyWindow(glfwwindow);
-	#else
+#else
 	glfwCloseWindow();
-	#endif
+#endif
 	glfwTerminate();
-	#endif
+#endif
 }
 
 GraphicToInput GraphicHandler::toinput()
 {
-	#if !defined( __DUETTO__) && (GLFW_VERSION_MAJOR == 3)
+#if !defined( __DUETTO__) && (GLFW_VERSION_MAJOR == 3)
 	return GraphicToInput{.window=glfwwindow};
-	#else
+#else
 	return GraphicToInput();
-	#endif
+#endif
 }
 
 // Very simple tessellation: FROM counterclockwise list of vertices TO triangle strip
@@ -620,12 +614,12 @@ void GraphicHandler::endrender(const std::vector<float> & linecompleteness, cons
 		glDisableVertexAttribArray(aCompTextureCoordLoc);
 	}
 
-	#ifndef __DUETTO__
-	#if GLFW_VERSION_MAJOR == 3
+#ifndef __DUETTO__
+#if GLFW_VERSION_MAJOR == 3
 	glfwSwapBuffers(glfwwindow);
 	glfwPollEvents();
-	#else
+#else
 	glfwSwapBuffers();
-	#endif
-	#endif
+#endif
+#endif
 }
