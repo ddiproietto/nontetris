@@ -250,9 +250,24 @@ public:
 
 	void removealignedvertices()
 	{
-		constexpr T thetathreshold = 173.0*M_PI/180.0;
+		/* Removes aligned vertices, i.e. vertices whose edges form an angle
+		 * between 180+-7 degrees. Change costhetathreshold to change the angle
+		 *
+		 * Implementation:
+		 * - find vertices to remove
+		 * - sort them by angle (more aligned first)
+		 * - erase them, but not all of them: we must guarantee that the polygon still has 3 vertices
+		 */
 
+		/*
+		That's what I would write if I could use cos to init a constexpr
+		constexpr T thetathreshold = 173.0*M_PI/180.0;
 		constexpr T costhetathreshold = cos(thetathreshold);
+		*/
+
+		constexpr T costhetathreshold = -0.992546152;
+
+		std::vector<std::pair<int, T>> markedvertices;
 
 		size_t s = vertices.size();
 		for (int i = 0; i < s; ++i)
@@ -268,12 +283,27 @@ public:
 
 			if (costheta < costhetathreshold)
 			{
-				vertices.erase(vertices.begin()+normalize_index(i+1));
-				i--;
-				s--;
+				markedvertices.emplace_back(std::make_pair((i+1)%s, costheta));
 			}
 		}
-		
+
+		std::sort(markedvertices.begin(), markedvertices.end(), [](const std::pair<int,T> & v1, const std::pair<int,T> & v2)->bool{
+			return std::get<1>(v1) > std::get<1>(v2);
+		});
+
+		if(s-markedvertices.size() < 3)
+		{
+			markedvertices.erase(markedvertices.begin()+(s-3), markedvertices.end());
+		}
+
+		// If only remove_if allowed me to use indexes instead of the element (rp)
+		// I wouldn't have to do find_if and everything wouls have been better
+		vertices.erase(std::remove_if(vertices.begin(), vertices.end(), [&](const point<T> & rp)->bool{
+			return find_if(markedvertices.begin(), markedvertices.end(), [&](const std::pair<int, T> & m)->bool{
+				return vertices[std::get<0>(m)].x == rp.x && vertices[std::get<0>(m)].y == rp.y;
+			}) != markedvertices.end();
+		}), vertices.end());
+
 	}
 
 	void removetoonearvertices()

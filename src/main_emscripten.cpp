@@ -40,7 +40,6 @@ using namespace std;
 
 namespace
 {
-	const double PHYSICSTEP = 1.0/60.0;
 	FileLoader fileloader;
 	GameHandler * pgh;
 
