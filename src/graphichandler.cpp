@@ -22,14 +22,13 @@
 
 #include "NontetrisConfig.h"
 
+#include "glwrapper.h"
+
 #ifdef __DUETTO__
 #include <duetto/client.h>
 #include <duetto/clientlib.h>
-#include <GLES2/gl2.h>
 #include <GLES2/webgles.h>
 #else
-
-#include "glwrapper.h"
 
 #if (USE_GLFW_VERSION==3)
 #include <GLFW/glfw3.h>
@@ -171,7 +170,7 @@ GLuint filetotexture(const std::string & filename, bool generatemipmap, Args... 
 	return rettex;
 }
 
-GraphicHandler::GraphicHandler(const GameOptions & _gameopt, const FileLoader & fileloader):gameopt(_gameopt), vbo_score(0), PMatrix_eye{0.0F}, PMatrix_half{0.0F}, PMatrix_pieces{0.0F}, RTVec_eye{0.0F}
+GraphicHandler::GraphicHandler(const GameOptions & _gameopt, const FileLoader & fileloader):gameopt(_gameopt), vbo_text(0), PMatrix_eye{0.0F}, PMatrix_half{0.0F}, PMatrix_pieces{0.0F}, RTVec_eye{0.0F}
 {
 	// WINDOWING INITIALIZATION
 #ifndef __DUETTO__
@@ -333,54 +332,8 @@ GraphicHandler::GraphicHandler(const GameOptions & _gameopt, const FileLoader & 
 		glUniform4fv(uCompRTVecLoc, 1, RTVec_eye);
 	}
 
-	// TEXT INITIALIZATION
-	std::fill(vbo_score_num_vertices.begin(), vbo_score_num_vertices.end(), 0);
-
 	// PIECE FBO INITIALIZATION
 	glGenFramebuffers(1, &piece_fbo);
-}
-
-template <class vec>
-static inline int string_to_vbo_vector(const std::string & s, vec & coords, int rightx, int bottomy)
-{
-	int index = 0;
-	for (auto i = s.rbegin(); i != s.rend(); ++i)
-	{
-		const auto & c = *i;
-		//Only numbers are supported
-		int digit = c - '0';
-		if (!(0 <= digit && digit <= 9))
-			continue;
-		coords.insert(coords.end(),{
-			(rightx - index) * (2/20.0F) -1, (17 - bottomy) * (2/18.0F) -1,     (9+(8.0F*digit))/512, 1,
-			(rightx - index) * (2/20.0F) -1, (18 - bottomy) * (2/18.0F) -1,           (9+(8.0F*digit))/512, 0,
-			(rightx -1 - index) * (2/20.0F) -1, (17 - bottomy) * (2/18.0F) -1,  (1+(8.0F*digit))/512, 1,
-			(rightx -1 - index) * (2/20.0F) -1, (18 - bottomy) * (2/18.0F) -1,        (1+(8.0F*digit))/512, 0
-		});
-		++index;
-	}
-	return index;
-}
-
-void GraphicHandler::updatescore(int number_a, int number_b, int number_c)
-{
-	if(glIsBuffer(vbo_score))
-		glDeleteBuffers(1, &vbo_score);
-
-	glGenBuffers(1, &vbo_score);
-
-	std::string string_a = std::to_string(number_a);
-	std::string string_b = std::to_string(number_b);
-	std::string string_c = std::to_string(number_c);
-
-	std::vector<float> coords;
-
-	vbo_score_num_vertices[0] = string_to_vbo_vector(string_a, coords, 18, 10) * 4;
-	vbo_score_num_vertices[1] = string_to_vbo_vector(string_b, coords, 18, 7) * 4;
-	vbo_score_num_vertices[2] = string_to_vbo_vector(string_c, coords, 19, 3) * 4;
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_score);
-	glBufferData(GL_ARRAY_BUFFER, coords.size()*sizeof(float), coords.data(), GL_STATIC_DRAW);
 }
 
 GraphicHandler::~GraphicHandler()
@@ -516,7 +469,7 @@ void GraphicHandler::deletepiece(GraphicPiece * pgp)
 	delete pgp;
 }
 
-void GraphicHandler::beginrender()
+void GraphicHandler::beginrender(TextHandler & texthandler)
 {
 	glViewport(0, 0, gameopt.width, gameopt.height);
 	glClearColor(1.0, 1.0, 1.0, 1.0);
@@ -538,12 +491,12 @@ void GraphicHandler::beginrender()
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 	// TEXT
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_score);
+	glBindBuffer(GL_ARRAY_BUFFER, texthandler.getvbo());
 	glBindTexture(GL_TEXTURE_2D, tex_font);
 	glVertexAttribPointer(aGlobalVertexPositionLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)0);
 	glVertexAttribPointer(aGlobalTextureCoordLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)(2*sizeof(GLfloat)));
 	int sum = 0;
-	for (int i: vbo_score_num_vertices)
+	for (int i: texthandler.getvbo_numvertices())
 	{
 		glDrawArrays(GL_TRIANGLE_STRIP, sum, i);
 		sum += i;

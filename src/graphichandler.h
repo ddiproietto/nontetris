@@ -23,11 +23,10 @@
 
 #include "NontetrisConfig.h"
 
-#ifdef __DUETTO__
-#include <GLES2/gl2.h>
-#else
-
 #include "glwrapper.h"
+
+#ifndef __DUETTO__
+
 #if (USE_GLFW_VERSION==3)
 #include <GLFW/glfw3.h>
 #else
@@ -49,6 +48,8 @@
 
 #include "gameoptions.h"
 
+#include "texthandler.h"
+
 struct GraphicPiece
 {
 	GLuint tex;
@@ -69,8 +70,7 @@ class GraphicHandler
 
 	GLuint vbo_background;
 	GLuint vbo_completeness;
-	GLuint vbo_score;
-	std::array<int, 3> vbo_score_num_vertices;
+	GLuint vbo_text;
 	GLuint vbo_lines;
 	GLuint vbo_piece;
 
@@ -98,11 +98,9 @@ public:
 	~GraphicHandler();
 	GraphicPiece * createpiece(const piece<float> & pol);
 	void deletepiece(GraphicPiece * pgp);
-	void beginrender();
+	void beginrender(TextHandler & texthandler);
 	void renderpiece(float x, float y, float rot, GraphicPiece * gp);
 	void endrender(const std::vector<float> & linecompleteness, const std::vector<bool> & linecutblack);
-
-	void updatescore(int number_a, int number_b, int number_c);
 
 	GraphicToInput toinput();
 };

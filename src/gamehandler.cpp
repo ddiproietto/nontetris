@@ -54,7 +54,9 @@ GameHandler::GameHandler(const GameOptions & _gameopt, const FileLoader & fl):ga
 		graphicpieces_uncutted.emplace_back(phgraphic->createpiece(p));
 	}
 
-	phgraphic->updatescore(linesortiles, level, score);
+	textscores[0] = texthandler.createtextfragment(std::to_string(linesortiles), TextAlign::ALIGN_RIGHT, 17, 10);
+	textscores[1] = texthandler.createtextfragment(std::to_string(level), TextAlign::ALIGN_RIGHT, 17, 7);
+	textscores[2] = texthandler.createtextfragment(std::to_string(score), TextAlign::ALIGN_RIGHT, 18, 3);
 
 	for (float i = 0.0; i < gameopt.rows; i += gameopt.rowwidth)
 	{
@@ -262,13 +264,27 @@ float GameHandler::computelinearea(float from, float to)
 
 	return retarea;
 }
+
 void GameHandler::updatelinearea()
 {
-	for(float i = 0.0; i < gameopt.rows; i += gameopt.rowwidth)
+	for (float i = 0.0; i < gameopt.rows; i += gameopt.rowwidth)
 	{
 		linearea[i] = computelinearea(i, i + gameopt.rowwidth);
 		linecompleteness[i] = std::min(linearea[i]/gameopt.cuttingrowarea, 1.0);
 	}
+}
+
+void GameHandler::updatescoregraphic()
+{
+	for (const auto & i: textscores)
+	{
+		texthandler.deletetextfragment(i);
+	}
+	textscores[0] = texthandler.createtextfragment(std::to_string(linesortiles), TextAlign::ALIGN_RIGHT, 17, 10);
+	textscores[1] = texthandler.createtextfragment(std::to_string(level), TextAlign::ALIGN_RIGHT, 17, 7);
+	textscores[2] = texthandler.createtextfragment(std::to_string(score), TextAlign::ALIGN_RIGHT, 18, 3);
+	// Note really necessary, but better doing it here than during rendering
+	texthandler.updatevbo();
 }
 
 void GameHandler::step_physic()
@@ -283,9 +299,9 @@ void GameHandler::step_physic()
 		{
 			gamestate = RUNNING;
 			// Effectively cut lines at the end of the cutpause
-			for(float i = 0.0; i < gameopt.rows; i += gameopt.rowwidth)
+			for (float i = 0.0; i < gameopt.rows; i += gameopt.rowwidth)
 			{
-				if(linesbeingcut[i])
+				if (linesbeingcut[i])
 					cutline(i, i + gameopt.rowwidth);
 			}
 
@@ -301,13 +317,13 @@ void GameHandler::step_physic()
 
 	phh.step(level, [&](float x, float y)
 	{
-		if(gamestate == GAMEOVER)
+		if (gamestate == GAMEOVER)
 			return;
 		// The falling piece has landed:
 		// time to generate another piece if the screen is not full
 		phh.untagfallingpiece();
 
-		if( y > 0 )
+		if (y > 0)
 			checklineandnewpiece = true;
 		else
 			callgameover = true;
@@ -317,7 +333,7 @@ void GameHandler::step_physic()
 		float totalcuttedarea = 0.0;
 		int cuttedlines = 0;
 		updatelinearea();
-		for(float i = 0.0; i < gameopt.rows; i += gameopt.rowwidth)
+		for (float i = 0.0; i < gameopt.rows; i += gameopt.rowwidth)
 		{
 			if (linearea[i] > gameopt.cuttingrowarea)
 			{
@@ -327,7 +343,7 @@ void GameHandler::step_physic()
 				linesbeingcut[i] = true;
 			}
 		}
-		if(cuttedlines != 0)
+		if (cuttedlines != 0)
 		{
 			// Update score
 			int scoreadd = ceil(pow((cuttedlines*3),pow((totalcuttedarea/(10*cuttedlines)),10))*20+cuttedlines*cuttedlines*40);
@@ -335,7 +351,7 @@ void GameHandler::step_physic()
 			linesortiles += cuttedlines;
 			level = linesortiles/10;
 
-			phgraphic->updatescore(linesortiles, level, score);
+			updatescoregraphic();
 
 			// Set all pieces velocity to 0
 			phh.iteratepieces([&](PhysicPiece * php){
@@ -358,16 +374,16 @@ void GameHandler::step_physic()
 		linesortiles += 1;
 		level = 0;
 
-		phgraphic->updatescore(linesortiles, level, score);
+		updatescoregraphic();
 		newrandompiece();
 	}
 
-	if(callgameover)
+	if (callgameover)
 	{
 		phh.gameover();
 		gamestate = GAMEOVER;
 	}
-	if(gamestate == GAMEOVER)
+	if (gamestate == GAMEOVER)
 	{
 		bool nopiece = true;
 		phh.iteratepieces([&](PhysicPiece * php){
@@ -401,7 +417,7 @@ void GameHandler::step_graphic()
 			updatelinearea();
 		}
 	}
-	grh.beginrender();
+	grh.beginrender(texthandler);
 	phh.iteratepieces([&](PhysicPiece * php){
 		grh.renderpiece(php->getX(),php->getY(),php->getRot(),static_cast<GamePiece *>(php->getUserData())->grp);
 	});

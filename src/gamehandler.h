@@ -47,6 +47,8 @@ class GameHandler
 	GraphicHandler * phgraphic;
 	InputHandler * phinput;
 
+	TextHandler texthandler;
+
 	void newrandompiece();
 	GamePiece * newpiece(const piece<float> & p, float x, float y, float rot, PhysicPiece::PhysicPieceType type, GraphicPiece * sharedgp);
 	void randomnextpiece();
@@ -55,6 +57,7 @@ class GameHandler
 	float computelinearea(float from, float to);
 	void togglepause();
 	void updatelinearea();
+	void updatescoregraphic();
 
 	const GameOptions gameopt;
 
@@ -69,6 +72,8 @@ class GameHandler
 
 	//This is a cache and is used only to avoid recreating the same textures
 	std::vector<std::unique_ptr<GraphicPiece>> graphicpieces_uncutted;
+
+	std::array<GraphicText,3> textscores;
 
 	int nextpiece_type;
 	float nextpiece_rot;
