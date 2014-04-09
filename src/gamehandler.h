@@ -43,9 +43,9 @@ class GameHandler
 		}
 	};
 
-	PhysicHandler * phphysic;
-	GraphicHandler * phgraphic;
-	InputHandler * phinput;
+	PhysicHandler physichandler;
+	GraphicHandler graphichandler;
+	InputHandler inputhandler;
 
 	TextHandler texthandler;
 

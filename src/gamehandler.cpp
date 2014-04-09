@@ -43,15 +43,13 @@ namespace
 			);
 }
 
-GameHandler::GameHandler(const GameOptions & _gameopt, const FileLoader & fl):gameopt(_gameopt),score(0),level(0),linesortiles(0),gamestate(RUNNING), nextpiece_rot(0.0), updatebarscompleteness(1.0)
+GameHandler::GameHandler(const GameOptions & _gameopt, const FileLoader & fl):
+physichandler(_gameopt), graphichandler (_gameopt, fl), inputhandler(graphichandler.toinput()),
+gameopt(_gameopt),score(0),level(0),linesortiles(0),gamestate(RUNNING), nextpiece_rot(0.0), updatebarscompleteness(1.0)
 {
-	phphysic = new PhysicHandler (gameopt);
-	phgraphic = new GraphicHandler (gameopt, fl);
-	phinput = new InputHandler(phgraphic->toinput());
-
 	for (const auto & p: pieces)
 	{
-		graphicpieces_uncutted.emplace_back(phgraphic->createpiece(p));
+		graphicpieces_uncutted.emplace_back(graphichandler.createpiece(p));
 	}
 
 	textscores[0] = texthandler.createtextfragment(std::to_string(linesortiles), TextAlign::ALIGN_RIGHT, 17, 10);
@@ -72,9 +70,6 @@ GameHandler::GameHandler(const GameOptions & _gameopt, const FileLoader & fl):ga
 
 GameHandler::~GameHandler()
 {
-	delete phphysic;
-	delete phgraphic;
-	delete phinput;
 }
 
 void GameHandler::togglepause()
@@ -95,7 +90,7 @@ GameHandler::GamePiece * GameHandler::newpiece(const piece<float> & p, float x, 
 {
 	//TODO: free this memory at exit
 	auto * gamepiece = new GamePiece(p);
-	gamepiece->php = phphysic->createpiece(p, x, y, rot, gamepiece, type, level);
+	gamepiece->php = physichandler.createpiece(p, x, y, rot, gamepiece, type, level);
 	if (sharedgp)
 	{
 		gamepiece->graphicshared = true;
@@ -104,7 +99,7 @@ GameHandler::GamePiece * GameHandler::newpiece(const piece<float> & p, float x, 
 	else
 	{
 		gamepiece->graphicshared = false;
-		gamepiece->grp = phgraphic->createpiece(p);
+		gamepiece->grp = graphichandler.createpiece(p);
 	}
 	return gamepiece;
 }
@@ -112,8 +107,8 @@ GameHandler::GamePiece * GameHandler::newpiece(const piece<float> & p, float x, 
 void GameHandler::deletepiece(GamePiece* pgp)
 {
 	if (!pgp->graphicshared)
-		phgraphic->deletepiece(pgp->grp);
-	phphysic->destroypiece(pgp->php);
+		graphichandler.deletepiece(pgp->grp);
+	physichandler.destroypiece(pgp->php);
 	delete pgp;
 }
 
@@ -167,7 +162,7 @@ void GameHandler::cutline(float from, float to)
 	};
 	std::list<DeletePiece> deletelist;
 
-	phphysic->getpieces_in_rect(x0, y0, x1, y1, [y0, y1, &deletelist](PhysicPiece * php){
+	physichandler.getpieces_in_rect(x0, y0, x1, y1, [y0, y1, &deletelist](PhysicPiece * php){
 		polygon<float> p (static_cast<GamePiece *>(php->getUserData())->p.getshape());
 		struct DeletePiece dp;
 
@@ -234,7 +229,7 @@ float GameHandler::computelinearea(float from, float to)
 
 	std::list<polygon<float>> midremainders;
 
-	phphysic->getpieces_in_rect(x0, y0, x1, y1, [y0, y1, &midremainders](PhysicPiece * php){
+	physichandler.getpieces_in_rect(x0, y0, x1, y1, [y0, y1, &midremainders](PhysicPiece * php){
 		polygon<float> p (static_cast<GamePiece *>(php->getUserData())->p.getshape());
 
 		// Transform the piece coordinates from local to global
@@ -309,19 +304,18 @@ void GameHandler::step_physic()
 			newrandompiece();
 		}
 	}
-	PhysicHandler &phh = *phphysic;
 	bool checklineandnewpiece = false, callgameover = false;
 
 	nextpiece_rot += gameopt.physicstep;
 	nextpiece_rot = fmod(nextpiece_rot, 2*M_PI);
 
-	phh.step(level, [&](float x, float y)
+	physichandler.step(level, [&](float x, float y)
 	{
 		if (gamestate == GAMEOVER)
 			return;
 		// The falling piece has landed:
 		// time to generate another piece if the screen is not full
-		phh.untagfallingpiece();
+		physichandler.untagfallingpiece();
 
 		if (y > 0)
 			checklineandnewpiece = true;
@@ -354,7 +348,7 @@ void GameHandler::step_physic()
 			updatescoregraphic();
 
 			// Set all pieces velocity to 0
-			phh.iteratepieces([&](PhysicPiece * php){
+			physichandler.iteratepieces([&](PhysicPiece * php){
 				php->standstill();
 			});
 
@@ -380,13 +374,13 @@ void GameHandler::step_physic()
 
 	if (callgameover)
 	{
-		phh.gameover();
+		physichandler.gameover();
 		gamestate = GAMEOVER;
 	}
 	if (gamestate == GAMEOVER)
 	{
 		bool nopiece = true;
-		phh.iteratepieces([&](PhysicPiece * php){
+		physichandler.iteratepieces([&](PhysicPiece * php){
 			nopiece = false;
 			//If piece fallen outside of the screen
 			if (php->getY() > gameopt.rows + 4 * gameopt.rowwidth )
@@ -405,9 +399,6 @@ void GameHandler::step_physic()
 
 void GameHandler::step_graphic()
 {
-	GraphicHandler &grh = *phgraphic;
-	PhysicHandler &phh = *phphysic;
-
 	if (gameopt.gametype == GameOptions::CUTTING)
 	{
 		updatebarscompleteness += gameopt.updatebarsfreq;
@@ -417,26 +408,23 @@ void GameHandler::step_graphic()
 			updatelinearea();
 		}
 	}
-	grh.beginrender(texthandler);
-	phh.iteratepieces([&](PhysicPiece * php){
-		grh.renderpiece(php->getX(),php->getY(),php->getRot(),static_cast<GamePiece *>(php->getUserData())->grp);
+	graphichandler.beginrender(texthandler);
+	physichandler.iteratepieces([&](PhysicPiece * php){
+		graphichandler.renderpiece(php->getX(),php->getY(),php->getRot(),static_cast<GamePiece *>(php->getUserData())->grp);
 	});
 	if (gamestate != GAMEOVER)
-		grh.renderpiece(gameopt.columns + 5.0F, 15.0F, nextpiece_rot, graphicpieces_uncutted[nextpiece_type].get());
+		graphichandler.renderpiece(gameopt.columns + 5.0F, 15.0F, nextpiece_rot, graphicpieces_uncutted[nextpiece_type].get());
 	if ((gamestate == CUTPAUSED || gamestate == CUTPAUSED_PAUSED) && (cutpausecontdown%30) > 15 )
-		grh.endrender(linecompleteness, linesbeingcut);
+		graphichandler.endrender(linecompleteness, linesbeingcut);
 	else
-		grh.endrender(linecompleteness, linesfalse);
+		graphichandler.endrender(linecompleteness, linesfalse);
 }
 
 bool GameHandler::step_logic()
 {
-	PhysicHandler &phh = *phphysic;
-	InputHandler &inh = *phinput;
-
 	bool continuerunning = true;
 
-	inh.process_input(
+	inputhandler.process_input(
 		[&]()//EXIT
 		{
 			continuerunning = false;
@@ -445,32 +433,32 @@ bool GameHandler::step_logic()
 		{
 			if(gamestate != RUNNING)
 				return;
-			phh.piecemove(-1);
+			physichandler.piecemove(-1);
 		},
 		[&]()//RIGHT
 		{
 			if(gamestate != RUNNING)
 				return;
-			phh.piecemove(1);
+			physichandler.piecemove(1);
 
 		},
 		[&]()//DOWN
 		{
 			if(gamestate != RUNNING)
 				return;
-			phh.pieceaccelerate();
+			physichandler.pieceaccelerate();
 		},
 		[&]()//Z
 		{
 			if(gamestate != RUNNING)
 				return;
-			phh.piecerotate(-1);
+			physichandler.piecerotate(-1);
 		},
 		[&]()//X
 		{
 			if(gamestate != RUNNING)
 				return;
-			phh.piecerotate(1);
+			physichandler.piecerotate(1);
 		},
 		[&]()//ENTER PRESS
 		{
