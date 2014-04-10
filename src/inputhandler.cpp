@@ -158,6 +158,7 @@ void InputHandler::keyset(int key, bool setto)
 #define NONTETRIS_RIGHT GLFW_KEY_RIGHT
 #define NONTETRIS_DOWN GLFW_KEY_DOWN
 #define NONTETRIS_ENTER GLFW_KEY_ENTER
+#define NONTETRIS_KP_ENTER GLFW_KEY_KP_ENTER
 #endif
 	switch (key)
 	{
@@ -181,6 +182,9 @@ void InputHandler::keyset(int key, bool setto)
 	case 'X':
 		act.k_x = setto;
 		break;
+#ifdef NONTETRIS_KP_ENTER
+	case NONTETRIS_KP_ENTER:
+#endif
 	case NONTETRIS_ENTER:
 		act.k_enter = setto;
 		break;
