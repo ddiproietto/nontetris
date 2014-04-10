@@ -1,19 +1,19 @@
 /*****************************************************************************
 
      Copyright (C) 2013  Daniele Di Proietto <d.diproietto@sssup.it>
-     
+
      This file is part of nontetris.
-     
+
      nontetris is free software: you can redistribute it and/or modify
      it under the terms of the GNU General Public License as published by
      the Free Software Foundation, either version 3 of the License, or
      (at your option) any later version.
-     
+
      nontetris is distributed in the hope that it will be useful,
      but WITHOUT ANY WARRANTY; without even the implied warranty of
      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
      GNU General Public License for more details.
-     
+
      You should have received a copy of the GNU General Public License
      along with nontetris.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -108,7 +108,7 @@ void remove_duplicates(std::vector<int> & arr)
 	std::vector<int> newarr;
 	for (unsigned int i = 0; i < arr.size(); ++i)
 	{
-		if(i == arr.size()-1 || arr[i] != arr[i+1])
+		if (i == arr.size()-1 || arr[i] != arr[i+1])
 			newarr.push_back(arr[i]);
 		else
 			++i;
@@ -192,7 +192,7 @@ bool cutter(const polygon<T> & p, C1 & upres, C2 & downres, C3 & midres, T up, T
 	{
 		/* If the refiner is enabled there might be a corner case:
 		 * an intersection vector can be 1135. We have to remove consecutive
-		 * duplicates(-> 35). In order to do so we must first transform the 
+		 * duplicates(-> 35). In order to do so we must first transform the
 		 * intersection indexes to be in the range [0, intersections.size()-1]
 		 * to allow comparison */
 		auto normalize_fn = [&](int & a)
@@ -263,7 +263,7 @@ bool cutter(const polygon<T> & p, C1 & upres, C2 & downres, C3 & midres, T up, T
 	}
 	else if (up_intersections.size() == 0 && down_intersections.size() == 4)
 	{
-		if(isvec4ordasc(down_intersections))
+		if (isvec4ordasc(down_intersections))
 		{
 			midres.push_back(myslice(newp, down_intersections[0], down_intersections[1]));
 			midres.push_back(myslice(newp, down_intersections[2], down_intersections[3]));
@@ -278,7 +278,7 @@ bool cutter(const polygon<T> & p, C1 & upres, C2 & downres, C3 & midres, T up, T
 	}
 	else if (up_intersections.size() == 4 && down_intersections.size() == 0)
 	{
-		if(isvec4ordasc(up_intersections))
+		if (isvec4ordasc(up_intersections))
 		{
 			upres.push_back(myslice(newp, up_intersections[0], up_intersections[1]));
 			upres.push_back(myslice(newp, up_intersections[2], up_intersections[3]));
@@ -294,11 +294,11 @@ bool cutter(const polygon<T> & p, C1 & upres, C2 & downres, C3 & midres, T up, T
 	else if (up_intersections.size() == 2 && down_intersections.size() == 4)
 	{
 		upres.push_back(myslice(newp, up_intersections[0], up_intersections[1]));
-		if(isvec4ordasc(down_intersections))
+		if (isvec4ordasc(down_intersections))
 		{
 			downres.push_back(myslice(newp, down_intersections[1], down_intersections[2], down_intersections[3], down_intersections[0]));
 
-			if(isvec4ordasc(make_array(down_intersections[0], up_intersections[0], up_intersections[1], down_intersections[1])))
+			if (isvec4ordasc(make_array(down_intersections[0], up_intersections[0], up_intersections[1], down_intersections[1])))
 			{
 				midres.push_back(myslice(newp, down_intersections[0], up_intersections[0], up_intersections[1], down_intersections[1]));
 				midres.push_back(myslice(newp, down_intersections[2], down_intersections[3]));
@@ -319,7 +319,7 @@ bool cutter(const polygon<T> & p, C1 & upres, C2 & downres, C3 & midres, T up, T
 	else if (up_intersections.size() == 4 && down_intersections.size() == 2)
 	{
 		downres.push_back(myslice(newp, down_intersections[1], down_intersections[0]));
-		if(isvec4ordasc(up_intersections))
+		if (isvec4ordasc(up_intersections))
 		{
 			midres.push_back(myslice(newp, down_intersections[0], up_intersections[0], up_intersections[1], up_intersections[2], up_intersections[3], down_intersections[1]));
 			upres.push_back(myslice(newp, up_intersections[0], up_intersections[1]));
@@ -328,7 +328,7 @@ bool cutter(const polygon<T> & p, C1 & upres, C2 & downres, C3 & midres, T up, T
 		else
 		{
 			upres.push_back(myslice(newp, up_intersections[0], up_intersections[3], up_intersections[2], up_intersections[1]));
-			if(isvec4ordasc(make_array(up_intersections[1],down_intersections[1], down_intersections[0], up_intersections[0])))
+			if (isvec4ordasc(make_array(up_intersections[1],down_intersections[1], down_intersections[0], up_intersections[0])))
 			{
 				midres.push_back(myslice(newp, down_intersections[0], up_intersections[0], up_intersections[1], down_intersections[1]));
 				midres.push_back(myslice(newp, up_intersections[3], up_intersections[2]));
@@ -342,7 +342,7 @@ bool cutter(const polygon<T> & p, C1 & upres, C2 & downres, C3 & midres, T up, T
 	}
 	else if (up_intersections.size() == 4 && down_intersections.size() == 4)
 	{
-		if(!isvec4ordasc(up_intersections) && !isvec4ordasc(down_intersections))
+		if (!isvec4ordasc(up_intersections) && !isvec4ordasc(down_intersections))
 		{
 			upres.push_back(myslice(newp, up_intersections[0], up_intersections[3], up_intersections[2], up_intersections[1]));
 			downres.push_back(myslice(newp, down_intersections[3], down_intersections[2]));
@@ -350,7 +350,7 @@ bool cutter(const polygon<T> & p, C1 & upres, C2 & downres, C3 & midres, T up, T
 			midres.push_back(myslice(newp, down_intersections[0], up_intersections[0], up_intersections[1], down_intersections[1]));
 			midres.push_back(myslice(newp, down_intersections[2], up_intersections[2], up_intersections[3], down_intersections[3]));
 		}
-		else if(isvec4ordasc(up_intersections) && !isvec4ordasc(down_intersections))
+		else if (isvec4ordasc(up_intersections) && !isvec4ordasc(down_intersections))
 		{
 			downres.push_back(myslice(newp, down_intersections[3], down_intersections[2]));
 			downres.push_back(myslice(newp, down_intersections[1], down_intersections[0]));
@@ -358,7 +358,7 @@ bool cutter(const polygon<T> & p, C1 & upres, C2 & downres, C3 & midres, T up, T
 			upres.push_back(myslice(newp, up_intersections[2], up_intersections[3]));
 			midres.push_back(myslice(newp, down_intersections[0], up_intersections[0], up_intersections[1], up_intersections[2], up_intersections[3], down_intersections[3], down_intersections[2], down_intersections[1]));
 		}
-		else if(isvec4ordasc(up_intersections) && isvec4ordasc(down_intersections))
+		else if (isvec4ordasc(up_intersections) && isvec4ordasc(down_intersections))
 		{
 			upres.push_back(myslice(newp, up_intersections[0], up_intersections[1]));
 			upres.push_back(myslice(newp, up_intersections[2], up_intersections[3]));
@@ -376,7 +376,7 @@ bool cutter(const polygon<T> & p, C1 & upres, C2 & downres, C3 & midres, T up, T
 		//TODO: error strange number of intersections
 	}
 
-return true;
+	return true;
 }
 
 #endif //_CUTTER_H

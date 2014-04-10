@@ -1,19 +1,19 @@
 /*****************************************************************************
 
      Copyright (C) 2013  Daniele Di Proietto <d.diproietto@sssup.it>
-     
+
      This file is part of nontetris.
-     
+
      nontetris is free software: you can redistribute it and/or modify
      it under the terms of the GNU General Public License as published by
      the Free Software Foundation, either version 3 of the License, or
      (at your option) any later version.
-     
+
      nontetris is distributed in the hope that it will be useful,
      but WITHOUT ANY WARRANTY; without even the implied warranty of
      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
      GNU General Public License for more details.
-     
+
      You should have received a copy of the GNU General Public License
      along with nontetris.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -82,7 +82,7 @@ std::vector<polygon<T> > convexer(polygon<T> p)
 		{
 			T np1 = point<T>::crossproduct(p[i-1] - p[i], p[i+1+num] - p[i]);
 			T np2 = point<T>::crossproduct(p[i+1+num] - p[i], p[i+1] - p[i]);
-			
+
 			thisok1 = np1 < 0;
 			thisok2 = np2 < 0;
 
@@ -100,7 +100,7 @@ std::vector<polygon<T> > convexer(polygon<T> p)
 				       ya = p[i-1].y,
 				       xb = p[i+1].x,
 				       yb = p[i+1].y;
-				
+
 				double mu1 = ((y0-yb)*(xp-xb) - (x0-xb)*(yp-yb))/((x1-x0)*(yp-yb)-(y1-y0)*(xp-xb));
 
 				float c1x = x0 + mu1*(x1-x0),
@@ -110,10 +110,10 @@ std::vector<polygon<T> > convexer(polygon<T> p)
 				point<T> newpoint({c1x,c1y});
 				std::cerr<<newpoint<<std::endl;
 				*/
-				
+
 				p.insert(insert_before_index, point<T>({c1x,c1y}));
 				cutpoints_indexes.push_back(insert_before_index);
-				
+
 				if(cutpoints_indexes[0] >= insert_before_index)
 				{
 					cutpoints_indexes[0]++;
@@ -144,7 +144,7 @@ std::vector<polygon<T> > convexer(polygon<T> p)
 	}
 	std::cerr<<std::endl;
 	*/
-	
+
 	polygon<T> polygonA, polygonB;
 	bool doingA = true;
 	for(int i = 0; i < s; i++)
@@ -216,7 +216,7 @@ std::vector<polygon<T> > convexer(polygon<T> p)
 		ret.push_back(polygonA);
 	if (polygonB.size() >= 3)
 		ret.push_back(polygonB);
-	
+
 	/*
 	std::cerr<<"NEWPOLYGON:";
 	for(auto pt: p)
