@@ -101,14 +101,18 @@ static int isvec4ordasc(T arr)
 	return notascendingsteps <= 1;
 }
 
-/* Removes consecutive duplicates
- * i.e. 1123 -> 23 */
-void remove_duplicates(std::vector<int> & arr)
+/* Removes adjacent duplicates
+ * i.e. 1123 -> 23, 7427 -> 42 */
+void remove_adjacent_duplicates(std::vector<int> & arr)
 {
 	std::vector<int> newarr;
-	for (unsigned int i = 0; i < arr.size(); ++i)
+	auto s = arr.size();
+	for (unsigned int i = 0; i < s; ++i)
 	{
-		if (i == arr.size()-1 || arr[i] != arr[i+1])
+		// Special case for first == last
+		if (arr[0] == arr[s-1] && (i == 0 || i == s-1))
+			;
+		else if (i == s-1 || arr[i] != arr[i+1])
 			newarr.push_back(arr[i]);
 		else
 			++i;
@@ -202,8 +206,8 @@ bool cutter(const polygon<T> & p, C1 & upres, C2 & downres, C3 & midres, T up, T
 		std::for_each(up_intersections.begin(), up_intersections.end(), normalize_fn);
 		std::for_each(down_intersections.begin(), down_intersections.end(), normalize_fn);
 
-		remove_duplicates(up_intersections);
-		remove_duplicates(down_intersections);
+		remove_adjacent_duplicates(up_intersections);
+		remove_adjacent_duplicates(down_intersections);
 	}
 
 	/* Sort intersections by the x coordinate */
