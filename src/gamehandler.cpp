@@ -26,6 +26,10 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+#ifdef DEBUGAREALOSS
+#include <csignal>
+#endif
+
 #include "myutil.h"
 
 #include "cutter.h"
@@ -159,6 +163,9 @@ void GameHandler::cutline(float from, float to)
 		GamePiece * pgp;
 		int originaltype;
 		float x,y,rot;
+#ifdef DEBUGAREALOSS
+		std::list<polygon<float>> midremainders;
+#endif
 	};
 	std::list<DeletePiece> deletelist;
 
@@ -173,16 +180,20 @@ void GameHandler::cutline(float from, float to)
 			vertex.translate(php->getX(), php->getY());
 		}
 
+#ifndef DEBUGAREALOSS
 		struct
 		{
 			void push_back(const polygon<float> & p)
 			{
 				(void) p;
 			}
-		} dummycontainer;
+		} midcontainer;
+#else
+		auto & midcontainer = dp.midremainders;
+#endif
 
 		// Here cutter uses the tolerance
-		bool isinbetween = cutter(p, dp.remainders, dp.remainders, dummycontainer, y0, y1, 0.1F);
+		bool isinbetween = cutter(p, dp.remainders, dp.remainders, midcontainer, y0, y1, 0.1F);
 
 		if (isinbetween)
 		{
@@ -198,11 +209,15 @@ void GameHandler::cutline(float from, float to)
 	for (auto & dp: deletelist)
 	{
 		GamePiece * pgp = dp.pgp;
+#ifdef DEBUGAREALOSS
+		float prevarea = pgp->p.getshape().area(),
+			newarea = 0;
+#endif
 
-		//Create remainders
-		for(auto & pol: dp.remainders)
+		// Create remainders
+		for (auto & pol: dp.remainders)
 		{
-			//Transform the piece coordinates from global to local again
+			// Transform the piece coordinates from global to local again
 			for (auto & vertex: pol)
 			{
 				vertex.translate(-dp.x, -dp.y);
@@ -213,7 +228,18 @@ void GameHandler::cutline(float from, float to)
 			piece<float> newp (pol, dp.originaltype);
 			if (!newp.empty())
 				newpiece(newp, dp.x, dp.y, dp.rot, PhysicPiece::OLD_PIECE);
+#ifdef DEBUGAREALOSS
+			newarea += pol.area();
+#endif
 		}
+#ifdef DEBUGAREALOSS
+		for (auto & pol: dp.midremainders)
+		{
+			newarea += pol.area();
+		}
+		if (fabs(prevarea - newarea) > 1.0)
+			raise(SIGTRAP);
+#endif
 		deletepiece(pgp);
 	}
 }
