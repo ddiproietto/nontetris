@@ -56,8 +56,8 @@ int main(int argc, char * argv[])
 
 		.physicstep = 1.0/60.0,
 
-		.width      = 600,
-		.height     = 540,
+		.width      = 640,
+		.height     = 576,
 		.fullscreen = false,
 		.piecesAA   = 4,
 	};
