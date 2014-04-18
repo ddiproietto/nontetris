@@ -360,30 +360,16 @@ GraphicToInput GraphicHandler::toinput()
 // Very simple tessellation: FROM counterclockwise list of vertices TO triangle strip
 // Since all polygons are convex all we need to do is reorder the vertices.
 // e.g. 1 2 3 4 5 6 -> 1 2 6 3 4 5
-// If the piece is made of two convex polygons we simply put twice the first vertex of the second polygon,
-// thus creating a degenerate triangle. This works properly if:
-// - the first vertex of the second polygon lies on a side of the first polygon.
 GraphicPiece * GraphicHandler::createpiece(const piece<float> & pie)
 {
 	GraphicPiece * pgp = new GraphicPiece;
 	GLuint VBOid;
-	size_t size = (pie.totsize()+(pie.size()-1))*4;
+	size_t size = (pie.totsize())*4;
 	std::vector<GLfloat> vertices;
 	vertices.reserve(size);
-	bool firstshape = true;
+
 	for (const auto & pol: pie )
 	{
-		if ( firstshape )
-		{
-			firstshape = false;
-		}
-		else
-		{
-			vertices.push_back(pol[0].x);
-			vertices.push_back(pol[0].y);
-			vertices.push_back((pol[0].x-2.0)/4);
-			vertices.push_back((pol[0].y-2.0)/4);
-		}
 		vertices.push_back(pol[0].x);
 		vertices.push_back(pol[0].y);
 		vertices.push_back((pol[0].x-2.0)/4);
@@ -449,7 +435,13 @@ GraphicPiece * GraphicHandler::createpiece(const piece<float> & pie)
 
 	glVertexAttribPointer(aGlobalVertexPositionLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)0);
 	glVertexAttribPointer(aGlobalTextureCoordLoc, 2, GL_FLOAT, false, 4*sizeof(GLfloat), (glvapt)(2*sizeof(GLfloat)));
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, vertices.size()/4);
+
+	int sum = 0;
+	for (const auto & pol: pie )
+	{
+		glDrawArrays(GL_TRIANGLE_STRIP, sum, pol.size());
+		sum += pol.size();
+	}
 
 	glBindTexture(GL_TEXTURE_2D, piecetex);
 	glGenerateMipmap(GL_TEXTURE_2D);

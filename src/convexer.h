@@ -168,48 +168,6 @@ std::vector<polygon<T> > convexer(polygon<T> p)
 	polygonA.removetoonearvertices();
 	polygonB.removetoonearvertices();
 
-	// Now, try to shift polygonB such that first element also belong to polygonA
-	// Since that may not be possible, because of vertices removal,
-	// let's put in the first place the polygonB vertex that has minimal distance
-	// from polygonA
-	// TODO: This is slow (A*B, number of the vertices)
-
-	int mindistB_index = 0;
-	T mindistB = std::numeric_limits<T>::infinity();
-	for (int i = 0; i < polygonB.size(); ++i)
-	{
-		auto & pB = polygonB[i];
-		T dist = polygonA.dist(pB);
-		if (dist < mindistB)
-		{
-			mindistB_index = i;
-			mindistB = dist;
-		}
-	}
-
-	// Also evaluates the minimum distance from each element of A to B
-	int mindistA_index = 0;
-	T mindistA = std::numeric_limits<T>::infinity();
-	for (int i = 0; i < polygonA.size(); ++i)
-	{
-		auto & pA = polygonA[i];
-		T dist = polygonB.dist(pA);
-		if (dist < mindistA)
-		{
-			mindistA_index = i;
-			mindistA = dist;
-		}
-	}
-
-	if(mindistA < mindistB)
-	{
-		std::swap(mindistA, mindistB);
-		std::swap(mindistA_index, mindistB_index);
-		std::swap(polygonA, polygonB);
-	}
-
-	polygonB.arrayrotate(mindistB_index);
-
 	std::vector<polygon<T>> ret;
 
 	if (polygonA.size() >= 3)
