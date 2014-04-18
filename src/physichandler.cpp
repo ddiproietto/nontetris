@@ -243,7 +243,8 @@ void PhysicHandler::iteratepieces(std::function <void (PhysicPiece *)> cb)
 
 struct MyQueryCallback : public b2QueryCallback
 {
-	//Duetto (0.9.4) has a bug and does not support set
+	/* Duetto does not support set or maps of pointers,
+	 * because pointers are not globally ordered */
 #ifndef __DUETTO__
 	std::set<b2Body *> bodylist;
 #else
@@ -256,9 +257,8 @@ struct MyQueryCallback : public b2QueryCallback
 #ifndef __DUETTO__
 		bodylist.insert(body);
 #else
-		//This is particularly stupid, but it's a temporary workaround
-		//until set gets fixed
-		if(find(bodylist.begin(), bodylist.end(), body) == bodylist.end())
+		// TODO: slow
+		if (find(bodylist.begin(), bodylist.end(), body) == bodylist.end())
 		{
 			bodylist.push_front(body);
 		}

@@ -53,7 +53,8 @@ gameopt(_gameopt),score(0),level(0),linesortiles(0),gamestate(RUNNING), nextpiec
 {
 	for (const auto & p: pieces)
 	{
-		graphicpieces_uncutted.emplace_back(graphichandler.createpiece(p));
+		// Should use make_unique, but it's c++1y
+		graphicpieces_uncutted.push_back(std::move(std::unique_ptr<GraphicPiece>(graphichandler.createpiece(p))));
 	}
 
 	textscores[0] = texthandler.createtextfragment(std::to_string(linesortiles), TextAlign::ALIGN_RIGHT, 17, 10);
