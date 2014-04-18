@@ -130,7 +130,7 @@ int webMain() [[client]]
 	};
 
 	__asm__(" \
-		_compatRequestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || \
+		window._compatRequestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || \
 			window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;");
 
 	//TODO: think of a better way to compare
