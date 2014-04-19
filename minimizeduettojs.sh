@@ -29,6 +29,6 @@ echo "\"use strict\";(function(){" > "$FILE"
 cat duettobuild/src/nontetris.js >> "$FILE"
 echo "})();" >> "$FILE"
 
-java -jar "$CLOSURE_COMPILER_PATH" --language_in=ECMASCRIPT5 --js="$FILE" --js_output_file=duettobuild/src/nontetris.js
+java -jar "$CLOSURE_COMPILER_PATH" --language_in=ECMASCRIPT5_STRICT --js="$FILE" --js_output_file=duettobuild/src/nontetris.js
 
 rm -f "$FILE"
