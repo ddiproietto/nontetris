@@ -25,9 +25,8 @@
 
 #include <limits>
 
-template <class T = float>
-//TODO:return rvalue reference?
-std::vector<polygon<T> > convexer(polygon<T> p)
+template <typename T = float, class C>
+void convexer(polygon<T> p, C & ret)
 {
 	/*
 	std::cerr<<"OLDPOLYGON:";
@@ -64,9 +63,12 @@ std::vector<polygon<T> > convexer(polygon<T> p)
 	std::cerr<<std::endl;
 	*/
 	if(concavity_points_indexes.size() == 0)
-		//There are no concavity points!
-		//The polygon is convex
-		return std::vector<polygon<T>>({p});
+	{
+		/* There are no concavity points!
+		 * The polygon is convex */
+		ret.push_back(p);
+		return;
+	}
 	if(concavity_points_indexes.size() == 2)
 	{
 		cutpoints_indexes = concavity_points_indexes;
@@ -134,7 +136,7 @@ std::vector<polygon<T> > convexer(polygon<T> p)
 	{
 		//TODO:signal error
 		//std::cerr << "concavity_points > 2!! "<< concavity_points_indexes.size() << std::endl;
-		return std::vector<polygon<T>>();
+		return;
 	}
 	/*
 	std::cerr<<"CUTPOINTS:";
@@ -168,8 +170,6 @@ std::vector<polygon<T> > convexer(polygon<T> p)
 	polygonA.removetoonearvertices();
 	polygonB.removetoonearvertices();
 
-	std::vector<polygon<T>> ret;
-
 	if (polygonA.size() >= 3)
 		ret.push_back(polygonA);
 	if (polygonB.size() >= 3)
@@ -195,7 +195,5 @@ std::vector<polygon<T> > convexer(polygon<T> p)
 	}
 	std::cerr<<std::endl;
 	*/
-	return ret;
-
 }
 #endif //_CONVEXER_H

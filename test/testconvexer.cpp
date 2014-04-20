@@ -70,7 +70,7 @@ int main()
 		cout << "\t\"orig\": [";
 		cout << test << "]," << endl;
 
-		result = convexer(test);
+		convexer(test, result);
 
 		cout << "\t\"separateplots\": [" << endl; 
 		printeverypolygon_updatearea(result, newarea);

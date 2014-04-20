@@ -78,7 +78,7 @@ int webMain()
 
 		oldarea = test.area();
 
-		result = convexer(test);
+		convexer(test, result);
 
 		if(firsttest)
 			firsttest = false;

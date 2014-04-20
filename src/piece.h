@@ -78,7 +78,8 @@ public:
 
 	void updateconvex()
 	{
-		convshapes = convexer(shape);
+		convshapes.clear();
+		convexer(shape, convshapes);
 	}
 	polygon<T> getshape() const
 	{
