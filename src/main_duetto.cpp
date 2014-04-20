@@ -32,7 +32,7 @@
  */
 
 extern "C" {
-	void compatRequestAnimationFrame(const client::EventListener&);
+	void compatRequestAnimationFrame(client::EventListener*);
 }
 
 namespace
