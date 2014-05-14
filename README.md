@@ -4,17 +4,17 @@ Nontetris
 Nontetris is inspired by (i.e. a clone of) the awesome  [Not Tetris 2](http://stabyourself.net/nottetris2/) by Maurice Guégan.
 It is a multiplatform demo (just playable) that uses GL for rendering. When I say multiplatform, I mean:
 
-* **Web with duetto**: it works at least with Firefox and Chrome, if WebGL is available. It still has issues, but we hope to fix them soon. Play online [here](http://allievi.sssup.it/jacopone/cnontetris/)
+* **Web with duetto**: it works at least with Firefox and Chrome, if WebGL is available. Play online [here](http://allievi.sssup.it/jacopone/cnontetris/)
 * **Windows**: working with MXE cross compiler toolchain! Get the executable [here](https://allievi.sssup.it/jacopone/cnontetris-win/nontetris.zip)
 * **Linux**: currently supported with glfw (You have to build the source yourself)
-* **Web with emscripten**: work in progress
+* **Web with emscripten**: it works at least with Firefox and Chrome, if WebGL is available. Play online [here](http://allievi.sssup.it/jacopone/cnontetris/index.html?compiler=emscripten)
 
 Building
 ================
 
 Get the source code with
 	
-	git clone git@github.com:ddiproietto/nontetris.git
+	git clone https://github.com/ddiproietto/nontetris.git
 
 Linux
 ---------------
@@ -76,17 +76,11 @@ You just need [duetto](http://leaningtech.com/duetto/) and cmake.
 	cmake -DCMAKE_TOOLCHAIN_FILE=/opt/duetto/share/cmake/Modules/DuettoToolchain.cmake ..
 	make
 
-After the build is finished you will find some useful symlinks to the build JS files and JS duetto libraries in www/ directory. Now, if you start a webserver, serving static content from that folder
-
-	cd ..
-	cd www/
-	python -m SimpleHTTPServer 8888
-
-You can access localhost:8888 with your browser and play nontetris.
+See below for running instructions.
 
 *Optional: you can minify all the JS in a single file with ./minimizeduettojs.sh . You should edit the script to point to the google [closure compiler](https://developers.google.com/closure/compiler/), if you are using debian you can simply install the package libclosure-compiler-java. The script replaces the built JS with a minified one.*
 
-Emscripten
+Web with Emscripten
 ----------
 
 Prerequisites: cmake(2.8.8), emscripten(tested with 1.10)
@@ -94,7 +88,7 @@ Prerequisites: cmake(2.8.8), emscripten(tested with 1.10)
 Edit the script emscriptenbuild.sh to reflect the Emscripten location in your system
 
 	#Path to emscripten
-	WHEREISEMSCRIPTEN= /usr/share/emscripten/
+	WHEREISEMSCRIPTEN=/usr/share/emscripten/
 
 Emscripten provides glfw 2, so this option must be OFF in CMakeLists.txt
 
@@ -104,19 +98,33 @@ Now by typing
 
 	./emscriptenbuild.sh
 
-the build process should start. The built file is emscriptenbuild/project.html.
+the build process should start.
 
+See below for running instructions.
+
+Running the web version
+-----------------------
+
+Whether you used duetto or emscripten (or both), the www/index.html is able to run the application. The www/ directory contains symlinks to the built JS files and to the resources necessary to run the application on the web.
+
+Since XMLHttpRequest is used, you will need a static webserver serving the content from the www/ directory. The simplest way to setup one (on Linux) is to open a terminal, cd into the www/ directory and type
+
+	python -m SimpleHTTPServer 8888
+
+You can access localhost:8888 with your browser and play nontetris.
+
+index.html embeds a JS snippet that chooses the scripts to load (nontetris-duetto.js for duetto, nontetris-emscripten.js and emscriptenwrapper.js for emscripten) based on the URL parameters. This happens on the client side and no server support is required. If one is interested only in one compiler, the scripts can be included directly.
 
 Technology
 ==========
 
 The code makes use of C++11 features (lambdas, std::array, std::chrono, initializer lists, ...)
 
-This project uses the Box2D library. The code has been modified to be built successfully under Duetto(no custom allocators, no unions). All the modification are enclosed by #ifdef __DUETTO__.
+This project uses the Box2D library. The code has been modified to be built successfully under Duetto (no custom allocators, no unions). All the modification are enclosed by #ifdef __DUETTO__.
 
-OpenGL is used to display graphics. The same codebase works on the native platform and on the web: a small wrapper has been written for duetto(src/duettogl.cpp) to map some basic GL calls to WebGL.
+OpenGL is used to display graphics. The same codebase works on the native platform and on the web.
 
-To load textures and external files(shaders) two small classes have been written (for duetto): src/texloader.h src/fileloader.h. They simply put the content on the DOM for a later retrieval and call a function when the resources have been loaded.
+To load textures and external files (shaders), two small classes have been written (for duetto): src/texloader.h src/fileloader.h. They simply put the content on the DOM for a later retrieval and call a function when the resources have been loaded.
 
 Directories
 -----------
@@ -131,7 +139,7 @@ src/ contains the sources of the project
 
 srclib/ contains some libraries that have been embedded (Box2D and lodepng)
 
-www/ contains html files and symlink to the built code for duetto. After the build it contains all the files necessary to run on the web.
+www/ contains html files and symlinks to the built code for duetto and emscripten. After the build it contains all the files necessary to run on the web.
 
 Todo
 ====
