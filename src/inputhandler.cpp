@@ -47,8 +47,8 @@ InputHandler::KeyState InputHandler::previntegrated;
 InputHandler::InputHandler(GraphicToInput gti)
 {
 #ifdef __DUETTO__
-	document.addEventListener("keydown", Callback(duetto_keydown));
-	document.addEventListener("keyup", Callback(duetto_keyup));
+	document.addEventListener("keydown", duetto::Callback(duetto_keydown));
+	document.addEventListener("keyup", duetto::Callback(duetto_keyup));
 #elif defined(EMSCRIPTEN)
 	emscripten_set_keydown_callback(NULL, 0, 1, emscripten_keycallback);
 	emscripten_set_keyup_callback(NULL, 0, 1, emscripten_keycallback);
@@ -64,8 +64,8 @@ InputHandler::InputHandler(GraphicToInput gti)
 InputHandler::~InputHandler()
 {
 #ifdef __DUETTO__
-	document.removeEventListener("keydown", Callback(duetto_keydown));
-	document.removeEventListener("keyup", Callback(duetto_keyup));
+	document.removeEventListener("keydown", duetto::Callback(duetto_keydown));
+	document.removeEventListener("keyup", duetto::Callback(duetto_keyup));
 #elif defined(EMSCRIPTEN)
 	emscripten_set_keydown_callback(NULL, 0, 1, NULL);
 	emscripten_set_keyup_callback(NULL, 0, 1, NULL);
