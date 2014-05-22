@@ -32,7 +32,7 @@
  */
 
 extern "C" {
-	void compatRequestAnimationFrame(const client::EventListener&);
+	void compatRequestAnimationFrame(client::EventListener*);
 }
 
 namespace
@@ -50,7 +50,7 @@ namespace
 			return;
 
 		pgh->step_graphic();
-		compatRequestAnimationFrame(client::Callback(oneiterationwrappergraphic));
+		compatRequestAnimationFrame(duetto::Callback(oneiterationwrappergraphic));
 	}
 
 	void oneiterationwrapperlogic()
@@ -89,7 +89,7 @@ namespace
 		pgh = new GameHandler(gameopt, fileloader);
 
 		oneiterationwrappergraphic();
-		timerHandler = client::setInterval(client::Callback(oneiterationwrapperlogic), gameopt.physicstep*1000);
+		timerHandler = client::setInterval(duetto::Callback(oneiterationwrapperlogic), gameopt.physicstep*1000);
 	}
 }
 
@@ -137,7 +137,7 @@ int webMain() [[client]]
 	if (client::document.get_readyState() != new client::String("loading")) {
 		domloaded();
 	} else {
-		client::document.addEventListener("DOMContentLoaded", client::Callback(domloaded));
+		client::document.addEventListener("DOMContentLoaded", duetto::Callback(domloaded));
 	}
 
 	return 0;

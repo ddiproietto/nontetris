@@ -50,7 +50,7 @@ public:
 			auto xhr = new client::XMLHttpRequest();
 			xhr->open("get", file, true);
 			todo ++;
-			xhr->set_onload(client::Callback([this, file](client::Event * e){
+			xhr->set_onload(duetto::Callback([this, file](client::Event * e){
 				auto res = static_cast<client::XMLHttpRequest *>(e->get_target());
 				auto contents = res->get_responseText();
 
