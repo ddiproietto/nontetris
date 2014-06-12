@@ -49,7 +49,7 @@ struct b2ContactFeature
 	uint8 typeB;		///< The feature type on shapeB
 };
 
-#ifdef __DUETTO__
+#ifdef __CHEERP__
 struct b2ContactID
 {
 	b2ContactFeature cf;

@@ -21,9 +21,9 @@
 #ifndef _FILELOADER_H
 #define _FILELOADER_H
 
-#ifdef __DUETTO__
-#include <duetto/client.h>
-#include <duetto/clientlib.h>
+#ifdef __CHEERP__
+#include <cheerp/client.h>
+#include <cheerp/clientlib.h>
 #else
 #include <fstream>
 #include <iostream>
@@ -35,7 +35,7 @@
 
 class FileLoader
 {
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	int todo;
 	#endif
 	std::function <void()> done;
@@ -44,13 +44,13 @@ public:
 	void load(T files, const std::function<void()> &f)
 	{
 		done = f;
-		#ifdef __DUETTO__
+		#ifdef __CHEERP__
 		for(const auto & file: files)
 		{
 			auto xhr = new client::XMLHttpRequest();
 			xhr->open("get", file, true);
 			todo ++;
-			xhr->set_onload(duetto::Callback([this, file](client::Event * e){
+			xhr->set_onload(cheerp::Callback([this, file](client::Event * e){
 				auto res = static_cast<client::XMLHttpRequest *>(e->get_target());
 				auto contents = res->get_responseText();
 
@@ -73,7 +73,7 @@ public:
 		#endif
 	}
 
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	client::String * getfilecontent(std::string f) const
 	{
 		auto elem = client::document.getElementById(f.c_str());

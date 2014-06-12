@@ -38,7 +38,7 @@ public:
 		for(const auto & s: v)
 		{
 			auto *imgel = static_cast<client::HTMLImageElement*>(client::document.createElement("img"));
-			imgel->addEventListener("load",duetto::Callback([&](){
+			imgel->addEventListener("load",cheerp::Callback([&](){
 				if ((--textodo)==0)
 					texdonefunc();
 			}));

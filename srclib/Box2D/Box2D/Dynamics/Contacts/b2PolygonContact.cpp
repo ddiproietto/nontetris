@@ -23,7 +23,7 @@
 #include <Box2D/Dynamics/b2Fixture.h>
 #include <Box2D/Dynamics/b2WorldCallbacks.h>
 
-#ifdef __DUETTO__
+#ifdef __CHEERP__
 #include <Box2D/Collision/Shapes/b2PolygonShape.h>
 #endif
 #include <new>
@@ -31,7 +31,7 @@ using namespace std;
 
 b2Contact* b2PolygonContact::Create(b2Fixture* fixtureA, int32, b2Fixture* fixtureB, int32, b2BlockAllocator* allocator)
 {
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	return new b2PolygonContact(fixtureA, fixtureB);
 	#else
 	void* mem = allocator->Allocate(sizeof(b2PolygonContact));
@@ -41,7 +41,7 @@ b2Contact* b2PolygonContact::Create(b2Fixture* fixtureA, int32, b2Fixture* fixtu
 
 void b2PolygonContact::Destroy(b2Contact* contact, b2BlockAllocator* allocator)
 {
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	delete contact;
 	#else
 	((b2PolygonContact*)contact)->~b2PolygonContact();
@@ -58,7 +58,7 @@ b2PolygonContact::b2PolygonContact(b2Fixture* fixtureA, b2Fixture* fixtureB)
 
 void b2PolygonContact::Evaluate(b2Manifold* manifold, const b2Transform& xfA, const b2Transform& xfB)
 {
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	b2CollidePolygons(	manifold,
 						static_cast<b2PolygonShape*>(m_fixtureA->GetShape()), xfA,
 						static_cast<b2PolygonShape*>(m_fixtureB->GetShape()), xfB);

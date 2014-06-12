@@ -23,9 +23,9 @@
 
 #include <functional>
 
-#ifdef __DUETTO__
-#include <duetto/client.h>
-#include <duetto/clientlib.h>
+#ifdef __CHEERP__
+#include <cheerp/client.h>
+#include <cheerp/clientlib.h>
 #elif defined(EMSCRIPTEN)
 #include "emscripten/html5.h"
 #else
@@ -62,9 +62,9 @@ class InputHandler
 	GLFWwindow * glfwwindow;
 	#endif
 
-	#ifdef __DUETTO__
-	static void duetto_keydown(client::KeyboardEvent * _e);
-	static void duetto_keyup(client::KeyboardEvent * _e);
+	#ifdef __CHEERP__
+	static void cheerp_keydown(client::KeyboardEvent * _e);
+	static void cheerp_keyup(client::KeyboardEvent * _e);
 	#elif defined(EMSCRIPTEN)
 	static int emscripten_keycallback(int eventType, const EmscriptenKeyboardEvent *keyEvent, void *userData);
 	#elif GLFW_VERSION_MAJOR == 3

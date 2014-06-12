@@ -34,6 +34,6 @@ set (BOX2D_BUILD_EXAMPLES OFF)
 add_subdirectory (Box2D)
 ###END BOX2D INCLUSION
 
-if(NOT DEFINED DUETTO)
+if(NOT DEFINED CHEERP)
 	add_subdirectory(lodepng)
-endif(NOT DEFINED DUETTO)
+endif(NOT DEFINED CHEERP)

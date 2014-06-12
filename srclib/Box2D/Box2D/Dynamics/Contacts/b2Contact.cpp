@@ -205,7 +205,7 @@ void b2Contact::Update(b2ContactListener* listener)
 			{
 				b2ManifoldPoint* mp1 = oldManifold.points + j;
 
-				#ifdef __DUETTO__
+				#ifdef __CHEERP__
 				if (mp1->id.getKey() == id2.getKey())
 				#else
 				if (mp1->id.key == id2.key)

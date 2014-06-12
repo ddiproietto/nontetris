@@ -18,8 +18,8 @@
      along with nontetris.  If not, see <http://www.gnu.org/licenses/>.
 
 *****************************************************************************/
-#include <duetto/client.h>
-#include <duetto/clientlib.h>
+#include <cheerp/client.h>
+#include <cheerp/clientlib.h>
 #include "texloader.h"
 
 #include "gamehandler.h"
@@ -50,7 +50,7 @@ namespace
 			return;
 
 		pgh->step_graphic();
-		compatRequestAnimationFrame(duetto::Callback(oneiterationwrappergraphic));
+		compatRequestAnimationFrame(cheerp::Callback(oneiterationwrappergraphic));
 	}
 
 	void oneiterationwrapperlogic()
@@ -89,7 +89,7 @@ namespace
 		pgh = new GameHandler(gameopt, fileloader);
 
 		oneiterationwrappergraphic();
-		timerHandler = client::setInterval(duetto::Callback(oneiterationwrapperlogic), gameopt.physicstep*1000);
+		timerHandler = client::setInterval(cheerp::Callback(oneiterationwrapperlogic), gameopt.physicstep*1000);
 	}
 }
 
@@ -137,7 +137,7 @@ int webMain() [[client]]
 	if (client::document.get_readyState() != new client::String("loading")) {
 		domloaded();
 	} else {
-		client::document.addEventListener("DOMContentLoaded", duetto::Callback(domloaded));
+		client::document.addEventListener("DOMContentLoaded", cheerp::Callback(domloaded));
 	}
 
 	return 0;

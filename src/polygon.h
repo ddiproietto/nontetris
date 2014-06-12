@@ -98,7 +98,7 @@ struct point
 		ret.y *= scale;
 		return ret;
 	}
-	#if !(defined(__DUETTO__)||defined(EMSCRIPTEN))
+	#if !(defined(__CHEERP__)||defined(EMSCRIPTEN))
 	friend std::ostream & operator<< (std::ostream & os, const point<T> & obj)
 	{
 		os<<'['<<obj.x<<", "<<obj.y<<']';
@@ -405,7 +405,7 @@ public:
 		rotate(vertices.begin(), vertices.begin()+normalize_index(pos), vertices.end());
 	}
 
-	#ifndef __DUETTO__
+	#ifndef __CHEERP__
 	friend std::ostream & operator<< (std::ostream & os, const polygon<T> & obj)
 	{
 		//Print everything but the last element
@@ -414,6 +414,6 @@ public:
 		os << obj.back();
 		return os;
 	}
-	#endif /* __DUETTO__ */
+	#endif /* __CHEERP__ */
 };
 #endif //_POLYGON_H

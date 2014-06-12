@@ -21,7 +21,7 @@
 #ifndef _GLWRAPPER_H
 #define _GLWRAPPER_H
 
-#ifdef __DUETTO__
+#ifdef __CHEERP__
 
 #include <GLES2/gl2.h>
 

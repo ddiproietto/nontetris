@@ -22,7 +22,7 @@ using namespace std;
 
 b2Shape* b2CircleShape::Clone(b2BlockAllocator* allocator) const
 {
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	b2CircleShape* clone = new b2CircleShape;
 	#else
 	void* mem = allocator->Allocate(sizeof(b2CircleShape));

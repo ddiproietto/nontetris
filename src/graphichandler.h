@@ -25,7 +25,7 @@
 
 #include "glwrapper.h"
 
-#ifndef __DUETTO__
+#ifndef __CHEERP__
 
 #if (USE_GLFW_VERSION==3)
 #include <GLFW/glfw3.h>
@@ -59,7 +59,7 @@ class GraphicHandler
 {
 	const GameOptions gameopt;
 
-	#if !defined( __DUETTO__) && (GLFW_VERSION_MAJOR == 3)
+	#if !defined( __CHEERP__) && (GLFW_VERSION_MAJOR == 3)
 	GLFWwindow * glfwwindow;
 	#endif
 	GLuint tex_background;

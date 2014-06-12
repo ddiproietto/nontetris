@@ -55,7 +55,7 @@ void b2Fixture::Create(b2BlockAllocator* allocator, b2Body* body, const b2Fixtur
 
 	// Reserve proxy space
 	int32 childCount = m_shape->GetChildCount();
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	m_proxies = new b2FixtureProxy[childCount];
 	#else
 	m_proxies = (b2FixtureProxy*)allocator->Allocate(childCount * sizeof(b2FixtureProxy));
@@ -77,7 +77,7 @@ void b2Fixture::Destroy(b2BlockAllocator* allocator)
 
 	// Free the proxy array.
 	int32 childCount = m_shape->GetChildCount();
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	delete [] m_proxies;
 	#else
 	allocator->Free(m_proxies, childCount * sizeof(b2FixtureProxy));
@@ -85,7 +85,7 @@ void b2Fixture::Destroy(b2BlockAllocator* allocator)
 	m_proxies = NULL;
 
 	// Free the child shape.
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	delete m_shape;
 	#else
 	switch (m_shape->m_type)

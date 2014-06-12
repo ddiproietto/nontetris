@@ -129,7 +129,7 @@ typedef double float64;
 
 /// Implement this function to use your own memory allocator.
 // Memory allocators. Modify these to use your own allocator.
-#ifdef __DUETTO__
+#ifdef __CHEERP__
 #define b2Alloc(size) malloc(size)
 #else
 void* b2Alloc(int32 size);

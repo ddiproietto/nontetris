@@ -28,7 +28,7 @@ using namespace std;
 
 b2Contact* b2CircleContact::Create(b2Fixture* fixtureA, int32, b2Fixture* fixtureB, int32, b2BlockAllocator* allocator)
 {
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	return new b2CircleContact(fixtureA, fixtureB);
 	#else
 	void* mem = allocator->Allocate(sizeof(b2CircleContact));
@@ -38,7 +38,7 @@ b2Contact* b2CircleContact::Create(b2Fixture* fixtureA, int32, b2Fixture* fixtur
 
 void b2CircleContact::Destroy(b2Contact* contact, b2BlockAllocator* allocator)
 {
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	delete contact;
 	#else
 	((b2CircleContact*)contact)->~b2CircleContact();
