@@ -31,7 +31,7 @@
  * using __asm__, in webMain
  */
 
-extern "C" {
+namespace client {
 	void compatRequestAnimationFrame(client::EventListener*);
 }
 
@@ -50,7 +50,7 @@ namespace
 			return;
 
 		pgh->step_graphic();
-		compatRequestAnimationFrame(cheerp::Callback(oneiterationwrappergraphic));
+		client::compatRequestAnimationFrame(cheerp::Callback(oneiterationwrappergraphic));
 	}
 
 	void oneiterationwrapperlogic()
@@ -130,7 +130,7 @@ int webMain() [[client]]
 	};
 
 	__asm__(" \
-		window._compatRequestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || \
+		window.compatRequestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || \
 			window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;");
 
 	//TODO: think of a better way to compare
