@@ -162,7 +162,7 @@ b2Island::b2Island(
 	m_allocator = allocator;
 	m_listener = listener;
 
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	/*
 	m_bodies = new b2Body* [bodyCapacity];
 	m_contacts = new b2Contact* [contactCapacity];
@@ -189,7 +189,7 @@ b2Island::b2Island(
 
 b2Island::~b2Island()
 {
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	/*
 	delete [] m_positions;
 	delete [] m_velocities;

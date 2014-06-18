@@ -18,15 +18,15 @@
      along with nontetris.  If not, see <http://www.gnu.org/licenses/>.
 
 *****************************************************************************/
-#ifdef __DUETTO__
-#include <duetto/client.h>
-#include <duetto/clientlib.h>
+#ifdef __CHEERP__
+#include <cheerp/client.h>
+#include <cheerp/clientlib.h>
 #include <stdio.h>
 #endif
 #include "physichandler.h"
 #include "NontetrisConfig.h"
 
-#ifndef __DUETTO__
+#ifndef __CHEERP__
 #include <iostream>
 #endif
 #include <algorithm>
@@ -214,7 +214,7 @@ void PhysicHandler::step(int level, std::function<void(float x, float y)> cb)
 	contactlistener.callcollision = false;
 }
 
-#ifndef __DUETTO__
+#ifndef __CHEERP__
 void PhysicHandler::debugprint()
 {
 	for (b2Body * body = world.GetBodyList(); body; body = body->GetNext())
@@ -243,9 +243,9 @@ void PhysicHandler::iteratepieces(std::function <void (PhysicPiece *)> cb)
 
 struct MyQueryCallback : public b2QueryCallback
 {
-	/* Duetto does not support set or maps of pointers,
+	/* Cheerp does not support set or maps of pointers,
 	 * because pointers are not globally ordered */
-#ifndef __DUETTO__
+#ifndef __CHEERP__
 	std::set<b2Body *> bodylist;
 #else
 	std::list<b2Body *> bodylist;
@@ -254,7 +254,7 @@ struct MyQueryCallback : public b2QueryCallback
 	bool ReportFixture(b2Fixture* fixture)
 	{
 		b2Body * body = fixture->GetBody();
-#ifndef __DUETTO__
+#ifndef __CHEERP__
 		bodylist.insert(body);
 #else
 		// TODO: slow

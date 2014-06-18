@@ -26,20 +26,20 @@ configure_file (
 
 include_directories("${PROJECT_BINARY_DIR}")
 include_directories("${PROJECT_SOURCE_DIR}/srclib/Box2D/")
-if(NOT DEFINED DUETTO)
+if(NOT DEFINED CHEERP)
 include_directories("${PROJECT_SOURCE_DIR}/srclib/lodepng/")
-endif(NOT DEFINED DUETTO)
+endif(NOT DEFINED CHEERP)
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 set(MY_SOURCES physichandler.cpp inputhandler.cpp graphichandler.cpp inputhandler.cpp gamehandler.cpp joystickhandler.cpp texthandler.cpp)
 
-if(DEFINED DUETTO)
-	set (MY_SOURCES ${MY_SOURCES} main_duetto.cpp)
+if(DEFINED CHEERP)
+	set (MY_SOURCES ${MY_SOURCES} main_cheerp.cpp)
 elseif(DEFINED EMSCRIPTEN)
 	set (MY_SOURCES ${MY_SOURCES} $<TARGET_OBJECTS:lodepng> main_emscripten.cpp)
 else(DEFINED EMSCRIPTEN)
 	set (MY_SOURCES ${MY_SOURCES} main_pc.cpp)
-endif(DEFINED DUETTO)
+endif(DEFINED CHEERP)
 
 add_executable (nontetris ${MY_SOURCES})
 
@@ -47,11 +47,11 @@ if(NOT DEFINED EMSCRIPTEN)
 target_link_libraries(nontetris Box2D)
 endif(NOT DEFINED EMSCRIPTEN)
 
-if(DEFINED DUETTO)
+if(DEFINED CHEERP)
 	target_link_libraries(nontetris GLESv2)
-endif(DEFINED DUETTO)
+endif(DEFINED CHEERP)
 
-if(NOT DEFINED DUETTO)
+if(NOT DEFINED CHEERP)
 
 	if(NOT DEFINED EMSCRIPTEN)
 		target_link_libraries(nontetris ${OPENGL_LIBRARIES} lodepng)
@@ -64,4 +64,4 @@ if(NOT DEFINED DUETTO)
 	else(USE_GLFW_3)
 		target_link_libraries(nontetris ${GLFW_LIBRARIES})
 	endif(USE_GLFW_3)
-endif(NOT DEFINED DUETTO)
+endif(NOT DEFINED CHEERP)

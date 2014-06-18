@@ -39,7 +39,7 @@ struct b2VelocityConstraintPoint
 	float32 velocityBias;
 };
 
-#ifdef __DUETTO__
+#ifdef __CHEERP__
 struct b2ContactPositionConstraint
 {
 	b2Vec2 localPoints[b2_maxManifoldPoints];

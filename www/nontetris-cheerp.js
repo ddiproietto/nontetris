@@ -1,0 +1,1 @@
+../cheerpbuild/src/nontetris.js

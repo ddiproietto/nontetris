@@ -112,7 +112,7 @@ b2Body* b2World::CreateBody(const b2BodyDef* def)
 		return NULL;
 	}
 
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	b2Body* b = new b2Body(def, this);
 	#else
 	void* mem = m_blockAllocator.Allocate(sizeof(b2Body));
@@ -184,7 +184,7 @@ void b2World::DestroyBody(b2Body* b)
 		f0->DestroyProxies(&m_contactManager.m_broadPhase);
 		f0->Destroy(&m_blockAllocator);
 		f0->~b2Fixture();
-		#ifdef __DUETTO__
+		#ifdef __CHEERP__
 		delete f0;
 		#else
 		m_blockAllocator.Free(f0, sizeof(b2Fixture));
@@ -214,7 +214,7 @@ void b2World::DestroyBody(b2Body* b)
 
 	--m_bodyCount;
 	b->~b2Body();
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	delete b;
 	#else
 	m_blockAllocator.Free(b, sizeof(b2Body));
@@ -424,7 +424,7 @@ void b2World::Solve(const b2TimeStep& step)
 
 	// Build and simulate all awake islands.
 	int32 stackSize = m_bodyCount;
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	/*
 	b2Body** stack = new b2Body*[stackSize];
 	*/
@@ -564,7 +564,7 @@ void b2World::Solve(const b2TimeStep& step)
 		}
 	}
 
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	/*
 	delete [] stack;
 	*/

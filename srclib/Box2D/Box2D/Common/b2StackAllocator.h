@@ -21,7 +21,7 @@
 
 #include <Box2D/Common/b2Settings.h>
 
-#ifdef __DUETTO__
+#ifdef __CHEERP__
 #include <Box2D/Dynamics/Contacts/b2ContactSolver.h>
 #include <Box2D/Dynamics/b2TimeStep.h>
 
@@ -34,7 +34,7 @@ struct b2Velocity;
 struct b2Position;
 #endif
 
-#ifdef __DUETTO__
+#ifdef __CHEERP__
 const int32 b2_stackSize = 100;
 #else
 const int32 b2_stackSize = 100 * 1024;	// 100k
@@ -57,14 +57,14 @@ public:
 	b2StackAllocator();
 	~b2StackAllocator();
 
-#ifdef __DUETTO__
+#ifdef __CHEERP__
 
 #define DEFINE_TYPE(a,b) a * Allocate_ ## b (int32 num);
-#include <Box2D/Common/b2StackAllocatorTypesDuetto.h>
+#include <Box2D/Common/b2StackAllocatorTypesCheerp.h>
 #undef DEFINE_TYPE
 
 #define DEFINE_TYPE(a,b) void Free_ ## b (a * p);
-#include <Box2D/Common/b2StackAllocatorTypesDuetto.h>
+#include <Box2D/Common/b2StackAllocatorTypesCheerp.h>
 #undef DEFINE_TYPE
 
 #else
@@ -76,16 +76,16 @@ public:
 
 private:
 
-#ifdef __DUETTO__
+#ifdef __CHEERP__
 
 // TODO the size is fixed and there is no allocation
 
 #define DEFINE_TYPE(a,b) a m_data_ ## b[b2_stackSize/sizeof(a)];
-#include <Box2D/Common/b2StackAllocatorTypesDuetto.h>
+#include <Box2D/Common/b2StackAllocatorTypesCheerp.h>
 #undef DEFINE_TYPE
 
 #define DEFINE_TYPE(a,b) a * pointer_ ## b;
-#include <Box2D/Common/b2StackAllocatorTypesDuetto.h>
+#include <Box2D/Common/b2StackAllocatorTypesCheerp.h>
 #undef DEFINE_TYPE
 
 #else

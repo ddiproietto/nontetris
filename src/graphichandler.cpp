@@ -24,9 +24,9 @@
 
 #include "glwrapper.h"
 
-#ifdef __DUETTO__
-#include <duetto/client.h>
-#include <duetto/clientlib.h>
+#ifdef __CHEERP__
+#include <cheerp/client.h>
+#include <cheerp/clientlib.h>
 #include <GLES2/webgles.h>
 #else
 
@@ -41,7 +41,7 @@
 
 #include <algorithm>
 #include <cmath>
-#ifndef __DUETTO__
+#ifndef __CHEERP__
 #include <iostream>
 #define LODEPNG_NO_COMPILE_ENCODER
 #define LODEPNG_NO_COMPILE_CPP
@@ -51,7 +51,7 @@
 #include "fileloader.h"
 
 
-#ifdef __DUETTO__
+#ifdef __CHEERP__
 typedef GLsizei glvapt;
 #else
 typedef void * glvapt;
@@ -71,7 +71,7 @@ int findsmallestpot(int x)
 }
 void printLog(GLuint obj, const std::string & str)
 {
-#ifndef __DUETTO__
+#ifndef __CHEERP__
 	int infologLength = 0;
 	char infoLog[1024];
 
@@ -87,7 +87,7 @@ void printLog(GLuint obj, const std::string & str)
 
 #define WEBPREAMBLE "precision mediump float;\n"
 
-#if defined(EMSCRIPTEN) || defined(__MINGW32__) || defined(__DUETTO__)
+#if defined(EMSCRIPTEN) || defined(__MINGW32__) || defined(__CHEERP__)
 #define DATAPATHPREAMBLE ""
 #else
 #define DATAPATHPREAMBLE "../"
@@ -98,7 +98,7 @@ GLuint filetoshader(const FileLoader & fl, GLenum shadertype, const std::string 
 	GLuint shader;
 
 	std::string completefilename = std::string(DATAPATHPREAMBLE) + filename;
-#ifdef __DUETTO__
+#ifdef __CHEERP__
 	auto * c_ShaderSource = fl.getfilecontent(completefilename);
 	if(shadertype == GL_FRAGMENT_SHADER)
 			c_ShaderSource = client::String(WEBPREAMBLE).concat(c_ShaderSource);
@@ -112,7 +112,7 @@ GLuint filetoshader(const FileLoader & fl, GLenum shadertype, const std::string 
 #endif
 
 	shader = glCreateShader(shadertype);
-#ifdef __DUETTO__
+#ifdef __CHEERP__
 	webGLES->shaderSource(webGLESLookupWebGLShader(shader), *c_ShaderSource);
 #else
 	glShaderSource(shader, 1, &c_ShaderSource, NULL);
@@ -153,7 +153,7 @@ GLuint filetotexture(const std::string & filename, bool generatemipmap, Args... 
 	glBindTexture( GL_TEXTURE_2D, rettex);
 	unsigned int twidth, theight;
 
-#ifndef __DUETTO__
+#ifndef __CHEERP__
 	unsigned char * image;
 	lodepng_decode24_file(&image, &twidth, &theight, filename.c_str());
 
@@ -173,7 +173,7 @@ GLuint filetotexture(const std::string & filename, bool generatemipmap, Args... 
 GraphicHandler::GraphicHandler(const GameOptions & _gameopt, const FileLoader & fileloader):gameopt(_gameopt), vbo_text(0), PMatrix_eye{0.0F}, PMatrix_half{0.0F}, PMatrix_pieces{0.0F}, RTVec_eye{0.0F}
 {
 	// WINDOWING INITIALIZATION
-#ifndef __DUETTO__
+#ifndef __CHEERP__
 	glfwInit();
 #if GLFW_VERSION_MAJOR == 3
 	glfwWindowHint(GLFW_SAMPLES, 8);
@@ -190,7 +190,7 @@ GraphicHandler::GraphicHandler(const GameOptions & _gameopt, const FileLoader & 
 		std::cerr<<"GLEW fail"<<std::endl;
 	glEnableClientState(GL_VERTEX_ARRAY);
 #endif //defined(__EMSCRIPTEN__)
-#else //defined(__DUETTO__)
+#else //defined(__CHEERP__)
 	webGLESInit("glcanvas");
 #endif
 
@@ -338,7 +338,7 @@ GraphicHandler::GraphicHandler(const GameOptions & _gameopt, const FileLoader & 
 
 GraphicHandler::~GraphicHandler()
 {
-#ifndef __DUETTO__
+#ifndef __CHEERP__
 #if GLFW_VERSION_MAJOR == 3
 	glfwDestroyWindow(glfwwindow);
 #else
@@ -350,7 +350,7 @@ GraphicHandler::~GraphicHandler()
 
 GraphicToInput GraphicHandler::toinput()
 {
-#if !defined( __DUETTO__) && (GLFW_VERSION_MAJOR == 3)
+#if !defined( __CHEERP__) && (GLFW_VERSION_MAJOR == 3)
 	return GraphicToInput{.window=glfwwindow};
 #else
 	return GraphicToInput();
@@ -559,7 +559,7 @@ void GraphicHandler::endrender(const std::vector<float> & linecompleteness, cons
 		glDisableVertexAttribArray(aCompTextureCoordLoc);
 	}
 
-#ifndef __DUETTO__
+#ifndef __CHEERP__
 #if GLFW_VERSION_MAJOR == 3
 	glfwSwapBuffers(glfwwindow);
 	glfwPollEvents();

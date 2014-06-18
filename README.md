@@ -4,7 +4,7 @@ Nontetris
 Nontetris is inspired by (i.e. a clone of) the awesome  [Not Tetris 2](http://stabyourself.net/nottetris2/) by Maurice Guégan.
 It is a multiplatform demo (just playable) that uses GL for rendering. When I say multiplatform, I mean:
 
-* **Web with duetto**: it works at least with Firefox and Chrome, if WebGL is available. It still has issues, but we hope to fix them soon. Play online [here](http://allievi.sssup.it/jacopone/cnontetris/)
+* **Web with cheerp**: it works at least with Firefox and Chrome, if WebGL is available. It still has issues, but we hope to fix them soon. Play online [here](http://allievi.sssup.it/jacopone/cnontetris/)
 * **Windows**: working with MXE cross compiler toolchain! Get the executable [here](https://allievi.sssup.it/jacopone/cnontetris-win/nontetris.zip)
 * **Linux**: currently supported with glfw (You have to build the source yourself)
 * **Web with emscripten**: work in progress
@@ -65,18 +65,18 @@ Here I'm describing the procedure to cross compile from linux using [MXE](http:/
 * Now you will find in windowsbuild/src/ an executable named nontetris.exe. Yay! Rembember to run it in the same folder as shader.vert, shader.frag, shaderident.vert and the imgs/ folder
 
 
-Web with Duetto
+Web with Cheerp
 ---------------
 
-You just need [duetto](http://leaningtech.com/duetto/) and cmake.
+You just need [cheerp](http://leaningtech.com/cheerp/) and cmake.
 
 	#compile
-	mkdir duettobuild/
-	cd duettobuild/
-	cmake -DCMAKE_TOOLCHAIN_FILE=/opt/duetto/share/cmake/Modules/DuettoToolchain.cmake ..
+	mkdir cheerpbuild/
+	cd cheerpbuild/
+	cmake -DCMAKE_TOOLCHAIN_FILE=/opt/cheerp/share/cmake/Modules/CheerpToolchain.cmake ..
 	make
 
-After the build is finished you will find some useful symlinks to the build JS files and JS duetto libraries in www/ directory. Now, if you start a webserver, serving static content from that folder
+After the build is finished you will find some useful symlinks to the build JS files and JS cheerp libraries in www/ directory. Now, if you start a webserver, serving static content from that folder
 
 	cd ..
 	cd www/
@@ -84,7 +84,7 @@ After the build is finished you will find some useful symlinks to the build JS f
 
 You can access localhost:8888 with your browser and play nontetris.
 
-*Optional: you can minify all the JS in a single file with ./minimizeduettojs.sh . You should edit the script to point to the google [closure compiler](https://developers.google.com/closure/compiler/), if you are using debian you can simply install the package libclosure-compiler-java. The script replaces the built JS with a minified one.*
+*Optional: you can minify all the JS in a single file with ./minimizecheerpjs.sh . You should edit the script to point to the google [closure compiler](https://developers.google.com/closure/compiler/), if you are using debian you can simply install the package libclosure-compiler-java. The script replaces the built JS with a minified one.*
 
 Emscripten
 ----------
@@ -112,16 +112,16 @@ Technology
 
 The code makes use of C++11 features (lambdas, std::array, std::chrono, initializer lists, ...)
 
-This project uses the Box2D library. The code has been modified to be built successfully under Duetto(no custom allocators, no unions). All the modification are enclosed by #ifdef __DUETTO__.
+This project uses the Box2D library. The code has been modified to be built successfully under Cheerp(no custom allocators, no unions). All the modification are enclosed by #ifdef __CHEERP__.
 
-OpenGL is used to display graphics. The same codebase works on the native platform and on the web: a small wrapper has been written for duetto(src/duettogl.cpp) to map some basic GL calls to WebGL.
+OpenGL is used to display graphics. The same codebase works on the native platform and on the web: a small wrapper has been written for cheerp(src/cheerpgl.cpp) to map some basic GL calls to WebGL.
 
-To load textures and external files(shaders) two small classes have been written (for duetto): src/texloader.h src/fileloader.h. They simply put the content on the DOM for a later retrieval and call a function when the resources have been loaded.
+To load textures and external files(shaders) two small classes have been written (for cheerp): src/texloader.h src/fileloader.h. They simply put the content on the DOM for a later retrieval and call a function when the resources have been loaded.
 
 Directories
 -----------
 
-duettobuild/ cmake build directory for duetto
+cheerpbuild/ cmake build directory for cheerp
 emscriptenbuild/ cmake build directory for emscripten
 build/ cmake build directory for the native target
 
@@ -131,7 +131,7 @@ src/ contains the sources of the project
 
 srclib/ contains some libraries that have been embedded (Box2D and lodepng)
 
-www/ contains html files and symlink to the built code for duetto. After the build it contains all the files necessary to run on the web.
+www/ contains html files and symlink to the built code for cheerp. After the build it contains all the files necessary to run on the web.
 
 Todo
 ====

@@ -23,7 +23,7 @@
 #include <Box2D/Collision/Shapes/b2PolygonShape.h>
 
 //TODO:ugly
-#ifdef __DUETTO__
+#ifdef __CHEERP__
 #define m_v1 m_vxx[0]
 #define m_v2 m_vxx[1]
 #define m_v3 m_vxx[2]
@@ -272,7 +272,7 @@ struct b2Simplex
 	void Solve2();
 	void Solve3();
 
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	b2SimplexVertex m_vxx[3];
 	#else
 	b2SimplexVertex m_v1, m_v2, m_v3;

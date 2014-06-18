@@ -21,9 +21,9 @@
 #include "joystickhandler.h"
 
 #include "NontetrisConfig.h"
-#ifdef __DUETTO__
-#include <duetto/client.h>
-#include <duetto/clientlib.h>
+#ifdef __CHEERP__
+#include <cheerp/client.h>
+#include <cheerp/clientlib.h>
 #elif defined(EMSCRIPTEN)
 #include "emscripten/html5.h"
 #else
@@ -38,7 +38,7 @@
 bool JoystickHandler::isJoystickPresent()
 {
 	//TODO: should return true only if it has two axes and two buttons
-#ifdef __DUETTO__
+#ifdef __CHEERP__
 	return false;
 #elif defined(EMSCRIPTEN)
 	return false;
@@ -52,7 +52,7 @@ bool JoystickHandler::isJoystickPresent()
 JoystickHandler::JoystickValues JoystickHandler::pollJoystick()
 {
 	JoystickValues ret = {{0.0, 0.0}, {false, false, false, false, false, false, false, false, false, false}};
-#ifdef __DUETTO__
+#ifdef __CHEERP__
 #elif defined(EMSCRIPTEN)
 #elif GLFW_VERSION_MAJOR == 3
 	int numbuttons;

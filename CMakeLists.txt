@@ -18,15 +18,15 @@
 #	 along with nontetris.  If not, see <http://www.gnu.org/licenses/>.
 #
 #*****************************************************************************
-if(DEFINED DUETTO)
+if(DEFINED CHEERP)
 	cmake_minimum_required (VERSION 2.6) #Decent version
-else(DEFINED DUETTO)
+else(DEFINED CHEERP)
 	if(NOT DEFINED EMSCRIPTEN)
 		cmake_minimum_required (VERSION 2.8) #For file( COPY)
 	else(NOT DEFINED EMSCRIPTEN)
 		cmake_minimum_required (VERSION 2.8.8) #For object libraries
 	endif(NOT DEFINED EMSCRIPTEN)
-endif(DEFINED DUETTO)
+endif(DEFINED CHEERP)
 project (Nontetris)
 
 set (NONTETRIS_VERSION_MAJOR 0)
@@ -42,15 +42,15 @@ endif(USE_GLFW_3)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11")
 
-IF(DEFINED DUETTO)
+IF(DEFINED CHEERP)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
-ENDIF(DEFINED DUETTO)
+ENDIF(DEFINED CHEERP)
 
 IF(MINGW)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mwindows")
 ENDIF(MINGW)
 
-if(NOT DEFINED DUETTO)
+if(NOT DEFINED CHEERP)
 	if(NOT DEFINED EMSCRIPTEN)
 		##OpenGL##
 		find_package(OpenGL REQUIRED)
@@ -77,7 +77,7 @@ if(NOT DEFINED DUETTO)
 	file(COPY imgs/pieces DESTINATION ${PROJECT_BINARY_DIR}/imgs)
 	file(COPY imgs DESTINATION ${PROJECT_BINARY_DIR})
 
-endif(NOT DEFINED DUETTO)
+endif(NOT DEFINED CHEERP)
 
 add_subdirectory(srclib)
 add_subdirectory(src)

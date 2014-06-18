@@ -173,7 +173,7 @@ b2Fixture* b2Body::CreateFixture(const b2FixtureDef* def)
 
 	b2BlockAllocator* allocator = &m_world->m_blockAllocator;
 
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	b2Fixture* fixture = new b2Fixture;
 	#else
 	void* memory = allocator->Allocate(sizeof(b2Fixture));
@@ -274,7 +274,7 @@ void b2Body::DestroyFixture(b2Fixture* fixture)
 	fixture->m_body = NULL;
 	fixture->m_next = NULL;
 	fixture->~b2Fixture();
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	delete fixture;
 	#else
 	allocator->Free(fixture, sizeof(b2Fixture));
