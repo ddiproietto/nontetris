@@ -21,9 +21,9 @@
 
 b2StackAllocator::b2StackAllocator()
 {
-#ifdef __DUETTO__
+#ifdef __CHEERP__
 	#define DEFINE_TYPE(a,b) pointer_ ## b = m_data_ ## b;
-	#include <Box2D/Common/b2StackAllocatorTypesDuetto.h>
+	#include <Box2D/Common/b2StackAllocatorTypesCheerp.h>
 	#undef DEFINE_TYPE
 #else
 	m_index = 0;
@@ -35,14 +35,14 @@ b2StackAllocator::b2StackAllocator()
 
 b2StackAllocator::~b2StackAllocator()
 {
-#ifdef __DUETTO__
+#ifdef __CHEERP__
 #else
 	b2Assert(m_index == 0);
 	b2Assert(m_entryCount == 0);
 #endif
 }
 
-#ifdef __DUETTO__
+#ifdef __CHEERP__
 
 #define DEFINE_TYPE(a,b) \
 a * b2StackAllocator::Allocate_ ## b(int32 size) \
@@ -54,7 +54,7 @@ a * b2StackAllocator::Allocate_ ## b(int32 size) \
 	pointer_ ## b += size; \
 	return ret; \
 }
-#include <Box2D/Common/b2StackAllocatorTypesDuetto.h>
+#include <Box2D/Common/b2StackAllocatorTypesCheerp.h>
 #undef DEFINE_TYPE
 
 #define DEFINE_TYPE(a,b) \
@@ -65,7 +65,7 @@ void b2StackAllocator::Free_ ## b(a * p) \
 	else \
 		delete[] p; \
 }
-#include <Box2D/Common/b2StackAllocatorTypesDuetto.h>
+#include <Box2D/Common/b2StackAllocatorTypesCheerp.h>
 #undef DEFINE_TYPE
 
 #else

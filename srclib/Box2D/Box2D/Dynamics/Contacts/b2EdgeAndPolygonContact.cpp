@@ -25,7 +25,7 @@ using namespace std;
 
 b2Contact* b2EdgeAndPolygonContact::Create(b2Fixture* fixtureA, int32, b2Fixture* fixtureB, int32, b2BlockAllocator* allocator)
 {
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	return new b2EdgeAndPolygonContact(fixtureA, fixtureB);
 	#else
 	void* mem = allocator->Allocate(sizeof(b2EdgeAndPolygonContact));
@@ -35,7 +35,7 @@ b2Contact* b2EdgeAndPolygonContact::Create(b2Fixture* fixtureA, int32, b2Fixture
 
 void b2EdgeAndPolygonContact::Destroy(b2Contact* contact, b2BlockAllocator* allocator)
 {
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	delete contact;
 	#else
 	((b2EdgeAndPolygonContact*)contact)->~b2EdgeAndPolygonContact();

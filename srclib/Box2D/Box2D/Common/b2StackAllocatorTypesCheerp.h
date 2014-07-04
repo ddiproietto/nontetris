@@ -1,6 +1,6 @@
-#ifdef __DUETTO__
+#ifdef __CHEERP__
 
-/* Duetto is super-type-safe. We have to provide
+/* Cheerp is super-type-safe. We have to provide
  * different functions for each type
  * We use some macro tricks to do that
  */

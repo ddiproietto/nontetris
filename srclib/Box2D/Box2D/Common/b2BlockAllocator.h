@@ -38,7 +38,7 @@ public:
 	b2BlockAllocator();
 	~b2BlockAllocator();
 
-#ifdef __DUETTO__
+#ifdef __CHEERP__
 private:
 #endif
 	/// Allocate memory. This will use b2Alloc if the size is larger than b2_maxBlockSize.
@@ -46,7 +46,7 @@ private:
 
 	/// Free memory. This will use b2Free if the size is larger than b2_maxBlockSize.
 	void Free(void* p, int32 size);
-#ifdef __DUETTO__
+#ifdef __CHEERP__
 public:
 #endif
 

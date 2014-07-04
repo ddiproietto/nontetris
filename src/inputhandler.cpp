@@ -19,9 +19,9 @@
 
 *****************************************************************************/
 #include "NontetrisConfig.h"
-#ifdef __DUETTO__
-#include <duetto/client.h>
-#include <duetto/clientlib.h>
+#ifdef __CHEERP__
+#include <cheerp/client.h>
+#include <cheerp/clientlib.h>
 #elif defined(EMSCRIPTEN)
 #include "emscripten/html5.h"
 #else
@@ -37,7 +37,7 @@
 
 #include "joystickhandler.h"
 
-#ifdef __DUETTO__
+#ifdef __CHEERP__
 using namespace client;
 #endif
 
@@ -46,9 +46,9 @@ InputHandler::KeyState InputHandler::previntegrated;
 
 InputHandler::InputHandler(GraphicToInput gti)
 {
-#ifdef __DUETTO__
-	document.addEventListener("keydown", Callback(duetto_keydown));
-	document.addEventListener("keyup", Callback(duetto_keyup));
+#ifdef __CHEERP__
+	document.addEventListener("keydown", cheerp::Callback(cheerp_keydown));
+	document.addEventListener("keyup", cheerp::Callback(cheerp_keyup));
 #elif defined(EMSCRIPTEN)
 	emscripten_set_keydown_callback(NULL, 0, 1, emscripten_keycallback);
 	emscripten_set_keyup_callback(NULL, 0, 1, emscripten_keycallback);
@@ -63,9 +63,9 @@ InputHandler::InputHandler(GraphicToInput gti)
 
 InputHandler::~InputHandler()
 {
-#ifdef __DUETTO__
-	document.removeEventListener("keydown", &Callback(duetto_keydown));
-	document.removeEventListener("keyup", &Callback(duetto_keyup));
+#ifdef __CHEERP__
+	document.removeEventListener("keydown", cheerp::Callback(cheerp_keydown));
+	document.removeEventListener("keyup", cheerp::Callback(cheerp_keyup));
 #elif defined(EMSCRIPTEN)
 	emscripten_set_keydown_callback(NULL, 0, 1, NULL);
 	emscripten_set_keyup_callback(NULL, 0, 1, NULL);
@@ -78,7 +78,7 @@ InputHandler::~InputHandler()
 
 void InputHandler::process_input(const std::function<void()> & exit, const std::function<void()> & left, const std::function<void()> & right, const std::function<void()> & down, const std::function<void()> & z, const std::function<void()> & x, const std::function<void()> & enter_press)
 {
-#ifndef __DUETTO__
+#ifndef __CHEERP__
 	KeyState integrated = act;
 #else
 	KeyState integrated;
@@ -91,7 +91,7 @@ void InputHandler::process_input(const std::function<void()> & exit, const std::
 	integrated.k_enter = act.k_enter;
 #endif
 
-#if defined(__DUETTO__) || defined(EMSCRIPTEN)
+#if defined(__CHEERP__) || defined(EMSCRIPTEN)
 #define WINDOW_OPENED true
 #elif (GLFW_VERSION_MAJOR == 3)
 #define WINDOW_OPENED !glfwWindowShouldClose(glfwwindow)
@@ -142,7 +142,7 @@ void InputHandler::process_input(const std::function<void()> & exit, const std::
 
 void InputHandler::keyset(int key, bool setto)
 {
-#if defined(__DUETTO__) || defined(EMSCRIPTEN)
+#if defined(__CHEERP__) || defined(EMSCRIPTEN)
 #define NONTETRIS_ESC 27
 #define NONTETRIS_LEFT 37
 #define NONTETRIS_RIGHT 39
@@ -191,13 +191,13 @@ void InputHandler::keyset(int key, bool setto)
 	}
 }
 
-#ifdef __DUETTO__
-void InputHandler::duetto_keyup(KeyboardEvent * e)
+#ifdef __CHEERP__
+void InputHandler::cheerp_keyup(KeyboardEvent * e)
 {
 	keyset(e->get_keyCode(), false);
 }
 
-void InputHandler::duetto_keydown(KeyboardEvent * e)
+void InputHandler::cheerp_keydown(KeyboardEvent * e)
 {
 	int key = e->get_keyCode();
 	keyset(e->get_keyCode(), true);

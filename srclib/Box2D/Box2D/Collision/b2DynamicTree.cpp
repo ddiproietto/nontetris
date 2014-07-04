@@ -21,7 +21,7 @@
 #include <cfloat>
 using namespace std;
 
-#ifdef __DUETTO__
+#ifdef __CHEERP__
 //TODO:very ugly!!
 #define parent parent_or_next
 #define next parent_or_next

@@ -121,7 +121,7 @@ void GameHandler::deletepiece(GamePiece* pgp)
 void GameHandler::randomnextpiece()
 {
 //Different ways of generating random numbers
-#if defined (__DUETTO__)
+#if defined (__CHEERP__)
 	int randpieceindex = int(client::Math.random()*pieces.size());
 #elif defined (EMSCRIPTEN)
 	int randpieceindex = rand()%pieces.size();

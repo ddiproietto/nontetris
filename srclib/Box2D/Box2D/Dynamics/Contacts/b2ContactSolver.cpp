@@ -26,7 +26,7 @@
 
 #define B2_DEBUG_SOLVER 0
 
-#ifndef __DUETTO__
+#ifndef __CHEERP__
 struct b2ContactPositionConstraint
 {
 	b2Vec2 localPoints[b2_maxManifoldPoints];
@@ -48,7 +48,7 @@ b2ContactSolver::b2ContactSolver(b2ContactSolverDef* def)
 	m_step = def->step;
 	m_allocator = def->allocator;
 	m_count = def->count;
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	/*
 	m_positionConstraints = new b2ContactPositionConstraint[m_count];
 	m_velocityConstraints = new b2ContactVelocityConstraint[m_count];
@@ -141,7 +141,7 @@ b2ContactSolver::b2ContactSolver(b2ContactSolverDef* def)
 
 b2ContactSolver::~b2ContactSolver()
 {
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	/*
 	delete [] m_velocityConstraints;
 	delete [] m_positionConstraints;

@@ -1,5 +1,5 @@
-#include <duetto/client.h>
-#include <duetto/clientlib.h>
+#include <cheerp/client.h>
+#include <cheerp/clientlib.h>
 #include <array>
 #include <list>
 #include "../src/myutil.h"

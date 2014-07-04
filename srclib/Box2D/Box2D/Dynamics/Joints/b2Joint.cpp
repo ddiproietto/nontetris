@@ -42,7 +42,7 @@ b2Joint* b2Joint::Create(const b2JointDef* def, b2BlockAllocator* allocator)
 	{
 	case e_distanceJoint:
 		{
-			#ifdef __DUETTO__
+			#ifdef __CHEERP__
 			joint = new b2DistanceJoint((b2DistanceJointDef*)def);
 			#else
 			void* mem = allocator->Allocate(sizeof(b2DistanceJoint));
@@ -53,7 +53,7 @@ b2Joint* b2Joint::Create(const b2JointDef* def, b2BlockAllocator* allocator)
 
 	case e_mouseJoint:
 		{
-			#ifdef __DUETTO__
+			#ifdef __CHEERP__
 			joint = new b2MouseJoint((b2MouseJointDef*)def);
 			#else
 			void* mem = allocator->Allocate(sizeof(b2MouseJoint));
@@ -64,7 +64,7 @@ b2Joint* b2Joint::Create(const b2JointDef* def, b2BlockAllocator* allocator)
 
 	case e_prismaticJoint:
 		{
-			#ifdef __DUETTO__
+			#ifdef __CHEERP__
 			joint = new b2PrismaticJoint((b2PrismaticJointDef*)def);
 			#else
 			void* mem = allocator->Allocate(sizeof(b2PrismaticJoint));
@@ -75,7 +75,7 @@ b2Joint* b2Joint::Create(const b2JointDef* def, b2BlockAllocator* allocator)
 
 	case e_revoluteJoint:
 		{
-			#ifdef __DUETTO__
+			#ifdef __CHEERP__
 			joint = new b2RevoluteJoint((b2RevoluteJointDef*)def);
 			#else
 			void* mem = allocator->Allocate(sizeof(b2RevoluteJoint));
@@ -86,7 +86,7 @@ b2Joint* b2Joint::Create(const b2JointDef* def, b2BlockAllocator* allocator)
 
 	case e_pulleyJoint:
 		{
-			#ifdef __DUETTO__
+			#ifdef __CHEERP__
 			joint = new b2PulleyJoint((b2PulleyJointDef*)def);
 			#else
 			void* mem = allocator->Allocate(sizeof(b2PulleyJoint));
@@ -97,7 +97,7 @@ b2Joint* b2Joint::Create(const b2JointDef* def, b2BlockAllocator* allocator)
 
 	case e_gearJoint:
 		{
-			#ifdef __DUETTO__
+			#ifdef __CHEERP__
 			joint = new b2GearJoint((b2GearJointDef*)def);
 			#else
 			void* mem = allocator->Allocate(sizeof(b2GearJoint));
@@ -108,7 +108,7 @@ b2Joint* b2Joint::Create(const b2JointDef* def, b2BlockAllocator* allocator)
 
 	case e_wheelJoint:
 		{
-			#ifdef __DUETTO__
+			#ifdef __CHEERP__
 			joint = new b2WheelJoint((b2WheelJointDef*)def);
 			#else
 			void* mem = allocator->Allocate(sizeof(b2WheelJoint));
@@ -119,7 +119,7 @@ b2Joint* b2Joint::Create(const b2JointDef* def, b2BlockAllocator* allocator)
 
 	case e_weldJoint:
 		{
-			#ifdef __DUETTO__
+			#ifdef __CHEERP__
 			joint = new b2WeldJoint((b2WeldJointDef*)def);
 			#else
 			void* mem = allocator->Allocate(sizeof(b2WeldJoint));
@@ -130,7 +130,7 @@ b2Joint* b2Joint::Create(const b2JointDef* def, b2BlockAllocator* allocator)
         
 	case e_frictionJoint:
 		{
-			#ifdef __DUETTO__
+			#ifdef __CHEERP__
 			joint = new b2FrictionJoint((b2FrictionJointDef*)def);
 			#else
 			void* mem = allocator->Allocate(sizeof(b2FrictionJoint));
@@ -141,7 +141,7 @@ b2Joint* b2Joint::Create(const b2JointDef* def, b2BlockAllocator* allocator)
 
 	case e_ropeJoint:
 		{
-			#ifdef __DUETTO__
+			#ifdef __CHEERP__
 			joint = new b2RopeJoint((b2RopeJointDef*)def);
 			#else
 			void* mem = allocator->Allocate(sizeof(b2RopeJoint));
@@ -152,7 +152,7 @@ b2Joint* b2Joint::Create(const b2JointDef* def, b2BlockAllocator* allocator)
 
 	case e_motorJoint:
 		{
-			#ifdef __DUETTO__
+			#ifdef __CHEERP__
 			joint = new b2MotorJoint((b2MotorJointDef*)def);
 			#else
 			void* mem = allocator->Allocate(sizeof(b2MotorJoint));
@@ -171,7 +171,7 @@ b2Joint* b2Joint::Create(const b2JointDef* def, b2BlockAllocator* allocator)
 
 void b2Joint::Destroy(b2Joint* joint, b2BlockAllocator* allocator)
 {
-	#ifdef __DUETTO__
+	#ifdef __CHEERP__
 	delete joint;
 	#else
 	joint->~b2Joint();
