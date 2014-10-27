@@ -48,8 +48,8 @@ namespace
 			);
 }
 
-GameHandler::GameHandler(const GameOptions & _gameopt, const FileLoader & fl):
-physichandler(_gameopt), graphichandler (_gameopt, fl), inputhandler(graphichandler.toinput()),
+GameHandler::GameHandler(const GameOptions &_gameopt, const FileLoader &fl, const TextureLoader &tl):
+physichandler(_gameopt), graphichandler (_gameopt, fl, tl), inputhandler(graphichandler.toinput()),
 gameopt(_gameopt),score(0),level(0),linesortiles(0),gamestate(RUNNING), nextpiece_rot(0.0), updatebarscompleteness(1.0)
 {
 	for (const auto & p: pieces)

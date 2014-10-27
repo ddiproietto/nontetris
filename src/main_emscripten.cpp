@@ -32,6 +32,7 @@
 #include "gamehandler.h"
 
 #include "fileloader.h"
+#include "texloader.h"
 #include "myutil.h"
 
 #include "emscripten.h"
@@ -41,6 +42,7 @@ using namespace std;
 namespace
 {
 	FileLoader fileloader;
+	TextureLoader texloader;
 	GameHandler * pgh;
 
 	void oneiterationwrapper()
@@ -79,7 +81,7 @@ int main(int argc, char * argv[])
 		.fullscreen = false,
 		.piecesAA   = 4,
 	};
-	pgh = new GameHandler (gameopt, fileloader);
+	pgh = new GameHandler (gameopt, fileloader, texloader);
 	emscripten_set_main_loop(oneiterationwrapper, 0, 0);
 
 	return EXIT_SUCCESS;

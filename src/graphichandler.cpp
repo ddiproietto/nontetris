@@ -43,12 +43,10 @@
 #include <cmath>
 #ifndef __CHEERP__
 #include <iostream>
-#define LODEPNG_NO_COMPILE_ENCODER
-#define LODEPNG_NO_COMPILE_CPP
-#include "lodepng.h"
 #endif
 #include <string>
 #include "fileloader.h"
+#include "texloader.h"
 
 
 #ifdef __CHEERP__
@@ -146,22 +144,21 @@ void settexparameters(GLenum pname, T param, Args... texparameters)
 }
 
 template<typename... Args>
-GLuint filetotexture(const std::string & filename, bool generatemipmap, Args... texparameters)
+GLuint filetotexture(const TextureLoader &texloader, const std::string &filename, bool generatemipmap, Args... texparameters)
 {
 	GLuint rettex;
 	glGenTextures(1, &rettex);
 	glBindTexture( GL_TEXTURE_2D, rettex);
-	unsigned int twidth, theight;
 
 #ifndef __CHEERP__
-	unsigned char * image;
-	lodepng_decode24_file(&image, &twidth, &theight, filename.c_str());
+	unsigned int twidth, theight;
+	unsigned char *image = texloader.get(filename, &twidth, &theight);
 
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, twidth, theight, 0, GL_RGB,
 			GL_UNSIGNED_BYTE, image );
 	free(image);
 #else
-	webGLES->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<client::HTMLImageElement *>(client::document.getElementById(filename.c_str())));
+	webGLES->texImage2D(GL_TEXTURE_2D, 0, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, texloader.get(filename));
 #endif
 	settexparameters(texparameters...);
 
@@ -170,7 +167,7 @@ GLuint filetotexture(const std::string & filename, bool generatemipmap, Args... 
 	return rettex;
 }
 
-GraphicHandler::GraphicHandler(const GameOptions & _gameopt, const FileLoader & fileloader):gameopt(_gameopt), vbo_text(0), PMatrix_eye{0.0F}, PMatrix_half{0.0F}, PMatrix_pieces{0.0F}, RTVec_eye{0.0F}
+GraphicHandler::GraphicHandler(const GameOptions &_gameopt, const FileLoader &fileloader, const TextureLoader &texloader):gameopt(_gameopt), vbo_text(0), PMatrix_eye{0.0F}, PMatrix_half{0.0F}, PMatrix_pieces{0.0F}, RTVec_eye{0.0F}
 {
 	// WINDOWING INITIALIZATION
 #ifndef __CHEERP__
@@ -242,16 +239,16 @@ GraphicHandler::GraphicHandler(const GameOptions & _gameopt, const FileLoader & 
 	else if (gameopt.gametype == GameOptions::STACK)
 		backgroundfilename = DATAPATHPREAMBLE "imgs/newgamebackground.png";
 
-	tex_background = filetotexture(backgroundfilename, true, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	tex_background = filetotexture(texloader, backgroundfilename, true, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	for (int i = 0; i < 7; i++)
 	{
 		std::string path = std::string(DATAPATHPREAMBLE "imgs/pieces/")+std::to_string(i+1)+std::string(".png");
 
-		tex_small[i] = filetotexture(path, false, GL_TEXTURE_MIN_FILTER, GL_LINEAR, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		tex_small[i] = filetotexture(texloader, path, false, GL_TEXTURE_MIN_FILTER, GL_LINEAR, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	}
 
-	tex_font = filetotexture(DATAPATHPREAMBLE "imgs/font.png", true, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	tex_font = filetotexture(texloader, DATAPATHPREAMBLE "imgs/font.png", true, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	// VBO INITIALIZATION
 	glGenBuffers(1, &vbo_background);

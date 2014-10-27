@@ -55,12 +55,14 @@ struct GraphicPiece
 	GLuint tex;
 };
 
+class TextureLoader;
+
 class GraphicHandler
 {
 	const GameOptions gameopt;
 
 	#if !defined( __CHEERP__) && (GLFW_VERSION_MAJOR == 3)
-	GLFWwindow * glfwwindow;
+	GLFWwindow *glfwwindow;
 	#endif
 	GLuint tex_background;
 	GLuint tex_font;
@@ -94,13 +96,13 @@ class GraphicHandler
 	GLfloat RTVec_eye[4];
 
 public:
-	GraphicHandler(const GameOptions & gameopt, const FileLoader & fileloader);
+	GraphicHandler(const GameOptions &, const FileLoader &, const TextureLoader &);
 	~GraphicHandler();
-	GraphicPiece * createpiece(const piece<float> & pol);
-	void deletepiece(GraphicPiece * pgp);
-	void beginrender(TextHandler & texthandler);
-	void renderpiece(float x, float y, float rot, GraphicPiece * gp);
-	void endrender(const std::vector<float> & linecompleteness, const std::vector<bool> & linecutblack);
+	GraphicPiece *createpiece(const piece<float> & pol);
+	void deletepiece(GraphicPiece *);
+	void beginrender(TextHandler &texthandler);
+	void renderpiece(float x, float y, float rot, GraphicPiece *);
+	void endrender(const std::vector<float> &linecompleteness, const std::vector<bool> &linecutblack);
 
 	GraphicToInput toinput();
 };

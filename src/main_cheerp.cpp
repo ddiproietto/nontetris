@@ -65,7 +65,7 @@ namespace
 		}
 	}
 
-	void allloaded(const FileLoader & fl)
+	void allloaded(const FileLoader &fl, const TextureLoader &tl)
 	{
 
 		const GameOptions gameopt =
@@ -86,7 +86,7 @@ namespace
 			.fullscreen = false,
 			.piecesAA   = 4,
 		};
-		pgh = new GameHandler(gameopt, fileloader);
+		pgh = new GameHandler(gameopt, fl, tl);
 
 		oneiterationwrappergraphic();
 		timerHandler = client::setInterval(cheerp::Callback(oneiterationwrapperlogic), gameopt.physicstep*1000);
@@ -115,16 +115,16 @@ int webMain() [[client]]
 
 	//TODO: the two operations could be done in parallel
 
-	auto domloaded = [=](){
+	auto domloaded = [&](){
 		//The DOM has been loaded
 		client::console.log("DOMloaded");
-		fileloader.load(filestoload, [=](){
+		fileloader.load(filestoload, [&](){
 			client::console.log("FILESloaded");
 			//The files have been loaded
-			texloader.load(texturestoload, [=](){
+			texloader.load(texturestoload, [&](){
 				client::console.log("TEXTURESloaded");
 				//The textures have been loaded
-				allloaded(fileloader);
+				allloaded(fileloader, texloader);
 			});
 		});
 	};

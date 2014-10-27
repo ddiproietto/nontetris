@@ -32,6 +32,7 @@
 #include "gamehandler.h"
 
 #include "fileloader.h"
+#include "texloader.h"
 #include "myutil.h"
 
 #ifdef __MINGW32__
@@ -62,7 +63,8 @@ int main(int argc, char * argv[])
 		.piecesAA   = 4,
 	};
 	FileLoader fl;
-	GameHandler gh(gameopt, fl);
+	TextureLoader tl;
+	GameHandler gh(gameopt, fl, tl);
 
 	bool running = true;
 	auto next = std::chrono::steady_clock::now();

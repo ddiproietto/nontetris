@@ -82,7 +82,7 @@ class GameHandler
 	float updatebarscompleteness;
 
 public:
-	GameHandler(const GameOptions & _gameopt, const FileLoader & fl);
+	GameHandler(const GameOptions &, const FileLoader &, const TextureLoader &);
 	void step_physic();
 	void step_graphic();
 	bool step_logic();
