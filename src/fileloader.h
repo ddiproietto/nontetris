@@ -1,6 +1,6 @@
 /*****************************************************************************
 
-     Copyright (C) 2013  Daniele Di Proietto <d.diproietto@sssup.it>
+     Copyright (C) 2013, 2014  Daniele Di Proietto <d.diproietto@sssup.it>
 
      This file is part of nontetris.
 
@@ -30,65 +30,97 @@
 #endif
 
 #include <functional>
-#include <vector>
 #include <string>
+#include <map>
+
+#include <type_traits>
+
+/* FileLoader
+ *
+ * This class implements a very simple interface to load small text files,
+ * e.g. shaders. Usage:
+ *
+ * FileLoader fileloader;
+ * const char *filelist = ["shader.frag", "shader.vert"];
+ *
+ * fileloader.load(filelist, [&](){
+ * 	// The files have been loaded. Now we can continue with execution.
+ * 	compileshaders(fileloader);
+ * 	//...
+ * });
+ *
+ * Later, to use the file contents:
+ *
+ * auto shaderfrag_source = fileloader.getfilecontent("shader.frag");
+ *
+ * The type of 'shaderfrag_source' will be std::string, or client::String *
+ * if using cheerp.  This is done because conversions between JS and C++
+ * strings are expensive and should be avoided.
+ *
+ * When compiling for cheerp, XMLHttpRequest will be used. The files should be
+ * available via HTTP.
+ *
+ * When compiling not for cheerp, load() will not have any effect (except
+ * calling the callback).  The file will be read from disk when requested
+ * with getfilecontent().
+ */
 
 class FileLoader
 {
-	#ifdef __CHEERP__
+#ifdef __CHEERP__
+	/* Counts the files that still need to be loaded. When it reaches 0, the callback can be triggered. */
 	int todo;
-	#endif
+	/* Stores the file contents. It is indexed by the file name. */
+	std::map <std::string, client::String *> filecontentmap;
+#endif
+	/* Called when the files have been loaded */
 	std::function <void()> done;
 public:
 	template<typename T>
 	void load(T files, const std::function<void()> &f)
 	{
 		done = f;
-		#ifdef __CHEERP__
-		for(const auto & file: files)
-		{
+#ifdef __CHEERP__
+		for (const auto &file: files) {
 			auto xhr = new client::XMLHttpRequest();
 			xhr->open("get", file, true);
-			todo ++;
-			xhr->set_onload(cheerp::Callback([this, file](client::Event * e){
+			todo++;
+			xhr->set_onload(cheerp::Callback([this, file](client::Event *e){
 				auto res = static_cast<client::XMLHttpRequest *>(e->get_target());
 				auto contents = res->get_responseText();
 
-				auto scriptTag = client::document.createElement("script");
-				scriptTag->setAttribute("type", "customscript");
-				scriptTag->setAttribute("id", file);
+				filecontentmap.insert(make_pair(std::string(file), contents));
 
-				scriptTag->appendChild(client::document.createTextNode(*contents));
-
-				(client::document.getElementsByTagName("head"))->item(0)->appendChild(scriptTag);
-
-				if(!(--todo))
+				if (!(--todo)) {
 					done();
-					;
+				}
 			}));
 			xhr->send();
 		}
-		#else
+#else
 		done();
-		#endif
+#endif
 	}
 
-	#ifdef __CHEERP__
-	client::String * getfilecontent(std::string f) const
+#ifdef __CHEERP__
+	const client::String *getfilecontent(std::string f) const
 	{
-		auto elem = client::document.getElementById(f.c_str());
-		auto res = (elem->get_childNodes())->item(0)->get_nodeValue();
-		//console.log(*res);
-		return res;
+		/* Old version of cheerp have a bug with map::find() const */
+		auto & fcm = const_cast<std::remove_const<decltype(filecontentmap)>::type &>(filecontentmap);
+		auto it = fcm.find(f);
 
+		if (it == fcm.end()) {
+			return NULL;
+		}
+
+		return it->second;
 	}
-	#else
+#else
 	static std::string getfilecontent(std::string f)
 	{
 		std::ifstream t(f);
-		if(!t)
-		{
-			std::cerr << "Error reading file "<< f <<std::endl;
+		if(!t) {
+			std::cerr << "Error reading file " << f << std::endl;
 			return "";
 		}
 		std::string str;
@@ -99,7 +131,7 @@ public:
 		str.assign((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
 		return str;
 	}
-	#endif
+#endif
 };
 
-#endif //_FILELOADER_H
+#endif /* _FILELOADER_H */
