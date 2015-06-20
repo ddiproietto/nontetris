@@ -96,6 +96,7 @@ b2BlockAllocator::~b2BlockAllocator()
 	b2Free(m_chunks);
 }
 
+#ifndef __CHEERP__
 void* b2BlockAllocator::Allocate(int32 size)
 {
 	if (size == 0)
@@ -153,6 +154,7 @@ void* b2BlockAllocator::Allocate(int32 size)
 		return chunk->blocks;
 	}
 }
+#endif
 
 void b2BlockAllocator::Free(void* p, int32 size)
 {
